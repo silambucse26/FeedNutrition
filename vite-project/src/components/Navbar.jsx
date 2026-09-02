@@ -43,10 +43,14 @@ export default function Navbar({
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
-  // Live search with debounce - fetch matching cities from OpenWeather API
+  // Live search with debounce - supports both Open-Meteo and OpenWeather
   const handleSearchChange = (val) => {
     setManualCity(val);
 
@@ -58,31 +62,52 @@ export default function Navbar({
     }
 
     searchTimerRef.current = setTimeout(async () => {
-      const apiKey = envApiKey;
-      if (!apiKey) return;
-
       setSearching(true);
       try {
+        let results = [];
+        // 1. Try Open-Meteo free global geocoding
         const res = await fetch(
-          `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(val.trim())}&limit=5&appid=${apiKey}`
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val.trim())}&count=6&language=en&format=json`
         );
         if (res.ok) {
           const data = await res.json();
-          setSearchResults(data.map(loc => ({
-            name: loc.name,
-            state: loc.state || '',
-            country: loc.country,
-            lat: loc.lat,
-            lon: loc.lon,
-            display: loc.state ? `${loc.name}, ${loc.state}, ${loc.country}` : `${loc.name}, ${loc.country}`
-          })));
+          if (data.results && data.results.length > 0) {
+            results = data.results.map(loc => ({
+              name: loc.name,
+              state: loc.admin1 || '',
+              country: loc.country || '',
+              lat: loc.latitude,
+              lon: loc.longitude,
+              display: loc.admin1 ? `${loc.name}, ${loc.admin1}, ${loc.country}` : `${loc.name}, ${loc.country}`
+            }));
+          }
         }
+
+        // 2. Fallback to OpenWeather if available and no results yet
+        if (results.length === 0 && envApiKey) {
+          const owRes = await fetch(
+            `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(val.trim())}&limit=5&appid=${envApiKey}`
+          );
+          if (owRes.ok) {
+            const data = await owRes.json();
+            results = data.map(loc => ({
+              name: loc.name,
+              state: loc.state || '',
+              country: loc.country,
+              lat: loc.lat,
+              lon: loc.lon,
+              display: loc.state ? `${loc.name}, ${loc.state}, ${loc.country}` : `${loc.name}, ${loc.country}`
+            }));
+          }
+        }
+
+        setSearchResults(results);
       } catch (err) {
-        // Silent fail
+        console.warn('City search failed', err);
       } finally {
         setSearching(false);
       }
-    }, 400);
+    }, 300);
   };
 
   const handleSelectSearchResult = (result) => {
@@ -162,11 +187,10 @@ export default function Navbar({
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '10px', 
-          flexWrap: 'nowrap', 
-          overflow: 'hidden',
+          gap: '8px', 
+          flexWrap: 'wrap', 
           justifyContent: 'flex-end',
-          flexShrink: 1
+          flexShrink: 0
         }}>
           
           {/* Weather / Location Pill (With Truncation Ellipsis ...) */}
@@ -184,9 +208,8 @@ export default function Navbar({
               padding: '6px 12px',
               fontSize: '0.825rem',
               cursor: 'pointer',
-              maxWidth: '260px',
+              maxWidth: '240px',
               flexShrink: 1,
-              overflow: 'hidden',
               whiteSpace: 'nowrap'
             }}
           >
@@ -202,7 +225,7 @@ export default function Navbar({
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
               whiteSpace: 'nowrap',
-              maxWidth: '140px'
+              maxWidth: '120px'
             }}>
               {locationText}
             </span>
@@ -247,7 +270,7 @@ export default function Navbar({
           </button>
 
           {/* LANGUAGE SELECTOR DROPDOWN (6 Languages) */}
-          <div style={{ position: 'relative', flexShrink: 0 }} ref={langRef}>
+          <div style={{ position: 'relative', flexShrink: 0, zIndex: 100 }} ref={langRef}>
             <button
               type="button"
               onClick={() => setShowLangMenu(!showLangMenu)}
@@ -280,9 +303,9 @@ export default function Navbar({
                 background: '#ffffff',
                 border: '1.5px solid #e2e8f0',
                 borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
-                minWidth: '140px',
-                zIndex: 100,
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+                minWidth: '150px',
+                zIndex: 1000,
                 overflow: 'hidden'
               }}>
                 {languages.map(lang => (
@@ -293,8 +316,8 @@ export default function Navbar({
                       setShowLangMenu(false);
                     }}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '0.825rem',
+                      padding: '10px 14px',
+                      fontSize: '0.85rem',
                       fontWeight: currentLang === lang.code ? 800 : 600,
                       color: currentLang === lang.code ? '#16a34a' : '#0f172a',
                       background: currentLang === lang.code ? '#f0fdf4' : '#ffffff',
@@ -302,7 +325,8 @@ export default function Navbar({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      borderBottom: '1px solid #f1f5f9'
+                      borderBottom: '1px solid #f1f5f9',
+                      userSelect: 'none'
                     }}
                     onMouseEnter={(e) => {
                       if (currentLang !== lang.code) e.currentTarget.style.background = '#f8fafc';

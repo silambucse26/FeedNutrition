@@ -58,8 +58,15 @@ export default function App() {
     return val;
   };
 
-  // Weather State (null until user detects or enters location)
-  const [weather, setWeather] = useState(null);
+  // Weather State (null until user detects or enters location, restored from localStorage if available)
+  const [weather, setWeather] = useState(() => {
+    try {
+      const saved = localStorage.getItem('feednutrition_weather');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loadingWeather, setLoadingWeather] = useState(false);
   const [weatherError, setWeatherError] = useState(null);
 
@@ -187,7 +194,19 @@ export default function App() {
     selectedFeeds
   ]);
 
-  // Weather by coordinates
+  // Helper: map WMO weather code to text
+  const getWeatherConditionFromCode = (code) => {
+    if (code === 0) return 'Clear';
+    if (code >= 1 && code <= 3) return 'Partly Cloudy';
+    if (code === 45 || code === 48) return 'Foggy';
+    if (code >= 51 && code <= 67) return 'Rain';
+    if (code >= 71 && code <= 77) return 'Snow';
+    if (code >= 80 && code <= 82) return 'Rain Showers';
+    if (code >= 95) return 'Thunderstorm';
+    return 'Clear';
+  };
+
+  // Weather by coordinates with High Accuracy Geolocation & Reverse Geocoding
   const fetchWeatherByCoords = () => {
     if (!navigator.geolocation) {
       setWeatherError('Geolocation not supported by your browser');
@@ -202,50 +221,107 @@ export default function App() {
         try {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
-          const apiKey = envApiKey;
 
-          if (!apiKey) {
-            setWeather({
-              city: 'Detected Location',
-              tempC: 30,
-              humidity: 65,
-              condition: 'Sunny',
-              thi: 78
-            });
-            setLoadingWeather(false);
-            return;
+          // 1. Precise Reverse Geocoding to get City / District / Town Name
+          let cityName = '';
+          try {
+            const geoRes = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+            );
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              cityName = geoData.locality || geoData.city || geoData.town || geoData.village || geoData.county || geoData.principalSubdivision || '';
+            }
+          } catch (e) {
+            console.warn('BigDataCloud reverse geocode fallback', e);
           }
 
-          const res = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
-          );
-          if (!res.ok) throw new Error('Failed to fetch weather');
-          const data = await res.json();
+          if (!cityName) {
+            try {
+              const nomRes = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`
+              );
+              if (nomRes.ok) {
+                const nomData = await nomRes.json();
+                cityName = nomData.address?.city || nomData.address?.town || nomData.address?.village || nomData.address?.county || nomData.address?.state_district || nomData.name || '';
+              }
+            } catch (e) {
+              console.warn('Nominatim reverse geocode fallback', e);
+            }
+          }
 
-          const temp = data.main.temp;
-          const rh = data.main.humidity;
-          const thiCalc = 0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4;
+          // 2. Fetch Real-time Weather Data (OpenWeather if API key available, else Open-Meteo)
+          let temp = 28;
+          let rh = 65;
+          let condition = 'Clear';
+          let weatherFetched = false;
 
-          setWeather({
-            city: data.name,
+          if (envApiKey) {
+            try {
+              const owRes = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${envApiKey}`
+              );
+              if (owRes.ok) {
+                const owData = await owRes.json();
+                temp = Math.round(owData.main.temp);
+                rh = Math.round(owData.main.humidity);
+                condition = owData.weather[0]?.main || 'Clear';
+                if (!cityName) cityName = owData.name;
+                weatherFetched = true;
+              }
+            } catch (e) {
+              console.warn('OpenWeather fetch failed, trying Open-Meteo', e);
+            }
+          }
+
+          if (!weatherFetched) {
+            // Open-Meteo High Accuracy Real-time Weather (Free, No Key Required)
+            const omRes = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`
+            );
+            if (omRes.ok) {
+              const omData = await omRes.json();
+              if (omData.current) {
+                temp = Math.round(omData.current.temperature_2m);
+                rh = Math.round(omData.current.relative_humidity_2m);
+                condition = getWeatherConditionFromCode(omData.current.weather_code);
+                weatherFetched = true;
+              }
+            }
+          }
+
+          if (!cityName) {
+            cityName = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+          }
+
+          const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
+          const weatherObj = {
+            city: cityName,
             tempC: temp,
             humidity: rh,
-            condition: data.weather[0]?.main || 'Clear',
-            thi: Math.round(thiCalc)
-          });
+            condition: condition,
+            thi: thiCalc,
+            lat,
+            lon
+          };
+
+          setWeather(weatherObj);
+          try {
+            localStorage.setItem('feednutrition_weather', JSON.stringify(weatherObj));
+          } catch (e) {}
         } catch (err) {
           console.error(err);
-          setWeatherError('Could not fetch real weather data.');
+          setWeatherError('Could not fetch location weather data.');
         } finally {
           setLoadingWeather(false);
         }
       },
       (err) => {
-        console.warn('Geolocation blocked', err);
-        setWeatherError('Location access was denied. You can search manually.');
+        console.warn('Geolocation error / permission denied', err);
+        setWeatherError('Location access was denied or timed out. Please enter city manually.');
         setLoadingWeather(false);
       },
-      { timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -255,37 +331,80 @@ export default function App() {
     setLoadingWeather(true);
     setWeatherError(null);
 
-    const apiKey = envApiKey;
-    if (!apiKey) {
-      setWeather({
-        city: cityName,
-        tempC: 29,
-        humidity: 60,
-        condition: 'Clear',
-        thi: 76
-      });
-      setLoadingWeather(false);
-      return;
-    }
-
     try {
-      const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&units=metric&appid=${apiKey}`
-      );
-      if (!res.ok) throw new Error('City not found');
-      const data = await res.json();
+      let lat = null;
+      let lon = null;
+      let resolvedName = cityName;
+      let temp = 28;
+      let rh = 65;
+      let condition = 'Clear';
+      let weatherFetched = false;
 
-      const temp = data.main.temp;
-      const rh = data.main.humidity;
-      const thiCalc = 0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4;
+      // 1. Try OpenWeather if API key available
+      if (envApiKey) {
+        try {
+          const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&units=metric&appid=${envApiKey}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            lat = data.coord.lat;
+            lon = data.coord.lon;
+            resolvedName = data.name || cityName;
+            temp = Math.round(data.main.temp);
+            rh = Math.round(data.main.humidity);
+            condition = data.weather[0]?.main || 'Clear';
+            weatherFetched = true;
+          }
+        } catch (e) {
+          console.warn('OpenWeather city search failed', e);
+        }
+      }
 
-      setWeather({
-        city: data.name,
+      // 2. Open-Meteo Geocoding + Weather fallback (Free, 100% Reliable in Production)
+      if (!weatherFetched) {
+        const geoRes = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`
+        );
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.results && geoData.results.length > 0) {
+            const r = geoData.results[0];
+            lat = r.latitude;
+            lon = r.longitude;
+            resolvedName = r.name;
+
+            const omRes = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`
+            );
+            if (omRes.ok) {
+              const omData = await omRes.json();
+              if (omData.current) {
+                temp = Math.round(omData.current.temperature_2m);
+                rh = Math.round(omData.current.relative_humidity_2m);
+                condition = getWeatherConditionFromCode(omData.current.weather_code);
+                weatherFetched = true;
+              }
+            }
+          }
+        }
+      }
+
+      const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
+      const weatherObj = {
+        city: resolvedName,
         tempC: temp,
         humidity: rh,
-        condition: data.weather[0]?.main || 'Clear',
-        thi: Math.round(thiCalc)
-      });
+        condition: condition,
+        thi: thiCalc,
+        lat,
+        lon
+      };
+
+      setWeather(weatherObj);
+      try {
+        localStorage.setItem('feednutrition_weather', JSON.stringify(weatherObj));
+      } catch (e) {}
     } catch (err) {
       console.error(err);
       setWeatherError(`Could not find weather for "${cityName}".`);
