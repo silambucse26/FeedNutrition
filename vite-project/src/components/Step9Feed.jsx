@@ -85,45 +85,32 @@ export default function Step9Feed({
   ];
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)',
-        border: '1.5px solid #fde047',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)',
+          border: '1.5px solid #fde047'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{ background: '#ca8a04', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>{t ? t('step9.badge') : 'STEP 9 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#854d0e', fontWeight: 800 }}>{t ? t('step9.tag') : 'NUTRITION & FODDER INVENTORY'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#713f12', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#713f12' }}>
             {t ? t('step9.title') : 'Feed & Fodder Inventory'}
           </h2>
-          <p style={{ color: '#854d0e', fontSize: '0.925rem', margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#854d0e' }}>
             {t ? t('step9.subtitle') : 'Select your available green fodders, dry straws, and concentrates to compute NRC ration balance.'}
           </p>
         </div>
 
         <img 
           src="/cattle_art/feed.jpg" 
-          alt="Feed & Fodder" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(202, 138, 4, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          alt="Feed and Fodder" 
+          className="step-banner-img"
         />
       </div>
 

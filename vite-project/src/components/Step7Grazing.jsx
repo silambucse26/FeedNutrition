@@ -37,29 +37,24 @@ export default function Step7Grazing({
   ];
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-        border: '1.5px solid #a7f3d0',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+          border: '1.5px solid #a7f3d0'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span className="badge-green">{t ? t('step7.badge') : 'STEP 7 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#059669', fontWeight: 800 }}>{t ? t('step7.tag') : 'PASTURE & FORAGING'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#065f46', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#065f46' }}>
             {t ? t('step7.title') : 'Grazing Management'}
           </h2>
-          <p style={{ color: '#047857', fontSize: '0.925rem', margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#047857' }}>
             {t ? t('step7.subtitle') : 'Select your grazing system and record daily hours & distance walked per cattle group.'}
           </p>
         </div>
@@ -67,15 +62,7 @@ export default function Step7Grazing({
         <img 
           src="/cattle_art/grazing.jpg" 
           alt="Grazing Cattle" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          className="step-banner-img"
         />
       </div>
 

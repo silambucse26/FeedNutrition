@@ -31,15 +31,17 @@ export default function StepProgress({ currentStep, setStep, isStepValid, t }) {
       </div>
 
       {/* Steps Scroll Container */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        position: 'relative',
-        gap: '6px',
-        overflowX: 'auto',
-        paddingBottom: '4px'
-      }}>
+      <div 
+        className="horizontal-scroll"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+          gap: '6px',
+          paddingBottom: '6px'
+        }}
+      >
         {steps.map((step) => {
           const isActive = currentStep === step.number;
           const isCompleted = currentStep > step.number;

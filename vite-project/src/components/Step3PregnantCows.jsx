@@ -64,29 +64,24 @@ export default function Step3PregnantCows({
   const showRepeat = pregnantCategory === 'repeat' || pregnantCategory === 'both';
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-        border: '1.5px solid #fcd34d',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          border: '1.5px solid #fcd34d'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{ background: '#d97706', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>{t ? t('step3.badge') : 'STEP 3 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#b45309', fontWeight: 800 }}>{t ? t('step3.tag') : 'MATERNITY & CALVING'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#78350f', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#78350f' }}>
             {t ? t('step3.title') : 'Pregnant Cattle Management'}
           </h2>
-          <p style={{ color: '#92400e', fontSize: '0.925rem', margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#92400e' }}>
             {t ? t('step3.subtitle') : 'Track gestation stages, expected calving dates, and fetal growth nutritional demands.'}
           </p>
         </div>
@@ -94,15 +89,7 @@ export default function Step3PregnantCows({
         <img 
           src="/cattle_art/pregnant.jpg" 
           alt="Pregnant Cow" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(217, 119, 6, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          className="step-banner-img"
         />
       </div>
 

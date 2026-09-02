@@ -62,29 +62,24 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
   };
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-        border: '1.5px solid #bbf7d0',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+          border: '1.5px solid #bbf7d0'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('steps.step_1') : 'BREED SELECTION'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#0f172a' }}>
             {t ? t('step1.title') : 'Select Cattle or Buffalo Breed'}
           </h2>
-          <p style={{ color: '#475569', fontSize: '0.925rem', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#475569' }}>
             {t ? t('step1.subtitle') : 'Search or pick your breed from the single combined field below, or click any breed card to select.'}
           </p>
         </div>
@@ -92,15 +87,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
         <img 
           src="/cattle_art/breed_select.jpg" 
           alt="Cattle Breed Selection" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(22, 163, 74, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          className="step-banner-img"
         />
       </div>
 
@@ -269,8 +256,8 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
       {/* Breed Cards Grid: DISPLAYS ALL BREEDS ON LOAD */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))',
-        gap: '14px'
+        gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(130px, 28vw, 170px), 1fr))',
+        gap: 'clamp(8px, 2vw, 14px)'
       }}>
         {filteredBreeds.map(breed => {
           const isSelected = selectedBreed?.id === breed.id;
@@ -287,10 +274,11 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
                 border: isSelected ? '2.5px solid #16a34a' : '1.5px solid #e2e8f0',
                 background: isSelected ? '#f0fdf4' : '#ffffff',
                 position: 'relative',
-                textAlign: 'center'
+                textAlign: 'center',
+                padding: 0
               }}
             >
-              <div style={{ position: 'relative', height: '135px', overflow: 'hidden', background: '#f8fafc' }}>
+              <div style={{ position: 'relative', height: 'clamp(100px, 22vw, 135px)', overflow: 'hidden', background: '#f8fafc' }}>
                 <img 
                   src={breed.image} 
                   alt={getBreedName(breed, t)}

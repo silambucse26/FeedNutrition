@@ -27,29 +27,24 @@ export default function Step8Water({
   ];
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
-        border: '1.5px solid #7dd3fc',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+          border: '1.5px solid #7dd3fc'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{ background: '#0284c7', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>{t ? t('step8.badge') : 'STEP 8 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>{t ? t('step8.tag') : 'HYDRATION & WATER QUALITY'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0c4a6e', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#0c4a6e' }}>
             {t ? t('step8.title') : 'Water Availability & Quality'}
           </h2>
-          <p style={{ color: '#075985', fontSize: '0.925rem', margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#075985' }}>
             {t ? t('step8.subtitle') : 'Ensure clean, sufficient daily water supply essential for milk synthesis and thermoregulation.'}
           </p>
         </div>
@@ -57,15 +52,7 @@ export default function Step8Water({
         <img 
           src="/cattle_art/water.jpg" 
           alt="Cattle Drinking Clean Water" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(2, 132, 199, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          className="step-banner-img"
         />
       </div>
 

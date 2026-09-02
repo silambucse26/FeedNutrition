@@ -36,29 +36,24 @@ export default function Step2Heifers({
   };
 
   return (
-    <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
-      {/* Visual Header Banner with Big Clean Image */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-        border: '1.5px solid #bbf7d0',
-        borderRadius: '20px',
-        padding: '24px 28px',
-        marginBottom: '28px',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ flex: 1, minWidth: '260px' }}>
+    <div className="wg-card animate-fade-in">
+      {/* Visual Header Banner */}
+      <div 
+        className="step-banner"
+        style={{
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+          border: '1.5px solid #bbf7d0'
+        }}
+      >
+        <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span className="badge-green">{t ? t('step2.badge') : 'STEP 2 OF 9'}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('step2.tag') : 'YOUNG CATTLE'}</span>
           </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', margin: '0 0 8px 0', lineHeight: 1.2 }}>
+          <h2 className="step-banner-title" style={{ color: '#0f172a' }}>
             {t ? t('step2.title') : 'Heifer Cattle Management'}
           </h2>
-          <p style={{ color: '#475569', fontSize: '0.925rem', margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+          <p className="step-banner-subtitle" style={{ color: '#475569' }}>
             {t ? t('step2.subtitle') : 'Enter your total number of growing female heifers and record their individual weights.'}
           </p>
         </div>
@@ -66,15 +61,7 @@ export default function Step2Heifers({
         <img 
           src="/cattle_art/heifers.jpg" 
           alt="Young Heifer" 
-          style={{ 
-            width: '160px', 
-            height: '160px', 
-            borderRadius: '20px', 
-            objectFit: 'cover', 
-            boxShadow: '0 10px 25px rgba(22, 163, 74, 0.25)',
-            border: '4px solid #ffffff',
-            flexShrink: 0
-          }} 
+          className="step-banner-img"
         />
       </div>
 
@@ -82,7 +69,8 @@ export default function Step2Heifers({
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '20px',
+        justifyContent: 'space-between',
+        gap: '16px',
         background: '#ffffff',
         border: '2px solid #16a34a',
         borderRadius: '14px',
@@ -90,7 +78,7 @@ export default function Step2Heifers({
         marginBottom: '24px',
         flexWrap: 'wrap'
       }}>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: '1 1 200px' }}>
           <h3 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
             {t ? t('step2.count_label') : 'Number of Heifers'}
           </h3>
@@ -122,8 +110,8 @@ export default function Step2Heifers({
       {heifersData.length > 0 && (
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-          gap: '14px', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(140px, 28vw, 200px), 1fr))', 
+          gap: '12px', 
           marginBottom: '28px' 
         }}>
           {heifersData.map((heifer, idx) => (

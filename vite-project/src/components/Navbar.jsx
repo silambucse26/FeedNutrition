@@ -149,17 +149,17 @@ export default function Navbar({
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '10px 20px',
+        padding: '8px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'nowrap',
-        gap: '12px'
+        flexWrap: 'wrap',
+        gap: '8px'
       }}>
-        {/* Brand Name (Single Line + Ellipsis for tagline) */}
-        <div style={{ flexShrink: 0, minWidth: '150px' }}>
+        {/* Brand Name */}
+        <div style={{ flexShrink: 0 }}>
           <h1 style={{
-            fontSize: '1.25rem',
+            fontSize: '1.2rem',
             fontWeight: 900,
             color: '#0f172a',
             letterSpacing: '-0.03em',
@@ -170,7 +170,7 @@ export default function Navbar({
             Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
           </h1>
           <p style={{ 
-            fontSize: '0.72rem', 
+            fontSize: '0.7rem', 
             color: '#64748b', 
             fontWeight: 600, 
             margin: '2px 0 0',
@@ -189,13 +189,13 @@ export default function Navbar({
           alignItems: 'center', 
           gap: '8px', 
           flexWrap: 'wrap', 
-          justifyContent: 'flex-end',
-          flexShrink: 0
+          justifyContent: 'flex-end'
         }}>
           
           {/* Weather / Location Pill (With Truncation Ellipsis ...) */}
           <button 
             type="button"
+            className="nav-location-pill"
             onClick={() => setShowManualModal(true)}
             title={locationText}
             style={{
@@ -205,11 +205,10 @@ export default function Navbar({
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
               borderRadius: '20px',
-              padding: '6px 12px',
-              fontSize: '0.825rem',
+              padding: '6px 10px',
+              fontSize: '0.8rem',
               cursor: 'pointer',
-              maxWidth: '240px',
-              flexShrink: 1,
+              maxWidth: '200px',
               whiteSpace: 'nowrap'
             }}
           >
