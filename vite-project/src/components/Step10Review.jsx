@@ -22,6 +22,7 @@ export default function Step10Review({
   waterQuality = '', 
   selectedFeeds = [], 
   onEditStep,
+  onResetAllData,
   t
 }) {
   // Herd calculations
@@ -249,6 +250,20 @@ export default function Step10Review({
               <Download size={16} />
               <span>{t ? t('step10.download_csv') : 'Download CSV'}</span>
             </button>
+
+            {onResetAllData && (
+              <button 
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear all recorded farm data and start fresh?')) {
+                    onResetAllData();
+                  }
+                }} 
+                className="btn-secondary" 
+                style={{ padding: '10px 16px', fontSize: '0.85rem', color: '#dc2626', borderColor: '#fca5a5' }}
+              >
+                <span>Reset / Clear All Data</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -633,6 +648,20 @@ export default function Step10Review({
         </button>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {onResetAllData && (
+            <button 
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all recorded farm data and start fresh?')) {
+                  onResetAllData();
+                }
+              }} 
+              className="btn-secondary" 
+              style={{ padding: '12px 18px', color: '#dc2626', borderColor: '#fca5a5' }}
+            >
+              <span>Reset & Start New Record</span>
+            </button>
+          )}
+
           <button onClick={generateCSV} className="btn-primary" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Download size={18} />
             <span>{t ? t('step10.download_csv') : 'Download CSV Report'}</span>

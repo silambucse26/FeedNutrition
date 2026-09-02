@@ -105,33 +105,62 @@ export default function App() {
   // Step 9: Feed and Fodder Details (Clean default empty list)
   const [selectedFeeds, setSelectedFeeds] = useState([]);
 
-  // Load saved state from LocalStorage on mount
+  // Load saved state from LocalStorage on mount (clean purge of legacy mock data)
   useEffect(() => {
     try {
-      const savedState = localStorage.getItem('bovina_farm_state');
+      // 1. Permanently remove old legacy mock storage key if present in browser
+      localStorage.removeItem('bovina_farm_state');
+
+      // 2. Load legitimate user data from new storage key
+      const savedState = localStorage.getItem('feednutrition_farm_v3');
       if (savedState) {
         const parsed = JSON.parse(savedState);
         if (parsed.selectedBreed) setSelectedBreed(parsed.selectedBreed);
-        if (parsed.heifersData) setHeifersData(parsed.heifersData);
+        if (Array.isArray(parsed.heifersData)) setHeifersData(parsed.heifersData);
         if (parsed.pregnantCategory) setPregnantCategory(parsed.pregnantCategory);
-        if (parsed.firstTimeCattle) setFirstTimeCattle(parsed.firstTimeCattle);
-        if (parsed.repeatCattle) setRepeatCattle(parsed.repeatCattle);
-        if (parsed.lactatingData) setLactatingData(parsed.lactatingData);
-        if (parsed.dryCowsData) setDryCowsData(parsed.dryCowsData);
-        if (parsed.bullsData) setBullsData(parsed.bullsData);
+        if (Array.isArray(parsed.firstTimeCattle)) setFirstTimeCattle(parsed.firstTimeCattle);
+        if (Array.isArray(parsed.repeatCattle)) setRepeatCattle(parsed.repeatCattle);
+        if (Array.isArray(parsed.lactatingData)) setLactatingData(parsed.lactatingData);
+        if (Array.isArray(parsed.dryCowsData)) setDryCowsData(parsed.dryCowsData);
+        if (Array.isArray(parsed.bullsData)) setBullsData(parsed.bullsData);
         if (parsed.grazingSystem) setGrazingSystem(parsed.grazingSystem);
         if (parsed.grazingData) setGrazingData(parsed.grazingData);
-        if (parsed.waterVolume) setWaterVolume(parsed.waterVolume);
+        if (typeof parsed.waterVolume === 'number') setWaterVolume(parsed.waterVolume);
         if (parsed.waterSource) setWaterSource(parsed.waterSource);
         if (parsed.waterQuality) setWaterQuality(parsed.waterQuality);
-        if (parsed.selectedFeeds) setSelectedFeeds(parsed.selectedFeeds);
+        if (Array.isArray(parsed.selectedFeeds)) setSelectedFeeds(parsed.selectedFeeds);
       }
     } catch (e) {
       console.error('LocalStorage load failed', e);
     }
   }, []);
 
-  // Save state automatically whenever data changes
+  // Reset all farm data to clean empty state
+  const handleResetAllData = () => {
+    setSelectedBreed(CATTLE_BREEDS[0]);
+    setHeifersData([]);
+    setPregnantCategory('both');
+    setFirstTimeCattle([]);
+    setRepeatCattle([]);
+    setLactatingData([]);
+    setDryCowsData([]);
+    setBullsData([]);
+    setGrazingSystem('no_grazing');
+    setGrazingData({});
+    setWaterVolume(0);
+    setWaterSource('Borewell');
+    setWaterQuality('Good');
+    setSelectedFeeds([]);
+    setCurrentStep(1);
+    try {
+      localStorage.removeItem('bovina_farm_state');
+      localStorage.removeItem('feednutrition_farm_v3');
+    } catch (e) {
+      console.error('Reset failed', e);
+    }
+  };
+
+  // Save state automatically whenever user fills or modifies data
   useEffect(() => {
     try {
       const payload = {
@@ -150,7 +179,7 @@ export default function App() {
         waterQuality,
         selectedFeeds
       };
-      localStorage.setItem('bovina_farm_state', JSON.stringify(payload));
+      localStorage.setItem('feednutrition_farm_v3', JSON.stringify(payload));
     } catch (e) {
       console.error('LocalStorage save failed', e);
     }
@@ -547,6 +576,7 @@ export default function App() {
             waterQuality={waterQuality}
             selectedFeeds={selectedFeeds}
             onEditStep={(step) => setCurrentStep(step)}
+            onResetAllData={handleResetAllData}
             t={t}
           />
         )}
