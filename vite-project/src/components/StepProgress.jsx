@@ -12,7 +12,7 @@ export default function StepProgress({ currentStep, setStep, isStepValid, t }) {
     { number: 7, key: 'step_7', fallback: 'Grazing' },
     { number: 8, key: 'step_8', fallback: 'Water' },
     { number: 9, key: 'step_9', fallback: 'Feed' },
-    { number: 10, key: 'step_10', fallback: 'AI Plan' }
+    { number: 10, key: 'step_10', fallback: 'Summary' }
   ];
 
   const currentStepObj = steps[currentStep - 1];

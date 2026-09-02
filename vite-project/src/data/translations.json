@@ -26,7 +26,7 @@
       "step_7": "Grazing",
       "step_8": "Water",
       "step_9": "Feed",
-      "step_10": "AI Plan"
+      "step_10": "Summary"
     },
     "step1": {
       "badge": "STEP 1 OF 9",
@@ -189,9 +189,9 @@
     },
     "step10": {
       "badge": "FINAL STEP 10",
-      "tag": "FARM NUTRITION DATA COMPLETE",
-      "title": "Farm Summary & AI Ration Recommendation",
-      "subtitle": "Review complete farm inventory before generating NRC-optimized ration recommendations.",
+      "tag": "FARM DATA SUMMARY",
+      "title": "Farm Data & Inventory Summary",
+      "subtitle": "Review all farm parameters and herd details you have entered.",
       "print_report": "Print Report",
       "generate_ai_plan": "Generate AI Nutrition Plan",
       "calculating": "Calculating NRC Ration...",
@@ -281,7 +281,7 @@
       "step_7": "மேய்ச்சல்",
       "step_8": "தண்ணீர்",
       "step_9": "தீவனம்",
-      "step_10": "திட்டம்"
+      "step_10": "சுருக்கம்"
     },
     "step1": {
       "badge": "படி 1 / 9",
@@ -444,9 +444,9 @@
     },
     "step10": {
       "badge": "இறுதிப் படி 10",
-      "tag": "பண்ணை விவரங்கள் நிறைவுற்றன",
-      "title": "பண்ணை சுருக்கம் & AI தீவனப் பரிந்துரை",
-      "subtitle": "NRC தரநிலைகளின்படி உகந்த தீவனப் பரிந்துரையைப் பெறவும்.",
+      "tag": "FARM DATA SUMMARY",
+      "title": "பண்ணை தரவு மற்றும் இருப்புச் சுருக்கம்",
+      "subtitle": "நீங்கள் பதிவு செய்த அனைத்து பண்ணை விவரங்களையும் சரிபார்க்கவும்.",
       "print_report": "அறிக்கையை அச்சிடு",
       "generate_ai_plan": "AI தீவன திட்டம் உருவாக்கு",
       "calculating": "கணக்கிடப்படுகிறது...",
@@ -536,7 +536,7 @@
       "step_7": "चराई",
       "step_8": "पानी",
       "step_9": "चारा",
-      "step_10": "योजना"
+      "step_10": "सारांश"
     },
     "step1": {
       "badge": "चरण 1 / 9",
@@ -699,9 +699,9 @@
     },
     "step10": {
       "badge": "अंतिम चरण 10",
-      "tag": "फार्म पोषण डेटा पूर्ण",
-      "title": "फार्म सारांश और AI आहार अनुशंसा",
-      "subtitle": "NRC मानकों के आधार पर संतुलित राशन अनुशंसा देखें।",
+      "tag": "FARM DATA SUMMARY",
+      "title": "फार्म डेटा एवं पशुधन सारांश",
+      "subtitle": "आपके द्वारा दर्ज किए गए सभी फार्म विवरणों की समीक्षा करें।",
       "print_report": "रिपोर्ट प्रिंट करें",
       "generate_ai_plan": "AI पोषण योजना बनाएं",
       "calculating": "NRC राशन की गणना हो रही है...",
@@ -791,7 +791,7 @@
       "step_7": "మేత",
       "step_8": "నీరు",
       "step_9": "దాణా",
-      "step_10": "ప్రణాళిక"
+      "step_10": "సారాంశం"
     },
     "step1": {
       "badge": "దశ 1 / 9",
@@ -954,9 +954,9 @@
     },
     "step10": {
       "badge": "చివరి దశ 10",
-      "tag": "డేటా పూర్తయింది",
-      "title": "ఫారమ్ సారాంశం & AI దాణా సిఫార్సు",
-      "subtitle": "NRC ప్రమాణాల ఆధారంగా సమతుల్య దాణా సిఫార్సులను పొందండి.",
+      "tag": "FARM DATA SUMMARY",
+      "title": "ఫామ్ డేటా మరియు ఇన్వెంటరీ సారాంశం",
+      "subtitle": "మీరు నమోదు చేసిన అన్ని వివరాలను సమీక్షించండి.",
       "print_report": "రిపోర్ట్ ప్రింట్ చేయండి",
       "generate_ai_plan": "AI పోషణ ప్రణాళికను రూపొందించండి",
       "calculating": "లెక్కించబడుతోంది...",
@@ -1046,7 +1046,7 @@
       "step_7": "ಮೇಯಿಸುವಿಕೆ",
       "step_8": "ನೀರು",
       "step_9": "ಮೇವು",
-      "step_10": "ಯೋಜನೆ"
+      "step_10": "ಸಾರಾಂಶ"
     },
     "step1": {
       "badge": "ಹಂತ 1 / 9",
@@ -1209,9 +1209,9 @@
     },
     "step10": {
       "badge": "ಅಂತಿಮ ಹಂತ 10",
-      "tag": "ಡೇಟಾ ಪೂರ್ಣಗೊಂಡಿದೆ",
-      "title": "ಫಾರ್ಮ್ ಸಾರಾಂಶ ಮತ್ತು AI ಆಹಾರ ಶಿಫಾರಸು",
-      "subtitle": "NRC ಮಾನದಂಡಗಳ ಆಧಾರದ ಮೇಲೆ ಸಮತೋಲಿತ ಆಹಾರ ಶಿಫಾರಸುಗಳನ್ನು ಪಡೆಯಿರಿ.",
+      "tag": "FARM DATA SUMMARY",
+      "title": "ಫಾರ್ಮ್ ಮಾಹಿತಿ ಮತ್ತು ಸಾರಾಂಶ",
+      "subtitle": "ನೀವು ದಾಖಲಿಸಿದ ಎಲ್ಲಾ ಫಾರ್ಮ್ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
       "print_report": "ವರದಿ ಮುದ್ರಿಸಿ",
       "generate_ai_plan": "AI ಪೋಷಣೆ ಯೋಜನೆ ರಚಿಸಿ",
       "calculating": "ಲೆಕ್ಕಹಾಕಲಾಗುತ್ತಿದೆ...",
@@ -1301,7 +1301,7 @@
       "step_7": "चराई",
       "step_8": "पाणी",
       "step_9": "चारा",
-      "step_10": "योजना"
+      "step_10": "सारांश"
     },
     "step1": {
       "badge": "टप्पा 1 / 9",
@@ -1464,9 +1464,9 @@
     },
     "step10": {
       "badge": "अंतिम टप्पा 10",
-      "tag": "डेटा पूर्ण झाला",
-      "title": "फार्म सारांश आणि AI पोषण शिफारस",
-      "subtitle": "NRC मानकांनुसार संतुलित आहार शिफारसी मिळवा.",
+      "tag": "FARM DATA SUMMARY",
+      "title": "फार्म डेटा व सारांश",
+      "subtitle": "आपण नोंदवलेल्या सर्व तपशीलांचे पुनरावलोकन करा.",
       "print_report": "अहवाल प्रिंट करा",
       "generate_ai_plan": "AI पोषण योजना तयार करा",
       "calculating": "NRC आहाराची गणना करत आहे...",

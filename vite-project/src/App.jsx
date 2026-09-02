@@ -76,57 +76,34 @@ export default function App() {
   // Step 1: Selected Breed
   const [selectedBreed, setSelectedBreed] = useState(CATTLE_BREEDS[0]);
 
-  // Step 2: Heifer Cattle Details
-  const [heifersData, setHeifersData] = useState([
-    { id: 1, weight: 350 },
-    { id: 2, weight: 320 }
-  ]);
+  // Step 2: Heifer Cattle Details (Clean default empty list)
+  const [heifersData, setHeifersData] = useState([]);
 
-  // Step 3: Pregnant Cattle Details
+  // Step 3: Pregnant Cattle Details (Clean default empty list)
   const [pregnantCategory, setPregnantCategory] = useState('both');
-  const [firstTimeCattle, setFirstTimeCattle] = useState([
-    { id: 1, weight: 450, inputType: 'months', pregMonth: 5, pregDays: 150 }
-  ]);
-  const [repeatCattle, setRepeatCattle] = useState([
-    { id: 2, weight: 520, inputType: 'months', pregMonth: 7, pregDays: 210 }
-  ]);
+  const [firstTimeCattle, setFirstTimeCattle] = useState([]);
+  const [repeatCattle, setRepeatCattle] = useState([]);
 
-  // Step 4: Lactating Cattle Details
-  const [lactatingData, setLactatingData] = useState([
-    { id: 1, weight: 520, bcs: 3.5, milkYield: 18, milkFat: 4.2, stage: 'Early lactation' }
-  ]);
+  // Step 4: Lactating Cattle Details (Clean default empty list)
+  const [lactatingData, setLactatingData] = useState([]);
 
-  // Step 5: Dry Cow Details
-  const [dryCowsData, setDryCowsData] = useState([
-    { id: 1, weight: 500, dryDays: 60 }
-  ]);
+  // Step 5: Dry Cow Details (Clean default empty list)
+  const [dryCowsData, setDryCowsData] = useState([]);
 
-  // Step 6: Bull Details
-  const [bullsData, setBullsData] = useState([
-    { id: 1, weight: 650 }
-  ]);
+  // Step 6: Bull Details (Clean default empty list)
+  const [bullsData, setBullsData] = useState([]);
 
   // Step 7: Grazing Management
-  const [grazingSystem, setGrazingSystem] = useState('farm_only');
-  const [grazingData, setGrazingData] = useState({
-    heifers: { hours: 4, areaType: 'Pasture', distance: 1.5 },
-    pregnant: { hours: 3, areaType: 'Pasture', distance: 1.0 },
-    lactating: { hours: 5, areaType: 'Pasture', distance: 2.0 },
-    dry: { hours: 4, areaType: 'Pasture', distance: 1.0 },
-    bulls: { hours: 3, areaType: 'Pasture', distance: 1.0 }
-  });
+  const [grazingSystem, setGrazingSystem] = useState('no_grazing');
+  const [grazingData, setGrazingData] = useState({});
 
   // Step 8: Water Availability
-  const [waterVolume, setWaterVolume] = useState(500);
+  const [waterVolume, setWaterVolume] = useState(0);
   const [waterSource, setWaterSource] = useState('Borewell');
   const [waterQuality, setWaterQuality] = useState('Good');
 
-  // Step 9: Feed and Fodder Details
-  const [selectedFeeds, setSelectedFeeds] = useState([
-    { id: 'maize_fodder', name: 'Maize Fodder', category: 'Green Fodder', dmPct: 22, quantityKg: 25 },
-    { id: 'wheat_straw', name: 'Wheat Straw (Bhoosa)', category: 'Dry Fodder', dmPct: 90, quantityKg: 6 },
-    { id: 'wheat_bran', name: 'Wheat Bran', category: 'Concentrates', dmPct: 88, quantityKg: 4 }
-  ]);
+  // Step 9: Feed and Fodder Details (Clean default empty list)
+  const [selectedFeeds, setSelectedFeeds] = useState([]);
 
   // Load saved state from LocalStorage on mount
   useEffect(() => {
