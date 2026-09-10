@@ -372,7 +372,7 @@ export const CATTLE_BREEDS = [
     origin: 'Netherlands',
     avgWeightHeifer: 400,
     avgWeightCow: 650,
-    image: 'https://images.unsplash.com/photo-1546445317-29f4545f9d52?auto=format&fit=crop&w=800&q=80',
+    image: '/breed_images/cattle/cattle breeds/Holstein_Friesian.jpg',
     description: 'High volumetric milk yield dairy breed recognized by black and white markings.',
     badge: 'Exotic Dairy'
   },

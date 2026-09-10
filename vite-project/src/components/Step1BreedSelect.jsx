@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronRight, Check, ChevronDown, Plus } from 'lucide-react';
 import { CATTLE_BREEDS, getBreedName } from '../data/breeds';
 
-export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext, t }) {
+export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnteredAnimals = [], onNext, t }) {
   // Empty search term by default so ALL breeds are displayed on load!
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
                       src={breed.image} 
                       alt={getBreedName(breed, t)}
                       style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }}
-                      onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1546445317-29f4545f9d52?auto=format&fit=crop&w=200&q=80'}
+                      onError={(e) => e.target.src = '/cattle_art/breed_select.jpg'}
                     />
                     <div>
                       <div style={{ fontSize: '0.925rem', fontWeight: 800, color: '#0f172a' }}>{getBreedName(breed, t)}</div>
@@ -250,6 +250,35 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
             <span>{t ? t('step1.proceed_step2') : 'Proceed to Step 2 (Heifers)'}</span>
             <ChevronRight size={16} />
           </button>
+
+          {(() => {
+            const breedRefWeight = selectedBreed?.avgWeightCow || 450;
+            const deviating = (allEnteredAnimals || []).filter(a => {
+              const w = parseFloat(a.weight);
+              return w > 0 && (w < breedRefWeight * 0.65 || w > breedRefWeight * 1.45);
+            });
+            if (deviating.length === 0) return null;
+            return (
+              <div style={{
+                width: '100%',
+                background: '#fffbeb',
+                border: '1.5px solid #fde68a',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                marginTop: '10px',
+                fontSize: '0.85rem',
+                color: '#92400e',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+                <div>
+                  <strong>Breed-Switch Notice:</strong> You have {deviating.length} previously entered animal(s) whose weights differ from the typical mature weight of {getBreedName(selectedBreed, t)} ({breedRefWeight} kg). The system automatically formulates using your actual entered animal weights, but you may review them in steps 2–6 if desired.
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -288,7 +317,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, onNext,
                     objectFit: 'cover'
                   }}
                   onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1546445317-29f4545f9d52?auto=format&fit=crop&w=400&q=80';
+                    e.target.src = '/cattle_art/breed_select.jpg';
                   }}
                 />
                 

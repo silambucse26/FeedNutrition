@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
+import WeightRangeSelect from './WeightRangeSelect';
+import { COW_WEIGHT_RANGES, PREGNANCY_MONTH_OPTIONS, PREGNANCY_DAYS_OPTIONS } from '../data/weightRanges';
 
 export default function Step3PregnantCows({ 
   pregnantCategory, // 'firstTime', 'repeat', 'both'
@@ -7,21 +9,34 @@ export default function Step3PregnantCows({
   firstTimeCattle, setFirstTimeCattle,
   repeatCattle, setRepeatCattle,
   defaultBreed,
+  acknowledgeStep,
   onNext,
   onPrev,
   t
 }) {
   const baseWeight = defaultBreed ? defaultBreed.avgWeightCow : 480;
 
+  const [firstTimeInput, setFirstTimeInput] = useState(firstTimeCattle.length > 0 ? String(firstTimeCattle.length) : '');
+  const [repeatInput, setRepeatInput] = useState(repeatCattle.length > 0 ? String(repeatCattle.length) : '');
+
+  useEffect(() => {
+    setFirstTimeInput(firstTimeCattle.length > 0 ? String(firstTimeCattle.length) : '');
+  }, [firstTimeCattle.length]);
+
+  useEffect(() => {
+    setRepeatInput(repeatCattle.length > 0 ? String(repeatCattle.length) : '');
+  }, [repeatCattle.length]);
+
   // Handle count change for First-Time Pregnant
   const handleFirstTimeCountChange = (count) => {
+    if (acknowledgeStep) acknowledgeStep();
     const num = Math.max(0, Math.min(count, 200));
     if (num > firstTimeCattle.length) {
       const newEntries = [];
       for (let i = firstTimeCattle.length; i < num; i++) {
         newEntries.push({
           id: Date.now() + i,
-          weight: baseWeight,
+          weight: '',
           inputType: 'months',
           pregMonth: 5,
           pregDays: 150
@@ -35,13 +50,14 @@ export default function Step3PregnantCows({
 
   // Handle count change for Repeat Pregnant
   const handleRepeatCountChange = (count) => {
+    if (acknowledgeStep) acknowledgeStep();
     const num = Math.max(0, Math.min(count, 200));
     if (num > repeatCattle.length) {
       const newEntries = [];
       for (let i = repeatCattle.length; i < num; i++) {
         newEntries.push({
           id: Date.now() + i,
-          weight: baseWeight + 50,
+          weight: '',
           inputType: 'months',
           pregMonth: 7,
           pregDays: 210
@@ -65,18 +81,22 @@ export default function Step3PregnantCows({
 
   return (
     <div className="wg-card animate-fade-in">
-      {/* Visual Header Banner */}
+      {/* Visual Header Banner - Warm Amber Maternity Theme */}
       <div 
         className="step-banner"
         style={{
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-          border: '1.5px solid #fcd34d'
+          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+          border: '1.5px solid #fde68a'
         }}
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#d97706', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>{t ? t('step3.badge') : 'STEP 3 OF 9'}</span>
-            <span style={{ fontSize: '0.825rem', color: '#b45309', fontWeight: 800 }}>{t ? t('step3.tag') : 'MATERNITY & CALVING'}</span>
+            <span style={{ background: '#d97706', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
+              {t ? t('step3.badge') : 'STEP 3 OF 9'}
+            </span>
+            <span style={{ fontSize: '0.825rem', color: '#b45309', fontWeight: 800 }}>
+              {t ? t('step3.tag') : 'MATERNITY & CALVING'}
+            </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#78350f' }}>
             {t ? t('step3.title') : 'Pregnant Cattle Management'}
@@ -199,8 +219,32 @@ export default function Step3PregnantCows({
               type="number"
               min="0"
               max="200"
-              value={firstTimeCattle.length}
-              onChange={(e) => handleFirstTimeCountChange(parseInt(e.target.value) || 0)}
+              placeholder="0"
+              value={firstTimeInput}
+              onFocus={(e) => {
+                e.target.select();
+              }}
+              onWheel={(e) => e.target.blur()}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') {
+                  setFirstTimeInput('');
+                  handleFirstTimeCountChange(0);
+                  return;
+                }
+                const num = parseInt(raw, 10);
+                if (!isNaN(num)) {
+                  const clamped = Math.max(0, Math.min(num, 200));
+                  setFirstTimeInput(num === 0 ? '0' : String(clamped));
+                  handleFirstTimeCountChange(clamped);
+                }
+              }}
+              onBlur={() => {
+                if (!firstTimeInput || firstTimeInput === '0') {
+                  setFirstTimeInput('');
+                  handleFirstTimeCountChange(0);
+                }
+              }}
               style={{ 
                 width: '110px', 
                 fontSize: '1.25rem', 
@@ -227,23 +271,18 @@ export default function Step3PregnantCows({
                       </span>
                     </div>
                   </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {t ? t('step3.individual_weight') : 'Individual Weight (kg)'}
-                      </label>
-                      <input 
-                        type="number" 
-                        value={cow.weight}
-                        onChange={(e) => {
-                          const updated = [...firstTimeCattle];
-                          updated[idx].weight = parseInt(e.target.value) || 0;
-                          setFirstTimeCattle(updated);
-                        }}
-                        style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                      />
-                    </div>
+                    <WeightRangeSelect 
+                      value={cow.weight}
+                      onChange={(val) => {
+                        const updated = [...firstTimeCattle];
+                        updated[idx].weight = val;
+                        setFirstTimeCattle(updated);
+                      }}
+                      ranges={COW_WEIGHT_RANGES}
+                      label={t ? t('step3.individual_weight') : 'Weight Range'}
+                      accentColor="#16a34a"
+                    />
 
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
@@ -256,10 +295,10 @@ export default function Step3PregnantCows({
                           updated[idx].inputType = e.target.value;
                           setFirstTimeCattle(updated);
                         }}
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#000000', fontWeight: 400 }}
                       >
-                        <option value="months">{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
-                        <option value="days">{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
+                        <option value="months" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
+                        <option value="days" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
                       </select>
                     </div>
 
@@ -268,29 +307,33 @@ export default function Step3PregnantCows({
                         {cow.inputType === 'days' ? (t ? t('step3.days_after_insem') : 'Days After Insemination') : (t ? t('step3.preg_month') : 'Pregnancy Month')}
                       </label>
                       {cow.inputType === 'days' ? (
-                        <input 
-                          type="number"
-                          min="1" max="283"
+                        <select 
                           value={cow.pregDays}
                           onChange={(e) => {
                             const updated = [...firstTimeCattle];
-                            updated[idx].pregDays = parseInt(e.target.value) || 1;
+                            updated[idx].pregDays = parseInt(e.target.value) || 15;
                             setFirstTimeCattle(updated);
                           }}
-                          style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                        />
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
+                        >
+                          {PREGNANCY_DAYS_OPTIONS.map((opt, i) => (
+                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
+                          ))}
+                        </select>
                       ) : (
-                        <input 
-                          type="number"
-                          min="1" max="9"
+                        <select 
                           value={cow.pregMonth}
                           onChange={(e) => {
                             const updated = [...firstTimeCattle];
                             updated[idx].pregMonth = parseInt(e.target.value) || 1;
                             setFirstTimeCattle(updated);
                           }}
-                          style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                        />
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
+                        >
+                          {PREGNANCY_MONTH_OPTIONS.map((opt, i) => (
+                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   </div>
@@ -327,8 +370,32 @@ export default function Step3PregnantCows({
               type="number"
               min="0"
               max="200"
-              value={repeatCattle.length}
-              onChange={(e) => handleRepeatCountChange(parseInt(e.target.value) || 0)}
+              placeholder="0"
+              value={repeatInput}
+              onFocus={(e) => {
+                e.target.select();
+              }}
+              onWheel={(e) => e.target.blur()}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') {
+                  setRepeatInput('');
+                  handleRepeatCountChange(0);
+                  return;
+                }
+                const num = parseInt(raw, 10);
+                if (!isNaN(num)) {
+                  const clamped = Math.max(0, Math.min(num, 200));
+                  setRepeatInput(num === 0 ? '0' : String(clamped));
+                  handleRepeatCountChange(clamped);
+                }
+              }}
+              onBlur={() => {
+                if (!repeatInput || repeatInput === '0') {
+                  setRepeatInput('');
+                  handleRepeatCountChange(0);
+                }
+              }}
               style={{ 
                 width: '110px', 
                 fontSize: '1.25rem', 
@@ -355,23 +422,18 @@ export default function Step3PregnantCows({
                       </span>
                     </div>
                   </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {t ? t('step3.individual_weight') : 'Individual Weight (kg)'}
-                      </label>
-                      <input 
-                        type="number" 
-                        value={cow.weight}
-                        onChange={(e) => {
-                          const updated = [...repeatCattle];
-                          updated[idx].weight = parseInt(e.target.value) || 0;
-                          setRepeatCattle(updated);
-                        }}
-                        style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                      />
-                    </div>
+                    <WeightRangeSelect 
+                      value={cow.weight}
+                      onChange={(val) => {
+                        const updated = [...repeatCattle];
+                        updated[idx].weight = val;
+                        setRepeatCattle(updated);
+                      }}
+                      ranges={COW_WEIGHT_RANGES}
+                      label={t ? t('step3.individual_weight') : 'Weight Range'}
+                      accentColor="#16a34a"
+                    />
 
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
@@ -384,10 +446,10 @@ export default function Step3PregnantCows({
                           updated[idx].inputType = e.target.value;
                           setRepeatCattle(updated);
                         }}
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#000000', fontWeight: 400 }}
                       >
-                        <option value="months">{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
-                        <option value="days">{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
+                        <option value="months" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
+                        <option value="days" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
                       </select>
                     </div>
 
@@ -396,29 +458,33 @@ export default function Step3PregnantCows({
                         {cow.inputType === 'days' ? (t ? t('step3.days_after_insem') : 'Days After Insemination') : (t ? t('step3.preg_month') : 'Pregnancy Month')}
                       </label>
                       {cow.inputType === 'days' ? (
-                        <input 
-                          type="number"
-                          min="1" max="283"
+                        <select 
                           value={cow.pregDays}
                           onChange={(e) => {
                             const updated = [...repeatCattle];
-                            updated[idx].pregDays = parseInt(e.target.value) || 1;
+                            updated[idx].pregDays = parseInt(e.target.value) || 15;
                             setRepeatCattle(updated);
                           }}
-                          style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                        />
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
+                        >
+                          {PREGNANCY_DAYS_OPTIONS.map((opt, i) => (
+                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
+                          ))}
+                        </select>
                       ) : (
-                        <input 
-                          type="number"
-                          min="1" max="9"
+                        <select 
                           value={cow.pregMonth}
                           onChange={(e) => {
                             const updated = [...repeatCattle];
                             updated[idx].pregMonth = parseInt(e.target.value) || 1;
                             setRepeatCattle(updated);
                           }}
-                          style={{ width: '100%', fontWeight: 700, color: '#16a34a' }}
-                        />
+                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
+                        >
+                          {PREGNANCY_MONTH_OPTIONS.map((opt, i) => (
+                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   </div>
@@ -436,7 +502,20 @@ export default function Step3PregnantCows({
           <span>{t ? t('previous') : 'Previous'}</span>
         </button>
 
-        <button onClick={onNext} className="btn-primary">
+        <button 
+          onClick={() => {
+            const list = pregnantCategory === 'firstTime' ? firstTimeCattle :
+                         pregnantCategory === 'repeat' ? repeatCattle :
+                         [...firstTimeCattle, ...repeatCattle];
+            const hasEmpty = list.length > 0 && list.some(c => !c.weight || Number(c.weight) <= 0);
+            if (hasEmpty) {
+              alert('Please enter weights for all pregnant cows before proceeding.');
+              return;
+            }
+            onNext();
+          }} 
+          className="btn-primary"
+        >
           <span>{t ? t('next_step') : 'Next Step'}</span>
           <ChevronRight size={18} />
         </button>

@@ -7,7 +7,7 @@ export default function Step8Water({
   waterSource, 
   setWaterSource, 
   waterQuality, 
-  setWaterQuality, 
+  setWaterQuality,
   onNext, 
   onPrev,
   t
@@ -71,9 +71,27 @@ export default function Step8Water({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <input 
             type="number"
-            min="50" max="10000" step="50"
-            value={waterVolume}
-            onChange={(e) => setWaterVolume(parseInt(e.target.value) || 0)}
+            min="10" 
+            max="20000" 
+            step="10"
+            placeholder="e.g. 500"
+            value={waterVolume === undefined || waterVolume === '' || waterVolume === 0 ? '' : waterVolume}
+            onFocus={(e) => {
+              if (e.target.value === '0') setWaterVolume('');
+              e.target.select();
+            }}
+            onWheel={(e) => e.target.blur()}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                setWaterVolume('');
+                return;
+              }
+              const num = parseInt(raw, 10);
+              if (!isNaN(num)) {
+                setWaterVolume(num === 0 ? '' : num);
+              }
+            }}
             style={{ width: '180px', fontSize: '1.4rem', fontWeight: '900', color: '#0284c7', borderColor: '#0284c7', borderRadius: '10px' }}
           />
           <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>

@@ -1,0 +1,67 @@
+=== FARM & LOCATION ===
+Field,Value
+Location,"Anna Nagar, IN"
+Temperature (°C),33
+Relative Humidity (%),69
+
+=== SELECTED BREED ===
+Breed Name,Rathi
+Category,Cattle
+Origin,"Rajasthan, India"
+
+=== HEIFERS ===
+Total Heifers,1
+#,Weight (kg)
+1,350
+
+=== PREGNANT CATTLE ===
+Pregnant Category,both
+--- First-Time Pregnant ---
+#,Weight (kg),Pregnancy Days
+1,420,
+2,420,
+3,420,
+4,420,
+5,420,
+--- Repeat Pregnant ---
+#,Weight (kg),Pregnancy Days
+1,520,
+
+=== LACTATING CATTLE ===
+Total Lactating,1
+#,Weight (kg),BCS Score,Milk Yield (L/day),Milk Fat (%),Lactation Stage
+1,520,4,18,4.2,
+
+=== DRY COWS ===
+Total Dry Cows,1
+#,Weight (kg),Dry Period (days)
+1,500,
+
+=== BULLS ===
+Total Bulls,1
+#,Weight (kg)
+1,650
+
+=== GRAZING MANAGEMENT ===
+Grazing System,farm_only
+Grazing Hours/Day,N/A
+Distance (km/day),N/A
+
+=== WATER AVAILABILITY ===
+Water Volume (L/day),500
+Water Source,Borewell
+Water Quality,Good
+
+=== FEED & FODDER ===
+Total Feed Ingredients,4
+Ingredient Name,Category,Quantity (kg/day),Dry Matter (%)
+Maize Fodder,Green Fodder,,
+Sorghum Fodder,Green Fodder,,
+Paddy Straw,Dry Fodder,,
+Wheat Bran,Concentrates,,
+
+=== HERD SUMMARY ===
+Total Cattle Count,10
+Total Herd Weight (kg),4640
+Total Daily Milk (L/day),18
+Estimated DMI (kg DM/day),130
