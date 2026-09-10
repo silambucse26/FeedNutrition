@@ -213,14 +213,17 @@ export default function Navbar({
               style={{ width: '15px', height: '15px', objectFit: 'contain', borderRadius: '3px', flexShrink: 0 }}
             />
 
-            <span style={{ 
-              color: hasLocation ? '#0f172a' : '#64748b', 
-              fontWeight: 700, 
-              overflow: 'hidden', 
-              textOverflow: 'ellipsis', 
-              whiteSpace: 'nowrap',
-              maxWidth: '85px'
-            }}>
+            <span 
+              className="nav-location-text"
+              style={{ 
+                color: hasLocation ? '#0f172a' : '#64748b', 
+                fontWeight: 700, 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                maxWidth: '180px'
+              }}
+            >
               {locationText}
             </span>
 

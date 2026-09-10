@@ -304,8 +304,11 @@ input[type="range"] {
     flex: 1 1 auto !important;
     max-width: none !important;
     justifyContent: center !important;
-    font-size: 0.75rem !important;
-    padding: 5px 8px !important;
+    font-size: 0.78rem !important;
+    padding: 5px 10px !important;
+  }
+  .nav-location-text {
+    max-width: 110px !important;
   }
   .btn-primary, .btn-secondary {
     padding: 6px 11px !important;
