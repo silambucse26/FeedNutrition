@@ -184,7 +184,8 @@ export default function Navbar({
           display: 'flex', 
           alignItems: 'center', 
           gap: '6px', 
-          flexWrap: 'nowrap'
+          flexWrap: 'nowrap',
+          minWidth: 0
         }}>
           
           {/* Weather / Location Pill */}
@@ -196,15 +197,16 @@ export default function Navbar({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '4px',
               background: '#f8fafc',
               border: '1px solid #cbd5e1',
               borderRadius: '20px',
               padding: '5px 9px',
               fontSize: '0.75rem',
               cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
+              flexShrink: 1,
+              minWidth: 0,
+              overflow: 'hidden'
             }}
           >
             <img 
@@ -221,7 +223,8 @@ export default function Navbar({
                 overflow: 'hidden', 
                 textOverflow: 'ellipsis', 
                 whiteSpace: 'nowrap',
-                maxWidth: '180px'
+                maxWidth: 'clamp(70px, 14vw, 180px)',
+                display: 'inline-block'
               }}
             >
               {locationText}
