@@ -146,40 +146,37 @@ export default function Navbar({
       zIndex: 50,
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)'
     }}>
-      <div style={{
+      <div className="navbar-inner" style={{
         maxWidth: '1200px',
         margin: '0 auto',
         padding: '8px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '8px'
+        gap: '10px'
       }}>
         {/* Brand Name */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div>
-            <h1 style={{
-              fontSize: '1.2rem',
-              fontWeight: 900,
-              color: '#0f172a',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              margin: 0,
-              whiteSpace: 'nowrap'
-            }}>
-              Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
-            </h1>
-            <p style={{ 
-              fontSize: '0.7rem', 
-              color: '#64748b', 
-              fontWeight: 600, 
-              margin: '2px 0 0',
-              whiteSpace: 'nowrap'
-            }}>
-              {t ? t('brand_tagline') : 'Cattle Nutrition & Advisory'}
-            </p>
-          </div>
+        <div style={{ flexShrink: 0 }}>
+          <h1 style={{
+            fontSize: 'clamp(1.05rem, 3vw, 1.25rem)',
+            fontWeight: 900,
+            color: '#0f172a',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.1,
+            margin: 0,
+            whiteSpace: 'nowrap'
+          }}>
+            Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
+          </h1>
+          <p style={{ 
+            fontSize: '0.68rem', 
+            color: '#64748b', 
+            fontWeight: 600, 
+            margin: '2px 0 0',
+            whiteSpace: 'nowrap'
+          }}>
+            {t ? t('brand_tagline') : 'Cattle Nutrition & Advisory'}
+          </p>
         </div>
 
         {/* RIGHT CONTROLS: Location Pill + Detect Location + Language Selector */}
@@ -187,7 +184,7 @@ export default function Navbar({
           display: 'flex', 
           alignItems: 'center', 
           gap: '6px', 
-          flexWrap: 'wrap'
+          flexWrap: 'nowrap'
         }}>
           
           {/* Weather / Location Pill */}
@@ -199,20 +196,21 @@ export default function Navbar({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               background: '#f8fafc',
               border: '1px solid #cbd5e1',
               borderRadius: '20px',
-              padding: '5px 10px',
-              fontSize: '0.78rem',
+              padding: '5px 9px',
+              fontSize: '0.75rem',
               cursor: 'pointer',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              flexShrink: 0
             }}
           >
             <img 
               src="/location_pin.jpg" 
               alt="Pin" 
-              style={{ width: '16px', height: '16px', objectFit: 'contain', borderRadius: '3px', flexShrink: 0 }}
+              style={{ width: '15px', height: '15px', objectFit: 'contain', borderRadius: '3px', flexShrink: 0 }}
             />
 
             <span style={{ 
@@ -221,7 +219,7 @@ export default function Navbar({
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
               whiteSpace: 'nowrap',
-              maxWidth: '90px'
+              maxWidth: '85px'
             }}>
               {locationText}
             </span>
@@ -230,11 +228,11 @@ export default function Navbar({
               <>
                 <span style={{ color: '#cbd5e1', fontWeight: 300, flexShrink: 0 }}>|</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#0f172a', fontWeight: 800, flexShrink: 0 }}>
-                  <Thermometer size={13} color="#0f172a" />
+                  <Thermometer size={12} color="#0f172a" />
                   {weather.tempC !== undefined ? `${Math.round(weather.tempC)}°` : '--'}
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#0f172a', fontWeight: 800, flexShrink: 0 }}>
-                  <Droplets size={13} color="#0f172a" />
+                  <Droplets size={12} color="#0f172a" />
                   {weather.humidity !== undefined ? `${weather.humidity}%` : '--'}
                 </span>
               </>
@@ -247,12 +245,12 @@ export default function Navbar({
             onClick={fetchWeatherByCoords}
             className="btn-primary"
             style={{ 
-              padding: '6px 12px', 
-              fontSize: '0.78rem', 
+              padding: '5px 10px', 
+              fontSize: '0.75rem', 
               borderRadius: '20px', 
               display: 'inline-flex', 
               alignItems: 'center', 
-              gap: '5px',
+              gap: '4px',
               flexShrink: 0,
               whiteSpace: 'nowrap'
             }}
@@ -260,7 +258,7 @@ export default function Navbar({
             <img 
               src="/location_pin.jpg" 
               alt="Pin" 
-              style={{ width: '14px', height: '14px', objectFit: 'contain', borderRadius: '2px' }} 
+              style={{ width: '13px', height: '13px', objectFit: 'contain', borderRadius: '2px' }} 
             />
             <span>{t ? t('detect_location') : 'Detect'}</span>
           </button>
@@ -273,13 +271,13 @@ export default function Navbar({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '5px 10px',
+                gap: '4px',
+                padding: '5px 9px',
                 borderRadius: '20px',
                 border: '1.5px solid #cbd5e1',
                 background: '#ffffff',
                 color: '#0f172a',
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',

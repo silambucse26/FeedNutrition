@@ -1638,8 +1638,97 @@ export default function Step10Review({
                 );
               })()}
 
-              {/* 5-COLUMN PRACTICAL COMPARISON TABLE (WHAT YOU PUT vs WHAT HERD NEEDS vs EXTRA NEEDED) */}
-              <div className="responsive-table-container horizontal-scroll">
+              {/* MOBILE FEED CARDS VIEW (Clean vertical cards for phones - no horizontal scrolling needed!) */}
+              <div className="mobile-feed-cards" style={{ display: 'none', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                {calcResult.practicalFeedingReport?.todayRecommendations?.map((rec, i) => {
+                  const userKg = rec.userProvidedKg !== undefined 
+                    ? Number(rec.userProvidedKg) 
+                    : (Number(selectedFeeds?.find(f => f.name?.toLowerCase() === rec.name?.toLowerCase())?.quantityKg) || 0);
+                  const neededKg = Number(rec.recommendedKg) || 0;
+                  const diffKg = rec.differenceKg !== undefined ? Number(rec.differenceKg) : Math.round((neededKg - userKg) * 10) / 10;
+                  const isShortage = diffKg > 0.5;
+                  const isSurplus = diffKg < -0.5;
+
+                  return (
+                    <div key={`m-feed-${i}`} style={{
+                      background: '#ffffff',
+                      border: isShortage ? '1.5px solid #fca5a5' : isSurplus ? '1.5px solid #bfdbfe' : '1.5px solid #86efac',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.03)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <div>
+                          <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>{stripEmojis(rec.name)}</strong>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{rec.category} • {rec.dmPct}% DM</span>
+                        </div>
+                        {isShortage ? (
+                          <span style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #f87171', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                            +{diffKg.toFixed(1)} kg needed
+                          </span>
+                        ) : isSurplus ? (
+                          <span style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #93c5fd', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                            {Math.abs(diffKg).toFixed(1)} kg surplus
+                          </span>
+                        ) : (
+                          <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                            Covered
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#f8fafc', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem' }}>
+                        <div>
+                          <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>You entered:</span>
+                          <strong style={{ color: '#1e293b' }}>{userKg > 0 ? `${userKg.toFixed(1)} kg/day` : '0.0 kg/day'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: '#15803d', fontSize: '0.72rem', display: 'block' }}>Herd needs:</span>
+                          <strong style={{ color: '#15803d', fontSize: '0.85rem' }}>{neededKg.toFixed(1)} kg/day</strong>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Mobile Total Fresh Feed Summary */}
+                {(() => {
+                  const totalUserProvidedKg = calcResult.practicalFeedingReport?.totalUserProvidedFeedKg ?? 
+                    (selectedFeeds || []).reduce((acc, f) => acc + (Number(f.quantityKg) || 0), 0);
+                  const totalFreshNeededKg = Number(calcResult.practicalFeedingReport?.totalTroughFreshFeedKg || calcResult.practicalFeedingReport?.totalFreshFeedKg) || 0;
+                  const totalHerdDiffKg = calcResult.practicalFeedingReport?.totalFeedDifferenceKg ?? Math.round((totalFreshNeededKg - totalUserProvidedKg) * 10) / 10;
+                  return (
+                    <div style={{
+                      background: '#f0fdf4',
+                      border: '2px solid #86efac',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px'
+                    }}>
+                      <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Total Fresh Trough Feed Today:</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#475569' }}>Total Herd Needs:</span>
+                        <strong style={{ color: '#166534', fontSize: '1rem' }}>{totalFreshNeededKg.toFixed(1)} kg/day</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#475569' }}>Total You Provided:</span>
+                        <strong style={{ color: '#1e293b' }}>{totalUserProvidedKg.toFixed(1)} kg/day</strong>
+                      </div>
+                      <div style={{ marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #bbf7d0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#475569' }}>Action:</span>
+                        <strong style={{ color: totalHerdDiffKg > 0.5 ? '#dc2626' : '#15803d' }}>
+                          {totalHerdDiffKg > 0.5 ? `+${totalHerdDiffKg.toFixed(1)} kg extra needed` : 'Balanced & Covered'}
+                        </strong>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 5-COLUMN PRACTICAL COMPARISON TABLE (SHOWN ON DESKTOP & TABLETS) */}
+              <div className="desktop-feed-table responsive-table-container horizontal-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>

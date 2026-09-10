@@ -287,19 +287,36 @@ input[type="range"] {
 }
 
 /* Responsive Media Queries */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
+  .navbar-inner {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
   .nav-controls {
-    width: auto;
+    width: 100% !important;
+    display: flex !important;
+    justifyContent: space-between !important;
     gap: 6px !important;
   }
   .nav-location-pill {
-    max-width: 130px !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    justifyContent: center !important;
     font-size: 0.75rem !important;
-    padding: 4px 8px !important;
+    padding: 5px 8px !important;
   }
   .btn-primary, .btn-secondary {
-    padding: 7px 12px;
-    font-size: 0.8rem;
+    padding: 6px 11px !important;
+    font-size: 0.75rem !important;
+  }
+  /* Show clean stacked feed cards on mobile instead of horizontal slide table */
+  .mobile-feed-cards {
+    display: flex !important;
+  }
+  .desktop-feed-table {
+    display: none !important;
   }
 }
 
