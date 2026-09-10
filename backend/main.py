@@ -544,15 +544,20 @@ def calculate_feed_nutrition(req: NutritionRequest):
     for f in (req.selectedFeeds or []):
         m = match_feed_data(f.name, f.category, f.dmPct)
         f_name_lower = f.name.lower()
-        f_cat_lower = str(f.category).lower()
-        if any(w in f_name_lower for w in ['maize', 'sorghum fodder', 'napier', 'lucerne', 'berseem', 'silage', 'green', 'grass', 'oat fodder', 'sugarcane tops']) or 'green' in f_cat_lower:
-            grp = "green"
-        elif any(w in f_name_lower for w in ['straw', 'paddy', 'bhoosa', 'hay', 'stover', 'kadbi', 'haulm', 'dry', 'bagasse']) or 'dry' in f_cat_lower:
-            grp = "dry"
-        elif 'unconventional' in f_cat_lower or 'molasses' in f_name_lower:
+        f_cat_lower = str(f.category or "").lower()
+        dm_p = float(m["DM"])
+        if 'unconventional' in f_cat_lower or 'molasses' in f_name_lower:
             grp = "unconventional"
-        else:
+        elif 'dry' in f_cat_lower or any(w in f_name_lower for w in ['straw', 'paddy', 'bhoosa', 'hay', 'stover', 'kadbi', 'haulm', 'bagasse', 'husk']):
+            grp = "dry"
+        elif 'concentrate' in f_cat_lower or any(w in f_name_lower for w in ['grain', 'bran', 'cake', 'meal', 'pellet', 'chuni', 'crushed', 'mash', 'oilcake', 'dairy concentrate']):
             grp = "concentrate"
+        elif 'green' in f_cat_lower or any(w in f_name_lower for w in ['maize', 'sorghum fodder', 'napier', 'lucerne', 'berseem', 'silage', 'green', 'grass', 'oat fodder', 'sugarcane tops']):
+            grp = "green"
+        elif dm_p >= 70.0:
+            grp = "dry"
+        else:
+            grp = "green"
 
         me_val = get_feed_me_mcal_per_kg_dm(f.name, f.category or "")
         dm_p = float(m["DM"])
@@ -858,7 +863,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
         p_def = max(0.0, a["pG"] - p_from_feed)
         if cat == "milkingCow":
             base_min = 50.0 + ent.get("milk_yield", 0.0) * 3.0
-            animal_min_g = int(round(min(130.0, max(base_min, ca_def / 0.20, p_def / 0.10))))
+            animal_min_g = int(round(min(200.0, max(base_min, ca_def / 0.20, p_def / 0.10))))
             animal_salt_g = int(round(32.0 + ent.get("milk_yield", 0.0) * 0.9))
             anim_ndf_status, _, _ = evaluate_category_ndf_status("milkingCow", (tot_anim_ndf_g / max(1.0, tot_anim_dm * 10.0)))
         elif cat == "pregnantCattle":
@@ -969,16 +974,20 @@ def calculate_feed_nutrition(req: NutritionRequest):
         user_kg = round(float(f.quantityKg or 0.0), 1)
         diff_kg = round(tot_fr - user_kg, 1)
 
+        f_spec = next((item for item in feed_optimizer_input if item["name"] == f_name), None)
+        feed_grp = f_spec.get("group") if f_spec else "green"
         if "molasses" in f_lower:
             icon = "molasses"
-        elif any(w in f_lower for w in ['straw', 'paddy', 'bhoosa', 'hay', 'stover', 'bagasse']):
+            cat_display = f.category or "Unconventional"
+        elif feed_grp == "dry" or any(w in f_lower for w in ['straw', 'paddy', 'bhoosa', 'hay', 'stover', 'bagasse', 'husk']):
             icon = "dry_fodder"
-        elif any(w in f_lower for w in ['maize', 'corn']):
-            icon = "green_fodder"
-        elif any(w in f_lower for w in ['grain', 'bran', 'cake', 'meal', 'pellet']):
+            cat_display = f.category or "Dry Fodder"
+        elif feed_grp == "concentrate" or any(w in f_lower for w in ['grain', 'bran', 'cake', 'meal', 'pellet', 'chuni', 'mash']):
             icon = "concentrate"
+            cat_display = f.category or "Concentrates"
         else:
-            icon = "forage"
+            icon = "green_fodder"
+            cat_display = f.category or "Green Fodder"
 
         dm_p = feed_mineral_specs.get(f_name, {}).get("dmPct", 25.0)
         shortage_kg = max(0.0, diff_kg)
@@ -989,7 +998,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
         today_recommendations.append({
             "name": f_name,
             "icon": icon,
-            "category": f.category or ("Concentrates" if any(w in f_lower for w in ['grain', 'bran', 'cake', 'meal', 'pellet']) else "Green Fodder"),
+            "category": cat_display,
             "dmAllocatedKg": tot_dm,
             "dmPct": dm_p,
             "recommendedKg": tot_fr,
@@ -1664,11 +1673,11 @@ def calculate_feed_nutrition(req: NutritionRequest):
         "detail": f"{recommended_total_me_mcal:.1f} Mcal ME vs {total_herd_me_required_mcal:.1f} Mcal required ({rec_me_ratio*100:.1f}%)"
     })
 
-    # 3. CP within range (90% - 120%)
-    cp_ok = (0.90 <= rec_cp_ratio <= 1.20)
+    # 3. CP within range (90% - 130% or diet CP <= 17.5%)
+    cp_ok = (0.90 <= rec_cp_ratio <= 1.30) or (recommended_diet_cp_pct <= 17.5 and rec_cp_ratio >= 0.90)
     if not cp_ok:
         safety_gate_passed = False
-        if rec_cp_ratio > 1.20:
+        if rec_cp_ratio > 1.30:
             surplus_cp = round((rec_cp_ratio - 1.0) * 100)
             safety_failure_reasons.append(f"CP Surplus: Protein is +{surplus_cp}% above requirement ({recommended_total_cp_kg*1000.0:.0f} vs {total_herd_cp_required_g:.0f} g CP).")
         else:
@@ -1687,9 +1696,9 @@ def calculate_feed_nutrition(req: NutritionRequest):
         anim_ndf = anim.get("ndfPct", recommended_diet_ndf_pct)
         anim_cat = anim.get("category", "herd")
         limits = get_animal_category_ndf_limits(anim_cat)
-        if anim_ndf < limits["acidosisThreshold"]:
+        if anim_ndf < limits["acidosisThreshold"] - 0.05:
             ndf_failures.append(f"{anim['title']}: {anim_ndf:.1f}% NDF (<{limits['acidosisThreshold']:.0f}% acidosis threshold)")
-        elif anim_ndf > limits["highRoughageThreshold"]:
+        elif anim_ndf > limits["highRoughageThreshold"] + 0.05:
             ndf_failures.append(f"{anim['title']}: {anim_ndf:.1f}% NDF (>{limits['highRoughageThreshold']:.0f}% high roughage threshold)")
 
     ndf_ok = len(ndf_failures) == 0
@@ -1699,7 +1708,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
     safety_gate_checks.append({
         "gate": "NDF within range?",
         "passed": ndf_ok,
-        "detail": f"{recommended_diet_ndf_pct:.1f}% NDF diet (Limits: Milking 28%–42%, Non-lactating 32%–60%)" if ndf_ok else ndf_failures[0]
+        "detail": f"{recommended_diet_ndf_pct:.1f}% NDF diet (Limits: Milking 28%–48%, Non-lactating 32%–60%)" if ndf_ok else ndf_failures[0]
     })
 
     # 5. Ca/P adequate

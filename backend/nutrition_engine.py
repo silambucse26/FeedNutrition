@@ -1870,20 +1870,21 @@ def optimize_joint_farm_ration(
         trough_nel = max(0.1, float(a.get("target_nel_mcal", 5.0)))
         trough_cp = max(10.0, float(a.get("target_cp_g", 300.0)))
         milk_yield = float(a.get("milk_yield", 0.0))
+        pasture_dm = float(a.get("pasture_dm", 0.0))
 
-        # (a) DMI lower bound: sum_k x_{j,k} >= 0.95 * trough_dmi => -sum_k x_{j,k} <= -0.95 * trough_dmi
+        # (a) DMI lower bound: sum_k x_{j,k} >= 0.98 * trough_dmi => -sum_k x_{j,k} <= -0.98 * trough_dmi
         row_dmi_low = [0.0] * n_vars
         for k in range(k_feeds):
             row_dmi_low[get_var_idx(j, k)] = -1.0
         A_ub.append(row_dmi_low)
-        b_ub.append(-0.95 * trough_dmi)
+        b_ub.append(-0.98 * trough_dmi)
 
-        # (b) DMI upper bound: sum_k x_{j,k} <= 1.05 * trough_dmi
+        # (b) DMI upper bound: sum_k x_{j,k} <= 1.02 * trough_dmi
         row_dmi_up = [0.0] * n_vars
         for k in range(k_feeds):
             row_dmi_up[get_var_idx(j, k)] = 1.0
         A_ub.append(row_dmi_up)
-        b_ub.append(1.05 * trough_dmi)
+        b_ub.append(1.02 * trough_dmi)
 
         # (c) NEL Requirement: sum_k (x_{j,k} * nelPerKgDm_k) >= trough_nel
         row_nel = [0.0] * n_vars
@@ -1901,7 +1902,15 @@ def optimize_joint_farm_ration(
         b_ub.append(-max(10.0, trough_cp * 0.95))
 
         # (e) Concentrate Cap: sum_{k in conc} x_{j,k} - max_conc_frac * sum_k x_{j,k} <= 0
-        conc_frac = 0.40 if is_milking else (0.25 if is_late else (0.20 if is_heifer or is_bull else 0.15))
+        if is_milking:
+            conc_frac = 0.40 if milk_yield >= 10.0 else (0.28 if milk_yield <= 7.0 else 0.35)
+        elif is_late:
+            conc_frac = 0.25
+        elif is_heifer or is_bull:
+            conc_frac = 0.20
+        else:
+            conc_frac = 0.15
+
         row_conc = [0.0] * n_vars
         for k, f in enumerate(feeds):
             is_conc = f.get("group") in ["concentrate", "unconventional"]
@@ -1909,15 +1918,47 @@ def optimize_joint_farm_ration(
         A_ub.append(row_conc)
         b_ub.append(0.0)
 
-        # (f) Dry roughage inclusion if dry roughage feeds are present
+        # (f) Dry roughage inclusion limits (NRC & ICAR)
         dry_indices = [k for k, f in enumerate(feeds) if f.get("group") == "dry"]
         if dry_indices:
+            # Lower bound: need at least some effective fiber
             min_dry_frac = 0.10 if is_milking else 0.20
-            row_dry = [0.0] * n_vars
+            row_dry_min = [0.0] * n_vars
             for k, f in enumerate(feeds):
                 is_dry_feed = (k in dry_indices)
-                row_dry[get_var_idx(j, k)] = -(1.0 - min_dry_frac) if is_dry_feed else min_dry_frac
-            A_ub.append(row_dry)
+                row_dry_min[get_var_idx(j, k)] = -(1.0 - min_dry_frac) if is_dry_feed else min_dry_frac
+            A_ub.append(row_dry_min)
+            b_ub.append(0.0)
+
+            # Upper bound: prevent dry roughage overload (milking cows max 25% dry roughage)
+            max_dry_frac = 0.25 if is_milking else (0.40 if is_late else (0.45 if is_heifer else 0.65))
+            row_dry_max = [0.0] * n_vars
+            for k, f in enumerate(feeds):
+                is_dry_feed = (k in dry_indices)
+                row_dry_max[get_var_idx(j, k)] = (1.0 - max_dry_frac) if is_dry_feed else (-max_dry_frac)
+            A_ub.append(row_dry_max)
+            b_ub.append(0.0)
+
+        # (g) Dietary NDF Upper Bound: Prevent excessive roughage / gut fill
+        # High producing milking cows (>=10L): NDF <= 48.0%
+        # Moderate/low producing cows (<10L): NDF <= 52.0%
+        # Pregnant cattle: NDF <= 52.0%
+        # Growing heifers: NDF <= 50.0%
+        # Dry cows / Bulls: NDF <= 60.0%
+        if is_milking:
+            max_ndf_pct = 48.0 if milk_yield >= 10.0 else 52.0
+        elif is_late or ("preg" in cat):
+            max_ndf_pct = 52.0
+        elif is_heifer:
+            max_ndf_pct = 50.0
+        else:
+            max_ndf_pct = 60.0
+        if any(float(f.get("ndfPct", 50.0)) <= max_ndf_pct for f in feeds):
+            row_ndf_max = [0.0] * n_vars
+            for k, f in enumerate(feeds):
+                ndf_val = float(f.get("ndfPct", 50.0))
+                row_ndf_max[get_var_idx(j, k)] = (ndf_val - max_ndf_pct) / 100.0
+            A_ub.append(row_ndf_max)
             b_ub.append(0.0)
 
     # 2. Hard Farm Inventory Constraints (with slack penalty variables)
@@ -1973,6 +2014,9 @@ def optimize_joint_farm_ration(
                     else:
                         b_val = b_val * 0.85
                     break
+            # Relax NDF and dry upper bounds if present
+            if b_val == 0.0 and any(v > 0.01 for v in row) and any(v < -0.01 for v in row):
+                b_val = 2.0
             A_ub_rel.append(row)
             b_ub_rel.append(b_val)
         res = linprog(c, A_ub=A_ub_rel, b_ub=b_ub_rel, bounds=bounds, method="highs")
@@ -2118,10 +2162,10 @@ def get_animal_category_ndf_limits(category: str) -> Dict[str, Any]:
             "category": "Milking Cow",
             "minNdfPct": 28.0,
             "optMinNdfPct": 28.0,
-            "optMaxNdfPct": 42.0,
-            "rangeDesc": "28%–42% (Optimal for milk fat & energy intake)",
+            "optMaxNdfPct": 48.0,
+            "rangeDesc": "28%–48% (Optimal for milk fat & energy intake)",
             "acidosisThreshold": 28.0,
-            "highRoughageThreshold": 42.0
+            "highRoughageThreshold": 48.0
         }
     elif "dry" in cat:
         return {
@@ -2188,7 +2232,7 @@ def evaluate_category_ndf_status(category: str, ndf_pct: float) -> Tuple[str, st
             "warning",
             f"{cat_name} dietary NDF is {ndf_pct:.1f}% (below {limits['acidosisThreshold']:.0f}% min). Risk of subacute ruminal acidosis and milk fat depression. Add dry roughage."
         )
-    elif ndf_pct <= limits["highRoughageThreshold"]:
+    elif round(ndf_pct, 1) <= limits["highRoughageThreshold"] + 0.05:
         return (
             f"Optimal / Adequate ({ndf_pct:.1f}%)",
             "ok",
