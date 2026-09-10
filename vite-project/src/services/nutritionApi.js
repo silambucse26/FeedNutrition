@@ -4,12 +4,13 @@ const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 /**
  * Health check to verify if the Python backend is reachable.
+ * Render free-tier cold starts can take up to 50 seconds.
  */
 export async function checkBackendStatus() {
   try {
     const controller = new AbortController();
-    // 15s timeout to allow free-tier cloud backends (e.g., Render) to wake up from cold start
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    // 50s timeout — Render free tier needs up to 50s to wake from a cold start
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
     const res = await fetch(`${API_BASE_URL}/api/health`, {
       signal: controller.signal
     });
@@ -18,7 +19,13 @@ export async function checkBackendStatus() {
     const data = await res.json();
     return { connected: true, data };
   } catch (err) {
-    return { connected: false, error: err.message || 'Connection failed' };
+    const isTimeout = err.name === 'AbortError';
+    return {
+      connected: false,
+      error: isTimeout
+        ? 'Backend timed out — Render cold start can take up to 50 seconds. Please retry.'
+        : (err.message || 'Connection failed')
+    };
   }
 }
 

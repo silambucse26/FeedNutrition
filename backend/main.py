@@ -55,18 +55,25 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for Vite frontend (local dev and deployed Vercel domains)
+# Enable CORS for Vite frontend (local dev + Vercel + Render + custom domains)
+_extra_origin = os.environ.get("CORS_ORIGIN", "").strip()
+_allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    "https://feednutrition.onrender.com",   # self (backend origin)
+]
+if _extra_origin:
+    _allowed_origins.append(_extra_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-    ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=_allowed_origins,
+    # Covers all Vercel deployment URLs (production + preview branches)
+    allow_origin_regex=r"https://(.*\.vercel\.app|.*\.vercel\.com)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

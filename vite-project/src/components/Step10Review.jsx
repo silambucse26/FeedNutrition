@@ -1296,9 +1296,9 @@ export default function Step10Review({
                 </button>
               </div>
               <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#78350f', lineHeight: 1.5 }}>
-                • <strong>If deployed on Vercel:</strong> Make sure <code>VITE_API_BASE_URL</code> environment variable is set to your deployed Render/Cloud backend URL (e.g. <code>https://your-backend.onrender.com</code>), and allow 10–20 seconds if Render is waking from a cold start.<br />
-                • <strong>If running locally:</strong> Open a terminal in <code>d:\Project\Feednutrition\backend</code> and run: <br />
-                <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>.\venv\Scripts\uvicorn.exe main:app --reload --port 8000</code>
+                • <strong>If deployed on Vercel:</strong> Ensure <code>VITE_API_BASE_URL</code> is set to <code>https://feednutrition.onrender.com</code> in your Vercel project's Environment Variables. Render free-tier can take <strong>up to 50 seconds</strong> to wake — click Retry after waiting.<br />
+                • <strong>If running locally:</strong> Open a terminal inside the <code>backend/</code> folder and run: <br />
+                <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>uvicorn main:app --reload --port 8000</code>
               </div>
             </div>
           </div>
