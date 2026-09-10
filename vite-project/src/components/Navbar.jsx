@@ -166,7 +166,7 @@ export default function Navbar({
             margin: 0,
             whiteSpace: 'nowrap'
           }}>
-            Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
+            MOOPO<span style={{ color: '#16a34a' }}>SHAQ</span>
           </h1>
           <p style={{ 
             fontSize: '0.68rem', 

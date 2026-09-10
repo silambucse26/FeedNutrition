@@ -796,7 +796,7 @@ export default function App() {
         fontSize: '0.8rem',
         fontWeight: 600
       }}>
-        FeedNutrition AI - {t('brand_tagline')}
+        MOOPOSHAQ - {t('brand_tagline')}
       </footer>
     </div>
   );

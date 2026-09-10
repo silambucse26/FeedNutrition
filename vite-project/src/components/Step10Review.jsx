@@ -422,7 +422,7 @@ export default function Step10Review({
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     const dateStr = new Date().toISOString().slice(0, 10);
-    link.setAttribute("download", `FeedNutrition_FarmData_${dateStr}.csv`);
+    link.setAttribute("download", `MOOPOSHAQ_FarmData_${dateStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1331,7 +1331,7 @@ export default function Step10Review({
                     My Farm Feeding Report
                   </h3>
                   <h4 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-                    {weather?.city ? `${weather.city} Dairy Farm` : 'Anna Nagar Farm'}
+                    {weather?.city ? `${weather.city} Dairy Farm` : 'MOOPOSHAQ Farm'}
                   </h4>
                 </div>
 
