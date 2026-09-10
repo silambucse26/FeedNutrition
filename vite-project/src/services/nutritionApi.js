@@ -6,7 +6,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000
 export async function checkBackendStatus() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    // 10s timeout to allow free-tier cloud backends (e.g., Render) to wake up from cold start
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     const res = await fetch(`${API_BASE_URL}/api/health`, {
       signal: controller.signal
     });

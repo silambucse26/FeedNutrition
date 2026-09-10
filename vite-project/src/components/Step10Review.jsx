@@ -1269,12 +1269,35 @@ export default function Step10Review({
 
         {/* Backend offline guide notice if not connected */}
         {!backendOnline && (
-          <div style={{ padding: '16px 20px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', color: '#92400e', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
-            <AlertCircle size={24} style={{ flexShrink: 0, color: '#d97706' }} />
-            <div>
-              <strong>Python Backend is currently not responding.</strong>
-              <div style={{ marginTop: '4px', fontSize: '0.8rem', color: '#78350f' }}>
-                To connect: open a terminal in <code>d:\Project\Feednutrition\backend</code> and run: <br />
+          <div style={{ padding: '16px 20px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', color: '#92400e', fontSize: '0.85rem', display: 'flex', alignItems: 'flex-start', gap: '12px', marginTop: '16px' }}>
+            <AlertCircle size={24} style={{ flexShrink: 0, color: '#d97706', marginTop: '2px' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <strong>Python Backend is currently not responding.</strong>
+                <button
+                  onClick={async () => {
+                    setCheckingBackend(true);
+                    const status = await checkBackendStatus();
+                    setBackendOnline(status.connected);
+                    setCheckingBackend(false);
+                  }}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    background: '#f59e0b',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {checkingBackend ? 'Retrying...' : '🔄 Retry Connection'}
+                </button>
+              </div>
+              <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#78350f', lineHeight: 1.5 }}>
+                • <strong>If deployed on Vercel:</strong> Make sure <code>VITE_API_BASE_URL</code> environment variable is set to your deployed Render/Cloud backend URL (e.g. <code>https://your-backend.onrender.com</code>), and allow 10–20 seconds if Render is waking from a cold start.<br />
+                • <strong>If running locally:</strong> Open a terminal in <code>d:\Project\Feednutrition\backend</code> and run: <br />
                 <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>.\venv\Scripts\uvicorn.exe main:app --reload --port 8000</code>
               </div>
             </div>
