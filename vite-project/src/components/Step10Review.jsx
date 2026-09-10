@@ -1639,7 +1639,7 @@ export default function Step10Review({
               })()}
 
               {/* 5-COLUMN PRACTICAL COMPARISON TABLE (WHAT YOU PUT vs WHAT HERD NEEDS vs EXTRA NEEDED) */}
-              <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+              <div className="responsive-table-container horizontal-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>

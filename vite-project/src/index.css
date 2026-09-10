@@ -260,37 +260,109 @@ input[type="range"] {
   border-radius: 4px;
 }
 
+/* Fluid responsive table container */
+.responsive-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.responsive-table-container table {
+  min-width: 600px;
+}
+
+/* Responsive grid helper utilities */
+.responsive-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: clamp(10px, 2vw, 16px);
+}
+
+.responsive-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  gap: clamp(8px, 1.5vw, 14px);
+}
+
 /* Responsive Media Queries */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .step-banner {
     flex-direction: column-reverse;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .step-banner-content {
+    width: 100%;
   }
   .step-banner-img {
-    width: 100px;
-    height: 100px;
-    align-self: flex-start;
-  }
-  .nav-location-pill {
-    max-width: 160px !important;
+    width: 100%;
+    max-width: 220px;
+    height: 120px;
+    align-self: center;
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
+  .nav-controls {
+    width: 100%;
+    justify-content: space-between !important;
+  }
+  .nav-location-pill {
+    max-width: 140px !important;
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 9px 16px;
+    font-size: 0.825rem;
+  }
+}
+
+@media (max-width: 540px) {
   body {
     font-size: 0.875rem;
   }
   .wg-card {
-    border-radius: 14px;
-    padding: 16px 12px;
+    border-radius: 12px;
+    padding: 14px 12px;
   }
   .step-banner {
-    border-radius: 14px;
-    padding: 14px;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .step-banner-title {
+    font-size: 1.2rem;
+  }
+  .step-banner-subtitle {
+    font-size: 0.78rem;
   }
   .btn-primary, .btn-secondary {
-    padding: 8px 14px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+  input[type="text"], input[type="number"], input[type="date"], select {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+  .responsive-table-container table {
+    font-size: 0.78rem;
+  }
+  .responsive-table-container th, 
+  .responsive-table-container td {
+    padding: 8px 10px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-location-pill {
+    max-width: 110px !important;
+  }
+  .chip-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
   }
 }
 

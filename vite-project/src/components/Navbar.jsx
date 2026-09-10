@@ -184,7 +184,7 @@ export default function Navbar({
         </div>
 
         {/* RIGHT CONTROLS: Location Pill + Detect Location + Language Selector */}
-        <div style={{ 
+        <div className="nav-controls" style={{ 
           display: 'flex', 
           alignItems: 'center', 
           gap: '8px', 
