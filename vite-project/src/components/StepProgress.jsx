@@ -26,9 +26,9 @@ export default function StepProgress({
   const currentTitle = t ? t(`steps.${currentStepObj?.key}`) : currentStepObj?.fallback;
 
   return (
-    <div className="wg-card" style={{ padding: '16px 20px', marginBottom: '24px' }}>
+    <div className="wg-card" style={{ padding: 'clamp(10px, 2.5vw, 16px) clamp(12px, 3vw, 20px)', marginBottom: '16px' }}>
       {/* Top Auto-Save & Status Strip */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', fontSize: '0.78rem', flexWrap: 'wrap', gap: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.78rem', flexWrap: 'wrap', gap: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ color: '#0f172a', fontWeight: 800 }}>
             STEP {currentStep > 9 ? 10 : currentStep} OF 10 • {currentTitle?.toUpperCase()}

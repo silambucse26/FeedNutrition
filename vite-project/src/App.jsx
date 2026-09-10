@@ -598,7 +598,7 @@ export default function App() {
         maxWidth: '1200px',
         width: '100%',
         margin: '0 auto',
-        padding: '24px 16px',
+        padding: 'clamp(12px, 3vw, 24px) clamp(10px, 2.5vw, 16px)',
         flex: 1
       }}>
         {/* Step Progress Bar */}

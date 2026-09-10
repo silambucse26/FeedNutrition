@@ -73,7 +73,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 9'}</span>
+            <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 10'}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('steps.step_1') : 'BREED SELECTION'}</span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0f172a' }}>

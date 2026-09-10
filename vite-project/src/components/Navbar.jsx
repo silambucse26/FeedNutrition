@@ -157,65 +157,62 @@ export default function Navbar({
         gap: '8px'
       }}>
         {/* Brand Name */}
-        <div style={{ flexShrink: 0 }}>
-          <h1 style={{
-            fontSize: '1.2rem',
-            fontWeight: 900,
-            color: '#0f172a',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.1,
-            margin: 0,
-            whiteSpace: 'nowrap'
-          }}>
-            Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
-          </h1>
-          <p style={{ 
-            fontSize: '0.7rem', 
-            color: '#64748b', 
-            fontWeight: 600, 
-            margin: '2px 0 0',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '180px'
-          }}>
-            {t ? t('brand_tagline') : 'Cattle Nutrition & Advisory'}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div>
+            <h1 style={{
+              fontSize: '1.2rem',
+              fontWeight: 900,
+              color: '#0f172a',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.1,
+              margin: 0,
+              whiteSpace: 'nowrap'
+            }}>
+              Feed<span style={{ color: '#16a34a' }}>Nutrition AI</span>
+            </h1>
+            <p style={{ 
+              fontSize: '0.7rem', 
+              color: '#64748b', 
+              fontWeight: 600, 
+              margin: '2px 0 0',
+              whiteSpace: 'nowrap'
+            }}>
+              {t ? t('brand_tagline') : 'Cattle Nutrition & Advisory'}
+            </p>
+          </div>
         </div>
 
         {/* RIGHT CONTROLS: Location Pill + Detect Location + Language Selector */}
         <div className="nav-controls" style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '8px', 
-          flexWrap: 'wrap', 
-          justifyContent: 'flex-end'
+          gap: '6px', 
+          flexWrap: 'wrap'
         }}>
           
-          {/* Weather / Location Pill (With Truncation Ellipsis ...) */}
+          {/* Weather / Location Pill */}
           <button 
             type="button"
             className="nav-location-pill"
             onClick={() => setShowManualModal(true)}
             title={locationText}
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #cbd5e1',
               borderRadius: '20px',
-              padding: '6px 10px',
-              fontSize: '0.8rem',
+              padding: '5px 10px',
+              fontSize: '0.78rem',
               cursor: 'pointer',
-              maxWidth: '200px',
               whiteSpace: 'nowrap'
             }}
           >
             <img 
               src="/location_pin.jpg" 
               alt="Pin" 
-              style={{ width: '18px', height: '18px', objectFit: 'contain', borderRadius: '3px', flexShrink: 0 }}
+              style={{ width: '16px', height: '16px', objectFit: 'contain', borderRadius: '3px', flexShrink: 0 }}
             />
 
             <span style={{ 
@@ -224,7 +221,7 @@ export default function Navbar({
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
               whiteSpace: 'nowrap',
-              maxWidth: '120px'
+              maxWidth: '90px'
             }}>
               {locationText}
             </span>
@@ -233,11 +230,11 @@ export default function Navbar({
               <>
                 <span style={{ color: '#cbd5e1', fontWeight: 300, flexShrink: 0 }}>|</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#0f172a', fontWeight: 800, flexShrink: 0 }}>
-                  <Thermometer size={14} color="#0f172a" />
+                  <Thermometer size={13} color="#0f172a" />
                   {weather.tempC !== undefined ? `${Math.round(weather.tempC)}°` : '--'}
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px', color: '#0f172a', fontWeight: 800, flexShrink: 0 }}>
-                  <Droplets size={14} color="#0f172a" />
+                  <Droplets size={13} color="#0f172a" />
                   {weather.humidity !== undefined ? `${weather.humidity}%` : '--'}
                 </span>
               </>
@@ -250,12 +247,12 @@ export default function Navbar({
             onClick={fetchWeatherByCoords}
             className="btn-primary"
             style={{ 
-              padding: '7px 14px', 
-              fontSize: '0.825rem', 
+              padding: '6px 12px', 
+              fontSize: '0.78rem', 
               borderRadius: '20px', 
               display: 'inline-flex', 
               alignItems: 'center', 
-              gap: '6px',
+              gap: '5px',
               flexShrink: 0,
               whiteSpace: 'nowrap'
             }}
@@ -263,7 +260,7 @@ export default function Navbar({
             <img 
               src="/location_pin.jpg" 
               alt="Pin" 
-              style={{ width: '15px', height: '15px', objectFit: 'contain', borderRadius: '3px' }} 
+              style={{ width: '14px', height: '14px', objectFit: 'contain', borderRadius: '2px' }} 
             />
             <span>{t ? t('detect_location') : 'Detect'}</span>
           </button>
@@ -274,15 +271,15 @@ export default function Navbar({
               type="button"
               onClick={() => setShowLangMenu(!showLangMenu)}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '6px 12px',
+                padding: '5px 10px',
                 borderRadius: '20px',
                 border: '1.5px solid #cbd5e1',
                 background: '#ffffff',
                 color: '#0f172a',
-                fontSize: '0.825rem',
+                fontSize: '0.78rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
