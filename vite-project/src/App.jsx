@@ -66,6 +66,7 @@ export default function App() {
   });
   const [loadingWeather, setLoadingWeather] = useState(false);
   const [weatherError, setWeatherError] = useState(null);
+  const [showIosLocationHelp, setShowIosLocationHelp] = useState(false);
 
   // App Step (1 to 6)
   const [currentStep, setCurrentStep] = useState(1);
@@ -247,24 +248,55 @@ export default function App() {
     return 'Clear';
   };
 
-  // Weather by coordinates with High Accuracy Geolocation & Reverse Geocoding
+  // Weather by coordinates with iOS Safari compatibility & multi-tier fallback
   const fetchWeatherByCoords = () => {
     if (!navigator.geolocation) {
-      setWeatherError('Geolocation not supported by your browser');
+      setWeatherError('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    const isIOS = typeof navigator !== 'undefined' && 
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isSecure = typeof window !== 'undefined' && (window.isSecureContext || isLocalhost);
+
+    if (!isSecure) {
+      const msg = isIOS
+        ? 'iOS Safari requires an HTTPS connection for live GPS location. Please search your city manually below.'
+        : 'Live location requires a secure HTTPS connection. Please search city manually.';
+      setWeatherError(msg);
+      setShowIosLocationHelp(true);
       return;
     }
 
     setLoadingWeather(true);
     setWeatherError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
+    const handleSuccess = async (pos) => {
+      try {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-          // 1. Precise Reverse Geocoding to get City / District / Town Name
-          let cityName = '';
+        // 1. Precise Reverse Geocoding to get City / District / Town Name
+        let cityName = '';
+        if (envApiKey) {
+          try {
+            const owGeoRes = await fetch(
+              `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${envApiKey}`
+            );
+            if (owGeoRes.ok) {
+              const owGeoData = await owGeoRes.json();
+              if (owGeoData && owGeoData.length > 0) {
+                cityName = owGeoData[0].name || '';
+              }
+            }
+          } catch (e) {
+            console.warn('OpenWeather reverse geocode fallback', e);
+          }
+        }
+
+        if (!cityName) {
           try {
             const geoRes = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
@@ -276,93 +308,122 @@ export default function App() {
           } catch (e) {
             console.warn('BigDataCloud reverse geocode fallback', e);
           }
-
-          if (!cityName) {
-            try {
-              const nomRes = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`
-              );
-              if (nomRes.ok) {
-                const nomData = await nomRes.json();
-                cityName = nomData.address?.city || nomData.address?.town || nomData.address?.village || nomData.address?.county || nomData.address?.state_district || nomData.name || '';
-              }
-            } catch (e) {
-              console.warn('Nominatim reverse geocode fallback', e);
-            }
-          }
-
-          // 2. Fetch Real-time Weather Data (OpenWeather if API key available, else Open-Meteo)
-          let temp = 28;
-          let rh = 65;
-          let condition = 'Clear';
-          let weatherFetched = false;
-
-          if (envApiKey) {
-            try {
-              const owRes = await fetch(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${envApiKey}`
-              );
-              if (owRes.ok) {
-                const owData = await owRes.json();
-                temp = Math.round(owData.main.temp);
-                rh = Math.round(owData.main.humidity);
-                condition = owData.weather[0]?.main || 'Clear';
-                if (!cityName) cityName = owData.name;
-                weatherFetched = true;
-              }
-            } catch (e) {
-              console.warn('OpenWeather fetch failed, trying Open-Meteo', e);
-            }
-          }
-
-          if (!weatherFetched) {
-            // Open-Meteo High Accuracy Real-time Weather (Free, No Key Required)
-            const omRes = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`
-            );
-            if (omRes.ok) {
-              const omData = await omRes.json();
-              if (omData.current) {
-                temp = Math.round(omData.current.temperature_2m);
-                rh = Math.round(omData.current.relative_humidity_2m);
-                condition = getWeatherConditionFromCode(omData.current.weather_code);
-                weatherFetched = true;
-              }
-            }
-          }
-
-          if (!cityName) {
-            cityName = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
-          }
-
-          const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
-          const weatherObj = {
-            city: cityName,
-            tempC: temp,
-            humidity: rh,
-            condition: condition,
-            thi: thiCalc,
-            lat,
-            lon
-          };
-
-          setWeather(weatherObj);
-          try {
-            localStorage.setItem('feednutrition_weather', JSON.stringify(weatherObj));
-          } catch (e) {}
-        } catch (err) {
-          console.error(err);
-          setWeatherError('Could not fetch location weather data.');
-        } finally {
-          setLoadingWeather(false);
         }
-      },
-      (err) => {
-        console.warn('Geolocation error / permission denied', err);
-        setWeatherError('Location access was denied or timed out. Please enter city manually.');
+
+        if (!cityName) {
+          try {
+            const nomRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`
+            );
+            if (nomRes.ok) {
+              const nomData = await nomRes.json();
+              cityName = nomData.address?.city || nomData.address?.town || nomData.address?.village || nomData.address?.county || nomData.address?.state_district || nomData.name || '';
+            }
+          } catch (e) {
+            console.warn('Nominatim reverse geocode fallback', e);
+          }
+        }
+
+        // 2. Fetch Real-time Weather Data (OpenWeather if API key available, else Open-Meteo)
+        let temp = 28;
+        let rh = 65;
+        let condition = 'Clear';
+        let weatherFetched = false;
+
+        if (envApiKey) {
+          try {
+            const owRes = await fetch(
+              `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${envApiKey}`
+            );
+            if (owRes.ok) {
+              const owData = await owRes.json();
+              temp = Math.round(owData.main.temp);
+              rh = Math.round(owData.main.humidity);
+              condition = owData.weather[0]?.main || 'Clear';
+              if (!cityName) cityName = owData.name;
+              weatherFetched = true;
+            }
+          } catch (e) {
+            console.warn('OpenWeather fetch failed, trying Open-Meteo', e);
+          }
+        }
+
+        if (!weatherFetched) {
+          // Open-Meteo High Accuracy Real-time Weather (Free, No Key Required)
+          const omRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`
+          );
+          if (omRes.ok) {
+            const omData = await omRes.json();
+            if (omData.current) {
+              temp = Math.round(omData.current.temperature_2m);
+              rh = Math.round(omData.current.relative_humidity_2m);
+              condition = getWeatherConditionFromCode(omData.current.weather_code);
+              weatherFetched = true;
+            }
+          }
+        }
+
+        if (!cityName) {
+          cityName = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+        }
+
+        const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
+        const weatherObj = {
+          city: cityName,
+          tempC: temp,
+          humidity: rh,
+          condition: condition,
+          thi: thiCalc,
+          lat,
+          lon
+        };
+
+        setWeather(weatherObj);
+        setShowIosLocationHelp(false);
+        try {
+          localStorage.setItem('feednutrition_weather', JSON.stringify(weatherObj));
+        } catch (e) {}
+      } catch (err) {
+        console.error(err);
+        setWeatherError('Could not fetch location weather data. Please search city manually.');
+      } finally {
         setLoadingWeather(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      }
+    };
+
+    const handleInitialFailure = (err) => {
+      console.warn('High-accuracy geolocation failed, attempting cell/network fallback', err);
+      // If code === 1 (PERMISSION_DENIED), user or iOS settings denied permission
+      if (err.code === 1) {
+        if (isIOS) {
+          setShowIosLocationHelp(true);
+        }
+        setWeatherError('Location access was denied on iOS. Tap for Settings guide or enter city manually.');
+        setLoadingWeather(false);
+        return;
+      }
+
+      // Tier 2: Low-accuracy fallback with cached position (fast and reliable on iOS Safari)
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        (fallbackErr) => {
+          console.warn('Fallback geolocation failed', fallbackErr);
+          if (fallbackErr.code === 1 && isIOS) {
+            setShowIosLocationHelp(true);
+          }
+          setWeatherError('Could not acquire GPS position. Please pick your city manually.');
+          setLoadingWeather(false);
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    };
+
+    // Tier 1: Try high accuracy first with 6s timeout
+    navigator.geolocation.getCurrentPosition(
+      handleSuccess,
+      handleInitialFailure,
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
     );
   };
 
@@ -537,11 +598,16 @@ export default function App() {
       {/* Top Navbar with Language Selector */}
       <Navbar 
         weather={weather}
+        loadingWeather={loadingWeather}
+        weatherError={weatherError}
+        clearWeatherError={() => setWeatherError(null)}
         fetchWeatherByCoords={fetchWeatherByCoords}
         fetchWeatherByCity={fetchWeatherByCity}
         envApiKey={envApiKey}
         currentLang={currentLang}
         setLang={setLanguage}
+        showIosLocationHelp={showIosLocationHelp}
+        setShowIosLocationHelp={setShowIosLocationHelp}
         t={t}
       />
 

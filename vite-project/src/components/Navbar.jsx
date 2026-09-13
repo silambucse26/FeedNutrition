@@ -1,13 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Thermometer, Droplets, Search, X, Globe, ChevronDown } from 'lucide-react';
+import { Thermometer, Droplets, Search, X, Globe, ChevronDown, Loader2, Smartphone, AlertCircle, HelpCircle, Check } from 'lucide-react';
 
 export default function Navbar({ 
   weather, 
+  loadingWeather,
+  weatherError,
+  clearWeatherError,
   fetchWeatherByCoords, 
   fetchWeatherByCity, 
   envApiKey,
   currentLang = 'en',
   setLang,
+  showIosLocationHelp,
+  setShowIosLocationHelp,
   t
 }) {
   const [showManualModal, setShowManualModal] = useState(false);
@@ -249,7 +254,9 @@ export default function Navbar({
           <button 
             type="button"
             onClick={fetchWeatherByCoords}
+            disabled={loadingWeather}
             className="btn-primary"
+            title="Detect live GPS location on iOS / mobile / PC"
             style={{ 
               padding: '5px 10px', 
               fontSize: '0.75rem', 
@@ -258,15 +265,21 @@ export default function Navbar({
               alignItems: 'center', 
               gap: '4px',
               flexShrink: 0,
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              opacity: loadingWeather ? 0.75 : 1,
+              cursor: loadingWeather ? 'wait' : 'pointer'
             }}
           >
-            <img 
-              src="/location_pin.jpg" 
-              alt="Pin" 
-              style={{ width: '13px', height: '13px', objectFit: 'contain', borderRadius: '2px' }} 
-            />
-            <span>{t ? t('detect_location') : 'Detect'}</span>
+            {loadingWeather ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <img 
+                src="/location_pin.jpg" 
+                alt="Pin" 
+                style={{ width: '13px', height: '13px', objectFit: 'contain', borderRadius: '2px' }} 
+              />
+            )}
+            <span>{loadingWeather ? (t ? t('locating') : 'Locating...') : (t ? t('detect_location') : 'Detect')}</span>
           </button>
 
           {/* LANGUAGE SELECTOR DROPDOWN (6 Languages) */}
@@ -473,6 +486,178 @@ export default function Navbar({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* iOS Safari Help link inside modal */}
+            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed #e2e8f0', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowManualModal(false);
+                  if (setShowIosLocationHelp) setShowIosLocationHelp(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0284c7',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <Smartphone size={14} />
+                <span>Need help with iOS Safari location access?</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IOS SAFARI LOCATION ACCESS GUIDE MODAL */}
+      {showIosLocationHelp && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 350
+        }}>
+          <div 
+            className="wg-card animate-fade-in" 
+            style={{ maxWidth: '500px', width: '100%', padding: '24px', position: 'relative', borderRadius: '18px' }}
+          >
+            <button 
+              onClick={() => {
+                if (setShowIosLocationHelp) setShowIosLocationHelp(false);
+                if (clearWeatherError) clearWeatherError();
+              }}
+              style={{ position: 'absolute', right: '16px', top: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ background: '#f0fdf4', padding: '8px', borderRadius: '12px', border: '1.5px solid #86efac' }}>
+                <Smartphone size={22} color="#16a34a" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: 900, margin: 0 }}>
+                  iOS Safari Location Access
+                </h3>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                  How to enable live GPS location on iPhone & iPad
+                </span>
+              </div>
+            </div>
+
+            {weatherError && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fca5a5',
+                borderRadius: '10px',
+                padding: '10px 12px',
+                fontSize: '0.78rem',
+                color: '#991b1b',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <span>{weatherError}</span>
+              </div>
+            )}
+
+            {/* 3 Step Instructions for iOS Safari */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '14px',
+              marginBottom: '18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              fontSize: '0.82rem',
+              color: '#1e293b'
+            }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <span style={{ background: '#16a34a', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 900, flexShrink: 0 }}>1</span>
+                <span>Open <strong>Settings</strong> on your iPhone or iPad.</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <span style={{ background: '#16a34a', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 900, flexShrink: 0 }}>2</span>
+                <span>Tap <strong>Privacy & Security</strong> → <strong>Location Services</strong> (ensure it is toggled <strong>ON</strong>).</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <span style={{ background: '#16a34a', color: '#fff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 900, flexShrink: 0 }}>3</span>
+                <span>Scroll down and tap <strong>Safari Websites</strong> → Select <strong>"While Using the App"</strong> and turn <strong>ON</strong> "Precise Location".</span>
+              </div>
+            </div>
+
+            {/* Quick Region Selector as Instant Fallback */}
+            <div style={{ marginBottom: '18px' }}>
+              <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                Or select your dairy region instantly:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {popularCities.map(city => (
+                  <button
+                    key={city}
+                    onClick={() => {
+                      handlePickCity(city);
+                      if (setShowIosLocationHelp) setShowIosLocationHelp(false);
+                      if (clearWeatherError) clearWeatherError();
+                    }}
+                    style={{
+                      padding: '5px 11px',
+                      fontSize: '0.78rem',
+                      borderRadius: '16px',
+                      border: '1.5px solid #cbd5e1',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (setShowIosLocationHelp) setShowIosLocationHelp(false);
+                  setShowManualModal(true);
+                }}
+                className="btn-secondary"
+                style={{ flex: 1, padding: '10px', fontSize: '0.82rem' }}
+              >
+                Search City
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (setShowIosLocationHelp) setShowIosLocationHelp(false);
+                  fetchWeatherByCoords();
+                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: '10px', fontSize: '0.82rem' }}
+              >
+                Try Detect Again
+              </button>
             </div>
           </div>
         </div>
