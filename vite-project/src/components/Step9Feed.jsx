@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, Plus, Trash2, X, Sparkles, Edit3 } from 'lucide-react';
+import { translateFeed, translateCategory, translateTerm } from '../utils/tamilTranslations';
 
 // Recommended quick quantity chips by category
 const QUICK_QTY_MAP = {
@@ -15,6 +16,7 @@ export default function Step9Feed({
   acknowledgeStep,
   onNext,
   onPrev,
+  currentLang = 'ta',
   t,
 }) {
   const [activeTab, setActiveTab] = useState('All');
@@ -165,17 +167,19 @@ export default function Step9Feed({
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{ background: '#16a34a', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              STEP 5 OF 6
+              {currentLang === 'ta' ? 'படி 5 / 6' : 'STEP 5 OF 6'}
             </span>
             <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 800 }}>
-              FARM FEED INVENTORY
+              {currentLang === 'ta' ? 'பண்ணை தீவன இருப்பு' : 'FARM FEED INVENTORY'}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#14532d' }}>
-            Feed & Fodder Availability
+            {currentLang === 'ta' ? 'தீவனம் & பசுந்தீவன இருப்பு' : 'Feed & Fodder Availability'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#334155' }}>
-            Tap each feed you have on your farm. When you select a feed, enter <strong>how much you have right now (kg/day)</strong>.
+            {currentLang === 'ta' 
+              ? 'உங்கள் பண்ணையில் உள்ள ஒவ்வொரு தீவனத்தையும் தொட்டுத் தேர்வு செய்து, தினசரி கிடைக்கும் அளவை (கிலோ/நாள்) உள்ளிடவும்.' 
+              : 'Tap each feed you have on your farm. When you select a feed, enter how much you have right now (kg/day).'}
           </p>
         </div>
 
@@ -204,19 +208,19 @@ export default function Step9Feed({
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
-              FEEDS SELECTED
+              {currentLang === 'ta' ? 'தேர்வு செய்த தீவனங்கள்' : 'FEEDS SELECTED'}
             </span>
             <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#16a34a' }}>
-              {selectedFeeds.length} Feeds
+              {selectedFeeds.length} {currentLang === 'ta' ? 'வகைகள்' : 'Feeds'}
             </span>
           </div>
           <div style={{ width: '1px', height: '30px', background: '#e2e8f0' }} />
           <div>
             <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
-              TOTAL INVENTORY
+              {currentLang === 'ta' ? 'மொத்த தீவன இருப்பு' : 'TOTAL INVENTORY'}
             </span>
             <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
-              {totalKg.toFixed(0)} kg/day
+              {totalKg.toFixed(0)} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}
             </span>
           </div>
         </div>
@@ -227,7 +231,7 @@ export default function Step9Feed({
           className="btn-secondary"
           style={{ padding: '6px 14px', fontSize: '0.78rem', fontWeight: 800 }}
         >
-          + Add Custom Feed
+          {currentLang === 'ta' ? '+ புதிய தீவனம் சேர்' : '+ Add Custom Feed'}
         </button>
       </div>
 
@@ -241,6 +245,9 @@ export default function Step9Feed({
       }}>
         {categories.map(cat => {
           const isSel = activeTab === cat;
+          const displayLabel = cat === 'All' 
+            ? (currentLang === 'ta' ? 'அனைத்தும்' : 'All') 
+            : translateCategory(cat, currentLang);
           return (
             <button
               key={cat}
@@ -259,7 +266,7 @@ export default function Step9Feed({
                 transition: 'all 0.15s ease',
               }}
             >
-              {cat}
+              {displayLabel}
             </button>
           );
         })}
@@ -305,7 +312,7 @@ export default function Step9Feed({
                     padding: '2px 7px',
                     borderRadius: '10px',
                   }}>
-                    {item.category}
+                    {translateCategory(item.category, currentLang)}
                   </span>
 
                   {isSelected && (
@@ -331,9 +338,14 @@ export default function Step9Feed({
                   )}
                 </div>
 
-                <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 8px' }}>
-                  {item.name}
+                <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
+                  {translateFeed(item.name, currentLang)}
                 </div>
+                {currentLang === 'ta' && (
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '6px' }}>
+                    {item.name}
+                  </div>
+                )}
               </div>
 
               {/* Status / Quantity Pill */}
@@ -349,10 +361,10 @@ export default function Step9Feed({
                     padding: '5px 10px',
                   }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#15803d' }}>
-                      ✓ {selected.quantityKg} kg/day
+                      ✓ {selected.quantityKg} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}
                     </span>
                     <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <Edit3 size={11} /> edit
+                      <Edit3 size={11} /> {currentLang === 'ta' ? 'மாற்று' : 'edit'}
                     </span>
                   </div>
                 ) : (
@@ -366,7 +378,7 @@ export default function Step9Feed({
                     textAlign: 'center',
                     border: '1px dashed #cbd5e1',
                   }}>
-                    + Tap to add quantity
+                    {currentLang === 'ta' ? '+ அளவை உள்ளிட தொடவும்' : '+ Tap to add quantity'}
                   </div>
                 )}
               </div>
@@ -374,6 +386,7 @@ export default function Step9Feed({
           );
         })}
       </div>
+
 
       {/* POPUP MODAL: ASK QUANTITY IMMEDIATELY ON SELECTION */}
       {editingFeed && (
@@ -406,10 +419,12 @@ export default function Step9Feed({
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
               <div>
                 <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#16a34a', background: '#f0fdf4', padding: '2px 8px', borderRadius: '10px' }}>
-                  {editingFeed.category}
+                  {translateCategory(editingFeed.category, currentLang)}
                 </span>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 0' }}>
-                  How much {editingFeed.name} do you have right now?
+                  {currentLang === 'ta' 
+                    ? `தற்போது உங்களிடம் உள்ள ${translateFeed(editingFeed.name, currentLang)} தீவனத்தின் அளவு எவ்வளவு?` 
+                    : `How much ${editingFeed.name} do you have right now?`}
                 </h3>
               </div>
               <button
@@ -422,7 +437,9 @@ export default function Step9Feed({
             </div>
 
             <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 16px' }}>
-              Enter the total amount (kg/day) available on your farm.
+              {currentLang === 'ta' 
+                ? 'உங்கள் பண்ணையில் தினசரி கிடைக்கும் மொத்த அளவை (கிலோ/நாள்) உள்ளிடவும்.' 
+                : 'Enter the total amount (kg/day) available on your farm.'}
             </p>
 
             {/* Stepper + Input */}
@@ -478,7 +495,7 @@ export default function Step9Feed({
                   }}
                 />
                 <span style={{ fontSize: '1rem', fontWeight: 800, color: '#16a34a' }}>
-                  kg/day
+                  {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}
                 </span>
               </div>
 
@@ -507,7 +524,7 @@ export default function Step9Feed({
             {/* Quick-tap Quantity Chips */}
             <div style={{ marginBottom: '20px' }}>
               <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 700, display: 'block', marginBottom: '6px' }}>
-                Quick select kg:
+                {currentLang === 'ta' ? 'விரைவுத் தேர்வு (கிலோ):' : 'Quick select kg:'}
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {(QUICK_QTY_MAP[editingFeed.category] || [5, 10, 15, 20, 25, 30]).map(q => (
@@ -527,7 +544,7 @@ export default function Step9Feed({
                       transition: 'all 0.12s ease',
                     }}
                   >
-                    {q} kg
+                    {q} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                   </button>
                 ))}
               </div>
@@ -541,7 +558,7 @@ export default function Step9Feed({
                 className="btn-secondary"
                 style={{ flex: 1, padding: '10px', fontSize: '0.82rem' }}
               >
-                Cancel
+                {currentLang === 'ta' ? 'ரத்து' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -550,7 +567,7 @@ export default function Step9Feed({
                 style={{ flex: 2, padding: '10px', fontSize: '0.85rem' }}
               >
                 <Check size={16} />
-                <span>Save to Farm Inventory</span>
+                <span>{currentLang === 'ta' ? 'பண்ணை இருப்பில் சேமி' : 'Save to Farm Inventory'}</span>
               </button>
             </div>
           </div>
@@ -574,10 +591,12 @@ export default function Step9Feed({
           padding: '16px',
         }}>
           <form onSubmit={handleAddCustomFeed} style={{ background: '#ffffff', borderRadius: '18px', padding: '24px', maxWidth: '400px', width: '100%' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 12px' }}>Add Custom Feed</h3>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 12px' }}>
+              {currentLang === 'ta' ? 'புதிய தீவனம் சேர்' : 'Add Custom Feed'}
+            </h3>
             <input
               type="text"
-              placeholder="Feed Name (e.g. Local Napier Hybrid)"
+              placeholder={currentLang === 'ta' ? 'தீவனப் பெயர் (எ.கா. நாட்டு நேப்பியர்)' : 'Feed Name (e.g. Local Napier Hybrid)'}
               value={customName}
               onChange={e => setCustomName(e.target.value)}
               required
@@ -588,14 +607,18 @@ export default function Step9Feed({
               onChange={e => setCustomCategory(e.target.value)}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', marginBottom: '16px' }}
             >
-              <option value="Green Fodder">Green Fodder</option>
-              <option value="Dry Fodder">Dry Fodder</option>
-              <option value="Concentrates">Concentrates</option>
-              <option value="Unconventional">Unconventional</option>
+              <option value="Green Fodder">{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green Fodder'}</option>
+              <option value="Dry Fodder">{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry Fodder'}</option>
+              <option value="Concentrates">{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrates'}</option>
+              <option value="Unconventional">{currentLang === 'ta' ? 'மரபுசாராத் தீவனம்' : 'Unconventional'}</option>
             </select>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" onClick={() => setShowCustomModal(false)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-              <button type="submit" className="btn-primary" style={{ flex: 1 }}>Add</button>
+              <button type="button" onClick={() => setShowCustomModal(false)} className="btn-secondary" style={{ flex: 1 }}>
+                {currentLang === 'ta' ? 'ரத்து' : 'Cancel'}
+              </button>
+              <button type="submit" className="btn-primary" style={{ flex: 1 }}>
+                {currentLang === 'ta' ? 'சேர்' : 'Add'}
+              </button>
             </div>
           </form>
         </div>
@@ -605,14 +628,15 @@ export default function Step9Feed({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
-          <span>Previous</span>
+          <span>{currentLang === 'ta' ? 'முந்தையது (தண்ணீர்)' : 'Previous'}</span>
         </button>
 
         <button onClick={handleProceed} className="btn-primary">
-          <span>Next: Review & Results</span>
+          <span>{currentLang === 'ta' ? 'அடுத்த படி: இறுதிச் சுருக்கம் & கணக்கீடு' : 'Next: Review & Results'}</span>
           <ChevronRight size={18} />
         </button>
       </div>
+
 
     </div>
   );

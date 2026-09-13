@@ -17,12 +17,12 @@ export default function App() {
   const rawKey = import.meta.env.VITE_OPENWEATHER_API_KEY || '';
   const envApiKey = rawKey.replace(/['"]/g, '').trim();
 
-  // Multi-Language state ('en', 'ta', 'hi', 'te', 'kn', 'mr')
+  // Multi-Language state ('en', 'ta', 'hi', 'te', 'kn', 'mr') - default to 'ta' (Tamil)
   const [currentLang, setCurrentLang] = useState(() => {
     try {
-      return localStorage.getItem('feednutrition_lang') || 'en';
+      return localStorage.getItem('feednutrition_lang') || 'ta';
     } catch {
-      return 'en';
+      return 'ta';
     }
   });
 
@@ -626,6 +626,7 @@ export default function App() {
           getStepStatus={getStepStatus}
           isStepValid={isStepValid}
           isWeatherComplete={isWeatherComplete}
+          currentLang={currentLang}
           t={t}
         />
 
@@ -639,6 +640,7 @@ export default function App() {
               acknowledgeStep(1);
               setCurrentStep(2);
             }}
+            currentLang={currentLang}
             t={t}
           />
         )}
@@ -668,6 +670,7 @@ export default function App() {
               setCurrentStep(3);
             }}
             onPrev={() => setCurrentStep(1)}
+            currentLang={currentLang}
             t={t}
           />
         )}
@@ -690,6 +693,7 @@ export default function App() {
               setCurrentStep(4);
             }}
             onPrev={() => setCurrentStep(2)}
+            currentLang={currentLang}
             t={t}
           />
         )}
@@ -709,6 +713,7 @@ export default function App() {
               setCurrentStep(5);
             }}
             onPrev={() => setCurrentStep(3)}
+            currentLang={currentLang}
             t={t}
           />
         )}
@@ -724,6 +729,7 @@ export default function App() {
               setCurrentStep(6);
             }}
             onPrev={() => setCurrentStep(4)}
+            currentLang={currentLang}
             t={t}
           />
         )}
@@ -764,6 +770,7 @@ export default function App() {
               else setCurrentStep(6); // Review
             }}
             onResetAllData={handleResetAllData}
+            currentLang={currentLang}
             t={t}
           />
         )}

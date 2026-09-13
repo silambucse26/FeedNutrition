@@ -7,6 +7,7 @@ export default function StepProgress({
   getStepStatus, 
   isStepValid, 
   isWeatherComplete,
+  currentLang,
   t 
 }) {
   const steps = [
@@ -21,8 +22,8 @@ export default function StepProgress({
   const currentStepObj = steps[currentStep - 1] || steps[0];
   const currentTitle = (t ? t(`steps.${currentStepObj.key}`) : null) || currentStepObj?.fallback;
 
-  // Translated step counter e.g. "STEP 2 OF 6"
-  const stepOfLabel = `STEP ${currentStep} OF 6`;
+  // Translated step counter e.g. "STEP 2 OF 6" or "படி 2 / 6"
+  const stepOfLabel = currentLang === 'ta' ? `படி ${currentStep} / 6` : `STEP ${currentStep} OF 6`;
 
   const locationWarning = t ? t('location_required') : 'Location & Temp/RH Required';
   const legendGreen  = t ? t('legend_green')  : 'Completed';

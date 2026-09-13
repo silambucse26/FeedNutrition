@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronRight, Check } from 'lucide-react';
 import { CATTLE_BREEDS, getBreedName } from '../data/breeds';
 
-export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnteredAnimals = [], onNext, t }) {
+export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnteredAnimals = [], onNext, t, currentLang }) {
   // Empty search term by default so ALL breeds are displayed on load!
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -50,14 +50,14 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 6'}</span>
+            <span className="badge-green">{currentLang === 'ta' ? 'படி 1 / 6' : (t ? t('step1.badge') : 'STEP 1 OF 6')}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('steps.step_1') : 'BREED SELECTION'}</span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0f172a' }}>
             {t ? t('step1.title') : 'Select Cattle or Buffalo Breed'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#475569' }}>
-            Click any breed card to select and proceed directly to Cattle Herd Management.
+            {currentLang === 'ta' ? 'மாடு அல்லது எருமை இனத்தை கிளிக் செய்து கால்நடை மந்தை மேலாண்மைக்கு செல்லவும்.' : (t ? t('step1.subtitle') : 'Click any breed card to select and proceed directly to Cattle Herd Management.')}
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
           </div>
 
           <button onClick={onNext} className="btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
-            <span>Proceed to Step 2 (Cattle Herd)</span>
+            <span>{currentLang === 'ta' ? 'படி 2-க்குச் செல்லவும் (மாடுகள் மந்தை)' : 'Proceed to Step 2 (Cattle Herd)'}</span>
             <ChevronRight size={16} />
           </button>
         </div>

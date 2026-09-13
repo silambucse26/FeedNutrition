@@ -8,6 +8,7 @@ import {
 import { getBreedName } from '../data/breeds';
 import { checkBackendStatus, runNutritionCalculation } from '../services/nutritionApi';
 import { downloadInputDataPDF, downloadFeedingReportPDF } from '../utils/pdfExportService';
+import { translateFeed, translateCategory, translateTerm } from '../utils/tamilTranslations';
 
 // Helper to strip any unexpected emoji characters from text
 const stripEmojis = (str) => {
@@ -208,6 +209,7 @@ export default function Step10Review({
   selectedFeeds = [], 
   onEditStep,
   onResetAllData,
+  currentLang = 'ta',
   t
 }) {
   // Python Backend Calculation State
@@ -680,7 +682,7 @@ export default function Step10Review({
       {/* ============================================================ */}
       <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <FileText size={20} color="#16a34a" />
-        <span>Recorded Farm Data Review (Steps 1 to 9)</span>
+        <span>{currentLang === 'ta' ? 'பதிவு செய்யப்பட்ட பண்ணைத் தரவுகள் (படிகள் 1 முதல் 9)' : 'Recorded Farm Data Review (Steps 1 to 9)'}</span>
       </h3>
 
       {/* Top Two Summary Cards: Climate & Breed */}
@@ -690,36 +692,36 @@ export default function Step10Review({
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h4 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('step10.section_weather') : '1. Farm Location & Climate'}
+              {currentLang === 'ta' ? '1. பண்ணை இருப்பிடம் & காலநிலை' : (t ? t('step10.section_weather') : '1. Farm Location & Climate')}
             </h4>
             <button onClick={() => onEditStep(1)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {t ? t('edit') : 'Edit'}
+              {currentLang === 'ta' ? 'மாற்றுக' : (t ? t('edit') : 'Edit')}
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-              <span style={{ color: '#64748b' }}>{t ? t('step10.location') : 'Location:'}</span>
-              <strong style={{ color: weather?.city ? '#0f172a' : '#dc2626' }}>{weather?.city || 'No location detected'}</strong>
+              <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'இருப்பிடம்:' : (t ? t('step10.location') : 'Location:')}</span>
+              <strong style={{ color: weather?.city ? '#0f172a' : '#dc2626' }}>{weather?.city || (currentLang === 'ta' ? 'இருப்பிடம் கண்டறியப்படவில்லை' : 'No location detected')}</strong>
             </div>
 
             {weather?.tempC !== undefined && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-                <span style={{ color: '#64748b' }}>{t ? t('step10.temperature') : 'Air Temperature:'}</span>
+                <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'சுற்றுச்சூழல் வெப்பநிலை:' : (t ? t('step10.temperature') : 'Air Temperature:')}</span>
                 <strong style={{ color: '#16a34a' }}>{Math.round(weather.tempC)}°C</strong>
               </div>
             )}
 
             {weather?.humidity !== undefined && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-                <span style={{ color: '#64748b' }}>{t ? t('step10.humidity') : 'Relative Humidity:'}</span>
+                <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'ஈரப்பதம்:' : (t ? t('step10.humidity') : 'Relative Humidity:')}</span>
                 <strong style={{ color: '#0d9488' }}>{weather.humidity}%</strong>
               </div>
             )}
 
             {weather?.thi !== undefined && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-                <span style={{ color: '#64748b' }}>THI Climate Index:</span>
+                <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'THI காலநிலை குறியீடு:' : 'THI Climate Index:'}</span>
                 <strong style={{ color: weather.thi > 78 ? '#dc2626' : '#16a34a' }}>{weather.thi}</strong>
               </div>
             )}
@@ -730,10 +732,10 @@ export default function Step10Review({
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h4 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('steps.step_1') : '2. Breed Selection'}
+              {currentLang === 'ta' ? '2. இனத் தேர்வு' : (t ? t('steps.step_1') : '2. Breed Selection')}
             </h4>
             <button onClick={() => onEditStep(1)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {t ? t('edit') : 'Edit'}
+              {currentLang === 'ta' ? 'மாற்றுக' : (t ? t('edit') : 'Edit')}
             </button>
           </div>
 
@@ -755,7 +757,7 @@ export default function Step10Review({
               </div>
             </div>
           ) : (
-            <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No breed selected.</p>
+            <p style={{ color: '#64748b', fontSize: '0.85rem' }}>{currentLang === 'ta' ? 'இனம் எதுவும் தேர்ந்தெடுக்கப்படவில்லை.' : 'No breed selected.'}</p>
           )}
         </div>
 
@@ -766,13 +768,13 @@ export default function Step10Review({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
             <h4 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('step10.section_animals') : '3. Cattle Herd Inventory'}
+              {currentLang === 'ta' ? '3. மந்தை மாடுகள் விவரம்' : (t ? t('step10.section_animals') : '3. Cattle Herd Inventory')}
             </h4>
             <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '2px 0 0' }}>
-              Only showing categories and live weights recorded on this farm.
+              {currentLang === 'ta' ? 'இப்பண்ணையில் பதிவு செய்யப்பட்ட மாடுகளின் எண்ணிக்கை மற்றும் எடைகள் மட்டுமே காட்டப்படுகின்றன.' : 'Only showing categories and live weights recorded on this farm.'}
             </p>
           </div>
-          <span className="badge-green">{totalCattleCount} {t ? t('step10.head') : 'head total'}</span>
+          <span className="badge-green">{totalCattleCount} {currentLang === 'ta' ? 'மொத்த மாடுகள்' : (t ? t('step10.head') : 'head total')}</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -786,10 +788,10 @@ export default function Step10Review({
                   style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #16a34a', flexShrink: 0 }} 
                 />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
-                  {t ? t('step7.heifers') : 'Heifers'}: {totalHeifers > 0 ? `${totalHeifers} head` : '0 head (None on farm)'}
+                  {currentLang === 'ta' ? 'கிடாரிகள்' : (t ? t('step7.heifers') : 'Heifers')}: {totalHeifers > 0 ? `${totalHeifers} ${currentLang === 'ta' ? 'மாடுகள்' : 'head'}` : (currentLang === 'ta' ? '0 மாடுகள் (பண்ணையில் இல்லை)' : '0 head (None on farm)')}
                 </strong>
               </div>
-              <button onClick={() => onEditStep(2)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
+              <button onClick={() => onEditStep(2)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>{currentLang === 'ta' ? 'மாற்றுக' : 'Edit'}</button>
             </div>
             {totalHeifers > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
@@ -798,9 +800,9 @@ export default function Step10Review({
                     key={h.id || i}
                     imgSrc="/cattle_art/cartoon_heifer.jpg"
                     number={i + 1}
-                    title={`Heifer #${i + 1}`}
+                    title={currentLang === 'ta' ? `கிடாரி #${i + 1}` : `Heifer #${i + 1}`}
                     weight={h.weight}
-                    details={[`${h.ageMonths || 18} mo`]}
+                    details={[`${h.ageMonths || 18} ${currentLang === 'ta' ? 'மாதம்' : 'mo'}`]}
                     color="#16a34a"
                     onClick={() => onEditStep(2)}
                     isMissing={!h.weight || Number(h.weight) <= 0}
@@ -809,7 +811,7 @@ export default function Step10Review({
               </div>
             ) : (
               <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
-                No heifers recorded
+                {currentLang === 'ta' ? 'கிடாரிகள் எதுவும் பதிவு செய்யப்படவில்லை' : 'No heifers recorded'}
               </div>
             )}
           </div>
@@ -824,24 +826,24 @@ export default function Step10Review({
                   style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #d97706', flexShrink: 0 }} 
                 />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
-                  {t ? t('step7.pregnant') : 'Pregnant Cows'}: {totalPregnant > 0 ? `${totalPregnant} head` : '0 head (None on farm)'}
+                  {currentLang === 'ta' ? 'சினை மாடுகள்' : (t ? t('step7.pregnant') : 'Pregnant Cows')}: {totalPregnant > 0 ? `${totalPregnant} ${currentLang === 'ta' ? 'மாடுகள்' : 'head'}` : (currentLang === 'ta' ? '0 மாடுகள் (பண்ணையில் இல்லை)' : '0 head (None on farm)')}
                 </strong>
               </div>
-              <button onClick={() => onEditStep(3)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
+              <button onClick={() => onEditStep(3)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>{currentLang === 'ta' ? 'மாற்றுக' : 'Edit'}</button>
             </div>
 
             {totalFirstTime > 0 && (
               <div style={{ marginBottom: '10px', marginTop: '8px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>First-Time Pregnant ({totalFirstTime}):</span>
+                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? `முதல் முறை சினை (${totalFirstTime}):` : `First-Time Pregnant (${totalFirstTime}):`}</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
                   {firstTimeCattle.map((c, i) => (
                     <CattleSummaryBadge 
                       key={c.id || i}
                       imgSrc="/cattle_art/cartoon_pregnant.jpg"
                       number={i + 1}
-                      title={`1st-Preg #${i + 1}`}
+                      title={currentLang === 'ta' ? `1-ம் சினை #${i + 1}` : `1st-Preg #${i + 1}`}
                       weight={c.weight}
-                      details={[`${c.pregDays || 150}d preg`]}
+                      details={[`${c.pregDays || 150}${currentLang === 'ta' ? ' நாள் சினை' : 'd preg'}`]}
                       color="#d97706"
                       onClick={() => onEditStep(3)}
                       isMissing={!c.weight || Number(c.weight) <= 0}
@@ -853,16 +855,16 @@ export default function Step10Review({
 
             {totalRepeat > 0 && (
               <div style={{ marginTop: '8px' }}>
-                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>Repeat / Multiparous ({totalRepeat}):</span>
+                <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? `மறு சினை மாடுகள் (${totalRepeat}):` : `Repeat / Multiparous (${totalRepeat}):`}</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
                   {repeatCattle.map((c, i) => (
                     <CattleSummaryBadge 
                       key={c.id || i}
                       imgSrc="/cattle_art/cartoon_pregnant.jpg"
                       number={i + 1}
-                      title={`Repeat #${i + 1}`}
+                      title={currentLang === 'ta' ? `மறுசினை #${i + 1}` : `Repeat #${i + 1}`}
                       weight={c.weight}
-                      details={[`${c.pregDays || 210}d preg`]}
+                      details={[`${c.pregDays || 210}${currentLang === 'ta' ? ' நாள் சினை' : 'd preg'}`]}
                       color="#b45309"
                       onClick={() => onEditStep(3)}
                       isMissing={!c.weight || Number(c.weight) <= 0}
@@ -874,7 +876,7 @@ export default function Step10Review({
 
             {totalPregnant === 0 && (
               <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
-                No pregnant cattle recorded
+                {currentLang === 'ta' ? 'சினை மாடுகள் எதுவும் பதிவு செய்யப்படவில்லை' : 'No pregnant cattle recorded'}
               </div>
             )}
           </div>
@@ -889,10 +891,10 @@ export default function Step10Review({
                   style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #0284c7', flexShrink: 0 }} 
                 />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
-                  {t ? t('step7.lactating') : 'Lactating Cows'}: {totalLactating > 0 ? `${totalLactating} head (${totalDailyMilkL} L/day total)` : '0 head (None on farm)'}
+                  {currentLang === 'ta' ? 'கறவை மாடுகள்' : (t ? t('step7.lactating') : 'Lactating Cows')}: {totalLactating > 0 ? `${totalLactating} ${currentLang === 'ta' ? 'மாடுகள்' : 'head'} (${totalDailyMilkL} ${currentLang === 'ta' ? 'லிட்டர்/நாள்' : 'L/day total'})` : (currentLang === 'ta' ? '0 மாடுகள் (பண்ணையில் இல்லை)' : '0 head (None on farm)')}
                 </strong>
               </div>
-              <button onClick={() => onEditStep(4)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
+              <button onClick={() => onEditStep(4)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>{currentLang === 'ta' ? 'மாற்றுக' : 'Edit'}</button>
             </div>
             {totalLactating > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
@@ -901,12 +903,12 @@ export default function Step10Review({
                     key={c.id || i}
                     imgSrc="/cattle_art/cartoon_lactating.jpg"
                     number={i + 1}
-                    title={`Cow #${i + 1} (${(c.lactationType === 'first_lactation' || c.isFirstLactation) ? '1st Lact' : '2nd+'})`}
+                    title={currentLang === 'ta' ? `கறவை மாடு #${i + 1} (${(c.lactationType === 'first_lactation' || c.isFirstLactation) ? '1-ம் ஈத்து' : '2+ ஈத்து'})` : `Cow #${i + 1} (${(c.lactationType === 'first_lactation' || c.isFirstLactation) ? '1st Lact' : '2nd+'})`}
                     weight={c.weight}
                     details={[
-                      `${c.milkYield || 10} L/d`,
-                      `${c.milkFat || 4.2}% Fat`,
-                      c.stage === 'early' ? 'Early (<100d)' : c.stage === 'late' ? 'Late (>200d)' : 'Mid (100–200d)'
+                      `${c.milkYield || 10} ${currentLang === 'ta' ? 'லி/நாள்' : 'L/d'}`,
+                      `${c.milkFat || 4.2}% ${currentLang === 'ta' ? 'கொழுப்பு' : 'Fat'}`,
+                      c.stage === 'early' ? (currentLang === 'ta' ? 'துவக்க பருவம் (<100 நாள்)' : 'Early (<100d)') : c.stage === 'late' ? (currentLang === 'ta' ? 'பிந்தைய பருவம் (>200 நாள்)' : 'Late (>200d)') : (currentLang === 'ta' ? 'நடுப்பருவம் (100–200 நாள்)' : 'Mid (100–200d)')
                     ]}
                     color="#0284c7"
                     onClick={() => onEditStep(4)}
@@ -916,7 +918,7 @@ export default function Step10Review({
               </div>
             ) : (
               <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
-                No lactating cattle recorded
+                {currentLang === 'ta' ? 'கறவை மாடுகள் எதுவும் பதிவு செய்யப்படவில்லை' : 'No lactating cattle recorded'}
               </div>
             )}
           </div>
@@ -931,10 +933,10 @@ export default function Step10Review({
                   style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #9333ea', flexShrink: 0 }} 
                 />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
-                  {t ? t('step7.dry') : 'Dry Cows'}: {totalDry > 0 ? `${totalDry} head` : '0 head (None on farm)'}
+                  {currentLang === 'ta' ? 'வறண்ட மாடுகள்' : (t ? t('step7.dry') : 'Dry Cows')}: {totalDry > 0 ? `${totalDry} ${currentLang === 'ta' ? 'மாடுகள்' : 'head'}` : (currentLang === 'ta' ? '0 மாடுகள் (பண்ணையில் இல்லை)' : '0 head (None on farm)')}
                 </strong>
               </div>
-              <button onClick={() => onEditStep(5)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
+              <button onClick={() => onEditStep(5)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>{currentLang === 'ta' ? 'மாற்றுக' : 'Edit'}</button>
             </div>
             {totalDry > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
@@ -943,9 +945,9 @@ export default function Step10Review({
                     key={c.id || i}
                     imgSrc="/cattle_art/cartoon_dry_cow.jpg"
                     number={i + 1}
-                    title={`Dry Cow #${i + 1}`}
+                    title={currentLang === 'ta' ? `வறண்ட மாடு #${i + 1}` : `Dry Cow #${i + 1}`}
                     weight={c.weight}
-                    details={[`${c.dryDays || 60}d dry`]}
+                    details={[`${c.dryDays || 60} ${currentLang === 'ta' ? 'நாள் வறட்சி' : 'd dry'}`]}
                     color="#9333ea"
                     onClick={() => onEditStep(5)}
                     isMissing={!c.weight || Number(c.weight) <= 0}
@@ -954,7 +956,7 @@ export default function Step10Review({
               </div>
             ) : (
               <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
-                No dry cows recorded
+                {currentLang === 'ta' ? 'வறண்ட மாடுகள் எதுவும் பதிவு செய்யப்படவில்லை' : 'No dry cows recorded'}
               </div>
             )}
           </div>
@@ -969,10 +971,10 @@ export default function Step10Review({
                   style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #dc2626', flexShrink: 0 }} 
                 />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
-                  {t ? t('step7.bulls') : 'Bulls'}: {totalBulls > 0 ? `${totalBulls} head` : '0 head (None on farm)'}
+                  {currentLang === 'ta' ? 'காளைகள்' : (t ? t('step7.bulls') : 'Bulls')}: {totalBulls > 0 ? `${totalBulls} ${currentLang === 'ta' ? 'மாடுகள்' : 'head'}` : (currentLang === 'ta' ? '0 மாடுகள் (பண்ணையில் இல்லை)' : '0 head (None on farm)')}
                 </strong>
               </div>
-              <button onClick={() => onEditStep(6)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
+              <button onClick={() => onEditStep(6)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>{currentLang === 'ta' ? 'மாற்றுக' : 'Edit'}</button>
             </div>
             {totalBulls > 0 ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
@@ -981,9 +983,9 @@ export default function Step10Review({
                     key={b.id || i}
                     imgSrc="/cattle_art/cartoon_bull.jpg"
                     number={i + 1}
-                    title={`Bull #${i + 1}`}
+                    title={currentLang === 'ta' ? `காளை #${i + 1}` : `Bull #${i + 1}`}
                     weight={b.weight}
-                    details={[`${b.purpose || 'Breeding Bull'}`]}
+                    details={[`${b.purpose || (currentLang === 'ta' ? 'இனப்பெருக்கக் காளை' : 'Breeding Bull')}`]}
                     color="#dc2626"
                     onClick={() => onEditStep(6)}
                     isMissing={!b.weight || Number(b.weight) <= 0}
@@ -992,7 +994,7 @@ export default function Step10Review({
               </div>
             ) : (
               <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px', fontStyle: 'italic' }}>
-                No bulls recorded
+                {currentLang === 'ta' ? 'காளைகள் எதுவும் பதிவு செய்யப்படவில்லை' : 'No bulls recorded'}
               </div>
             )}
           </div>
@@ -1006,10 +1008,10 @@ export default function Step10Review({
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h4 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('step10.section_grazing') : '4. Grazing System'}
+              {currentLang === 'ta' ? '4. மேய்ச்சல் முறை' : (t ? t('step10.section_grazing') : '4. Grazing System')}
             </h4>
             <button onClick={() => onEditStep(7)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {t ? t('edit') : 'Edit'}
+              {currentLang === 'ta' ? 'மாற்றுக' : (t ? t('edit') : 'Edit')}
             </button>
           </div>
 
@@ -1024,20 +1026,20 @@ export default function Step10Review({
                   const hrs = d.hours !== undefined && d.hours !== '' ? d.hours : (isStallFed ? 0 : 4);
                   const dist = Number(d.distance) || 0;
 
-                  const locBadge = isOutside ? 'Outside Farm' : isStallFed ? 'Stall-Fed' : 'Inside Farm';
+                  const locBadge = isOutside ? (currentLang === 'ta' ? 'பண்ணைக்கு வெளியே' : 'Outside Farm') : isStallFed ? (currentLang === 'ta' ? 'தொழுவப் பராமரிப்பு' : 'Stall-Fed') : (currentLang === 'ta' ? 'பண்ணைக்குள் மேய்ச்சல்' : 'Inside Farm');
                   const locColor = isOutside ? '#b45309' : isStallFed ? '#475569' : '#15803d';
                   const locBg = isOutside ? '#fef3c7' : isStallFed ? '#f1f5f9' : '#dcfce7';
 
                   return (
                     <div key={cat.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <strong style={{ color: '#0f172a' }}>{cat.label}</strong>
+                        <strong style={{ color: '#0f172a' }}>{translateTerm(cat.label, currentLang)}</strong>
                         <span style={{ fontSize: '0.72rem', fontWeight: 700, background: locBg, color: locColor, padding: '2px 8px', borderRadius: '6px' }}>
                           {locBadge}
                         </span>
                       </div>
                       <span style={{ color: '#0f172a', fontWeight: 700 }}>
-                        {isStallFed ? '0 hrs (Stall-fed)' : `${hrs} hrs/day`} {isOutside && dist > 0 ? `• ${dist} km walk` : ''}
+                        {isStallFed ? (currentLang === 'ta' ? '0 மணி (தொழுவம்)' : '0 hrs (Stall-fed)') : `${hrs} ${currentLang === 'ta' ? 'மணி/நாள்' : 'hrs/day'}`} {isOutside && dist > 0 ? `• ${dist} ${currentLang === 'ta' ? 'கி.மீ நடை' : 'km walk'}` : ''}
                       </span>
                     </div>
                   );
@@ -1046,7 +1048,7 @@ export default function Step10Review({
               })}
             </div>
           ) : (
-            <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>Standard zero-grazing recorded.</p>
+            <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>{currentLang === 'ta' ? 'மேய்ச்சல் இல்லா வழக்கமான தொழுவப் பராமரிப்பு பதிவு செய்யப்பட்டுள்ளது.' : 'Standard zero-grazing recorded.'}</p>
           )}
         </div>
 
@@ -1054,25 +1056,25 @@ export default function Step10Review({
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h4 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('5. Water Supply') : '5. Water Supply'}
+              {currentLang === 'ta' ? '5. குடிநீர் இருப்பு' : '5. Water Supply'}
             </h4>
             <button onClick={() => onEditStep(8)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {t ? t('edit') : 'Edit'}
+              {currentLang === 'ta' ? 'மாற்றுக' : (t ? t('edit') : 'Edit')}
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f0f9ff', borderRadius: '8px' }}>
-              <span style={{ color: '#0369a1' }}>Daily Volume:</span>
-              <strong style={{ color: '#0284c7' }}>{waterVolume} Litres / day</strong>
+              <span style={{ color: '#0369a1' }}>{currentLang === 'ta' ? 'தினசரி அளவு:' : 'Daily Volume:'}</span>
+              <strong style={{ color: '#0284c7' }}>{waterVolume} {currentLang === 'ta' ? 'லிட்டர் / நாள்' : 'Litres / day'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-              <span style={{ color: '#64748b' }}>Primary Source:</span>
-              <strong style={{ color: '#0f172a' }}>{waterSource || 'Not specified'}</strong>
+              <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'முக்கிய மூலம்:' : 'Primary Source:'}</span>
+              <strong style={{ color: '#0f172a' }}>{translateTerm(waterSource, currentLang) || (currentLang === 'ta' ? 'குறிப்பிடப்படவில்லை' : 'Not specified')}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '8px' }}>
-              <span style={{ color: '#64748b' }}>Water Quality:</span>
-              <strong style={{ color: '#16a34a' }}>{waterQuality || 'Good'}</strong>
+              <span style={{ color: '#64748b' }}>{currentLang === 'ta' ? 'தண்ணீர் தரம்:' : 'Water Quality:'}</span>
+              <strong style={{ color: '#16a34a' }}>{translateTerm(waterQuality, currentLang) || (currentLang === 'ta' ? 'நன்று' : 'Good')}</strong>
             </div>
           </div>
         </div>
@@ -1081,10 +1083,10 @@ export default function Step10Review({
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h4 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-              {t ? t('6. Feed Ingredients') : 'step10.section_feed'}
+              {currentLang === 'ta' ? '6. தீவனப் பொருட்கள்' : '6. Feed Ingredients'}
             </h4>
             <button onClick={() => onEditStep(9)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-              {t ? t('edit') : 'Edit'}
+              {currentLang === 'ta' ? 'மாற்றுக' : (t ? t('edit') : 'Edit')}
             </button>
           </div>
 
@@ -1092,13 +1094,13 @@ export default function Step10Review({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem' }}>
               {selectedFeeds.map((f, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: '#f8fafc', borderRadius: '6px' }}>
-                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{f.name}</span>
-                  <span style={{ color: '#16a34a', fontWeight: 700 }}>{f.quantityKg} kg/day ({f.category})</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{translateFeed(f.name, currentLang)}</span>
+                  <span style={{ color: '#16a34a', fontWeight: 700 }}>{f.quantityKg} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'} ({translateCategory(f.category, currentLang)})</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>No feed ingredients selected yet.</p>
+            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>{currentLang === 'ta' ? 'தீவனப் பொருட்கள் எதுவும் தேர்ந்தெடுக்கப்படவில்லை.' : 'No feed ingredients selected yet.'}</p>
           )}
         </div>
 
@@ -1400,7 +1402,13 @@ export default function Step10Review({
               }}
             >
               <RefreshCw size={18} className={calcLoading ? 'animate-spin' : ''} />
-              <span>{calcLoading ? 'Calculating Nutrition Values...' : calcResult ? 'Recalculate Nutrition Values' : 'Calculate Your Nutrition Values'}</span>
+              <span>
+                {calcLoading 
+                  ? (currentLang === 'ta' ? 'ஊட்டச்சத்து தேவைகள் கணக்கிடப்படுகிறது...' : 'Calculating Nutrition Values...') 
+                  : calcResult 
+                    ? (currentLang === 'ta' ? 'மீண்டும் ஊட்டச்சத்தைக் கணக்கிடுக' : 'Recalculate Nutrition Values') 
+                    : (currentLang === 'ta' ? 'தீவன ஊட்டச்சத்து தேவைகளைக் கணக்கிடுக' : 'Calculate Your Nutrition Values')}
+              </span>
             </button>
           </div>
         )}
@@ -1411,7 +1419,7 @@ export default function Step10Review({
             <AlertCircle size={24} style={{ flexShrink: 0, color: '#d97706', marginTop: '2px' }} />
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                <strong>Python Backend is currently not responding.</strong>
+                <strong>{currentLang === 'ta' ? 'பைத்தான் சர்வர் தற்போது பதிலளிக்கவில்லை.' : 'Python Backend is currently not responding.'}</strong>
                 <button
                   onClick={async () => {
                     setCheckingBackend(true);
@@ -1430,11 +1438,11 @@ export default function Step10Review({
                     cursor: 'pointer'
                   }}
                 >
-                  {checkingBackend ? 'Retrying...' : '🔄 Retry Connection'}
+                  {checkingBackend ? (currentLang === 'ta' ? 'இணைக்கப்படுகிறது...' : 'Retrying...') : (currentLang === 'ta' ? '🔄 மீண்டும் இணைக்க' : '🔄 Retry Connection')}
                 </button>
               </div>
               <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#78350f', lineHeight: 1.5 }}>
-                • <strong>If deployed on Vercel:</strong> Ensure <code>VITE_API_BASE_URL</code> is set to <code>https://feednutrition.onrender.com</code> in your Vercel project's Environment Variables. Render free-tier can take <strong>up to 50 seconds</strong> to wake — click Retry after waiting.<br />
+                • <strong>If deployed on Vercel:</strong> Ensure <code>VITE_API_BASE_URL</code> is set to <code>https://feednutrition.onrender.com</code> in your Vercel project's Environment Variables.<br />
                 • <strong>If running locally:</strong> Open a terminal inside the <code>backend/</code> folder and run: <br />
                 <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>uvicorn main:app --reload --port 8000</code>
               </div>
@@ -1445,7 +1453,7 @@ export default function Step10Review({
         {/* Calculation Error Notice */}
         {calcError && (
           <div style={{ padding: '12px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '10px', color: '#991b1b', fontSize: '0.85rem', marginTop: '16px' }}>
-            <strong>Calculation Notice:</strong> {calcError}
+            <strong>{currentLang === 'ta' ? 'கணக்கீட்டுக் குறிப்பு:' : 'Calculation Notice:'}</strong> {calcError}
           </div>
         )}
 
@@ -1466,10 +1474,12 @@ export default function Step10Review({
               <div style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '14px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
                   <h3 style={{ fontSize: '1.5rem', color: '#15803d', fontWeight: 900, margin: '0 0 4px' }}>
-                    My Farm Feeding Report
+                    {currentLang === 'ta' ? 'எனது பண்ணை தீவன அறிக்கை' : 'My Farm Feeding Report'}
                   </h3>
                   <h4 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-                    {weather?.city ? `${weather.city} Dairy Farm` : 'MOOPOSHAQ Farm'}
+                    {weather?.city 
+                      ? (currentLang === 'ta' ? `${weather.city} பால் பண்ணை` : `${weather.city} Dairy Farm`) 
+                      : (currentLang === 'ta' ? 'மூபோஷாக் பால் பண்ணை' : 'MOOPOSHAQ Farm')}
                   </h4>
                 </div>
 
@@ -1502,7 +1512,7 @@ export default function Step10Review({
                     title="Download complete herd feeding calculation in colorful PDF format"
                   >
                     <Download size={16} />
-                    <span>Download Report (PDF)</span>
+                    <span>{currentLang === 'ta' ? 'அறிக்கையைப் பதிவிறக்கு (PDF)' : 'Download Report (PDF)'}</span>
                   </button>
 
                   <button
@@ -1542,7 +1552,7 @@ export default function Step10Review({
                     title="Download recorded farm inputs in colorful PDF format"
                   >
                     <FileText size={15} color="#0284c7" />
-                    <span>Download Inputs (PDF)</span>
+                    <span>{currentLang === 'ta' ? 'உள்ளீடுகளைப் பதிவிறக்கு (PDF)' : 'Download Inputs (PDF)'}</span>
                   </button>
                 </div>
               </div>
@@ -1567,13 +1577,16 @@ export default function Step10Review({
                 />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Cattle Reference &amp; Genetic Baseline
+                    {currentLang === 'ta' ? 'மாடுகள் குறிப்பு & மரபியல் அடிப்படை' : 'Cattle Reference & Genetic Baseline'}
                   </div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
-                    {calcResult.breed?.name || selectedBreed?.name || 'Dairy Cattle'}
+                    {calcResult.breed?.name || selectedBreed?.name || (currentLang === 'ta' ? 'கறவை மாடுகள்' : 'Dairy Cattle')}
                   </div>
                   <div style={{ fontSize: '0.825rem', color: '#475569', marginTop: '2px' }}>
-                    Mature Cow Weight Target: <strong>{selectedBreed?.avgWeightCow || 450} kg</strong> • Reference Baseline: <strong>{selectedBreed?.avgMilkYield || '10–12'} L/day</strong> ({selectedBreed?.fatPct || '4.0'}% fat)
+                    {currentLang === 'ta' ? 'முதிர்ந்த பசு எடை இலக்கு: ' : 'Mature Cow Weight Target: '}
+                    <strong>{selectedBreed?.avgWeightCow || 450} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong> • 
+                    {currentLang === 'ta' ? ' அடிப்படை பால் அளவு: ' : ' Reference Baseline: '}
+                    <strong>{selectedBreed?.avgMilkYield || '10–12'} {currentLang === 'ta' ? 'லி/நாள்' : 'L/day'}</strong> ({selectedBreed?.fatPct || '4.0'}% {currentLang === 'ta' ? 'கொழுப்பு' : 'fat'})
                   </div>
                 </div>
               </div>
@@ -1585,22 +1598,22 @@ export default function Step10Review({
                                (totalHerdWeightKg > 0 ? (totalHerdWeightKg * 0.026).toFixed(1) : '0');
                 return (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', fontSize: '0.88rem', color: '#1e293b' }}>
-                    <div><strong>Breed:</strong> <span style={{ color: '#16a34a', fontWeight: 800 }}>{calcResult.breed?.name || selectedBreed?.name}</span></div>
-                    <div><strong>Total cattle:</strong> <span style={{ fontWeight: 800 }}>{totalCattleCount} Head</span></div>
-                    <div><strong>Total herd weight:</strong> <span style={{ fontWeight: 800 }}>{totalHerdWeightKg.toLocaleString()} kg</span></div>
-                    <div><strong>Milk production:</strong> <span style={{ color: '#0284c7', fontWeight: 800 }}>{totalDailyMilkL} L/day</span></div>
-                    <div><strong>Dry-matter required:</strong> <span style={{ fontWeight: 800, color: '#15803d' }}>{dmiVal} kg/day</span></div>
+                    <div><strong>{currentLang === 'ta' ? 'இனம்:' : 'Breed:'}</strong> <span style={{ color: '#16a34a', fontWeight: 800 }}>{calcResult.breed?.name || selectedBreed?.name}</span></div>
+                    <div><strong>{currentLang === 'ta' ? 'மொத்த மாடுகள்:' : 'Total cattle:'}</strong> <span style={{ fontWeight: 800 }}>{totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : 'Head'}</span></div>
+                    <div><strong>{currentLang === 'ta' ? 'மந்தையின் மொத்த எடை:' : 'Total herd weight:'}</strong> <span style={{ fontWeight: 800 }}>{totalHerdWeightKg.toLocaleString()} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</span></div>
+                    <div><strong>{currentLang === 'ta' ? 'பால் உற்பத்தி:' : 'Milk production:'}</strong> <span style={{ color: '#0284c7', fontWeight: 800 }}>{totalDailyMilkL} {currentLang === 'ta' ? 'லிட்டர்/நாள்' : 'L/day'}</span></div>
+                    <div><strong>{currentLang === 'ta' ? 'தேவையான உலர் சத்து (DMI):' : 'Dry-matter required:'}</strong> <span style={{ fontWeight: 800, color: '#15803d' }}>{dmiVal} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}</span></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Thermometer size={16} color="#d97706" />
-                      <span><strong>Temperature:</strong> {Math.round(weather?.tempC || 33)}°C</span>
+                      <span><strong>{currentLang === 'ta' ? 'வெப்பநிலை:' : 'Temperature:'}</strong> {Math.round(weather?.tempC || 33)}°C</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Droplets size={16} color="#0284c7" />
-                      <span><strong>Humidity:</strong> {weather?.humidity || 69}%</span>
+                      <span><strong>{currentLang === 'ta' ? 'ஈரப்பதம்:' : 'Humidity:'}</strong> {weather?.humidity || 69}%</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Droplet size={16} color="#0284c7" />
-                      <span><strong>Water available:</strong> {waterVolume} L/day</span>
+                      <span><strong>{currentLang === 'ta' ? 'குடிநீர் இருப்பு:' : 'Water available:'}</strong> {waterVolume} {currentLang === 'ta' ? 'லிட்டர்/நாள்' : 'L/day'}</span>
                     </div>
                   </div>
                 );
@@ -1612,20 +1625,21 @@ export default function Step10Review({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Wheat size={22} color="#15803d" />
-                  <span>Today's Feed Recommendation &amp; Practical Action Plan</span>
+                  <span>{currentLang === 'ta' ? 'இன்றைய தீவனப் பரிந்துரை & நடைமுறை செயல் திட்டம்' : "Today's Feed Recommendation & Practical Action Plan"}</span>
                 </h4>
               </div>
               <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0 0 10px', fontWeight: 600 }}>
-                Selected farm feeds inventory:
+                {currentLang === 'ta' ? 'தேர்வு செய்யப்பட்ட பண்ணை தீவன இருப்பு:' : 'Selected farm feeds inventory:'}
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }}>
                 {selectedFeeds.map((f, i) => (
                   <span key={i} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <Leaf size={14} color="#16a34a" />
-                    <span>{f.name}</span>
+                    <span>{translateFeed(f.name, currentLang)}</span>
                   </span>
                 ))}
               </div>
+
 
               {/* SIMPLE PLAIN-ENGLISH FEEDING GUIDE */}
               {(() => {
@@ -1664,12 +1678,14 @@ export default function Step10Review({
                       <span style={{ fontSize: '1.75rem' }}>{isAllOk ? <CheckCircle2 size={24} color="#16a34a" /> : <AlertTriangle size={24} color="#d97706" />}</span>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: isAllOk ? '#166534' : '#92400e' }}>
-                          {isAllOk ? 'All Okay! Feeding Plan for Today' : 'Today\'s Feeding Advice (Simple English Guide)'}
+                          {isAllOk 
+                            ? (currentLang === 'ta' ? 'அனைத்தும் சரி! இன்றைய தீவனத் திட்டம்' : 'All Okay! Feeding Plan for Today') 
+                            : (currentLang === 'ta' ? 'இன்றைய தீவன வழிகாட்டல் (விவசாயிகளுக்கான எளிய விளக்கம்)' : "Today's Feeding Advice (Simple English Guide)")}
                         </h4>
                         <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: isAllOk ? '#15803d' : '#b45309', fontWeight: 600 }}>
                           {isAllOk 
-                            ? 'All feed amounts match what your herd needs. Keep feeding as planned today!' 
-                            : 'Here is what you should increase or decrease today in simple words:'}
+                            ? (currentLang === 'ta' ? 'அனைத்து தீவன அளவுகளும் உங்கள் மந்தைக்குத் தேவையான அளவிற்கு சரியாக உள்ளன. இன்று திட்டமிட்டபடி தொடர்ந்து வழங்கவும்!' : 'All feed amounts match what your herd needs. Keep feeding as planned today!') 
+                            : (currentLang === 'ta' ? 'இன்று நீங்கள் எவற்றை அதிகரிக்க அல்லது குறைக்க வேண்டும் என்ற எளிய விவரம்:' : 'Here is what you should increase or decrease today in simple words:')}
                         </p>
                       </div>
                     </div>
@@ -1692,10 +1708,14 @@ export default function Step10Review({
                             flexWrap: 'wrap'
                           }}>
                             <span style={{ background: '#fee2e2', color: '#dc2626', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-                              FEED MORE TODAY
+                              {currentLang === 'ta' ? 'இன்று கூடுதலாக அளிக்க வேண்டும்' : 'FEED MORE TODAY'}
                             </span>
                             <span style={{ fontSize: '0.9rem', color: '#0f172a' }}>
-                              You should feed <strong>+{diffKg.toFixed(1)} kg more of {r.name}</strong> today (give <strong>{neededKg.toFixed(1)} kg total</strong>, currently at {userKg.toFixed(1)} kg).
+                              {currentLang === 'ta' ? (
+                                <>இன்று நீங்கள் <strong>+{diffKg.toFixed(1)} கிலோ கூடுதலாக {translateFeed(r.name, currentLang)}</strong> தீவனம் அளிக்க வேண்டும் (மொத்தம் <strong>{neededKg.toFixed(1)} கிலோ தேவை</strong>, தற்போது {userKg.toFixed(1)} கிலோ உள்ளது).</>
+                              ) : (
+                                <>You should feed <strong>+{diffKg.toFixed(1)} kg more of {r.name}</strong> today (give <strong>{neededKg.toFixed(1)} kg total</strong>, currently at {userKg.toFixed(1)} kg).</>
+                              )}
                             </span>
                           </div>
                         );
@@ -1718,10 +1738,14 @@ export default function Step10Review({
                             flexWrap: 'wrap'
                           }}>
                             <span style={{ background: '#dbeafe', color: '#1d4ed8', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-                              DECREASE THIS
+                              {currentLang === 'ta' ? 'அளவைக் குறைக்கலாம்' : 'DECREASE THIS'}
                             </span>
                             <span style={{ fontSize: '0.9rem', color: '#0f172a' }}>
-                              You can decrease <strong>{r.name}</strong> by <strong>{Math.abs(diffKg).toFixed(1)} kg</strong> today (give <strong>{neededKg.toFixed(1)} kg total</strong>, currently giving {userKg.toFixed(1)} kg).
+                              {currentLang === 'ta' ? (
+                                <>இன்று நீங்கள் <strong>{translateFeed(r.name, currentLang)}</strong> தீவனத்தை <strong>{Math.abs(diffKg).toFixed(1)} கிலோ குறைக்கலாம்</strong> (மொத்தம் <strong>{neededKg.toFixed(1)} கிலோ போதுமானது</strong>, தற்போது {userKg.toFixed(1)} கிலோ அளிக்கிறீர்கள்).</>
+                              ) : (
+                                <>You can decrease <strong>{r.name}</strong> by <strong>{Math.abs(diffKg).toFixed(1)} kg</strong> today (give <strong>{neededKg.toFixed(1)} kg total</strong>, currently giving {userKg.toFixed(1)} kg).</>
+                              )}
                             </span>
                           </div>
                         );
@@ -1742,16 +1766,20 @@ export default function Step10Review({
                             flexWrap: 'wrap'
                           }}>
                             <span style={{ background: '#dcfce7', color: '#15803d', fontWeight: 900, padding: '3px 8px', borderRadius: '6px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-                              ALL OKAY
+                              {currentLang === 'ta' ? 'சரியான அளவு' : 'ALL OKAY'}
                             </span>
                             <span style={{ fontSize: '0.875rem', color: '#334155' }}>
-                              <strong>{r.name}</strong> is just right ({userKg.toFixed(1)} kg). Keep giving this exact amount today.
+                              {currentLang === 'ta' ? (
+                                <><strong>{translateFeed(r.name, currentLang)}</strong> சரியான அளவில் உள்ளது ({userKg.toFixed(1)} கிலோ). இதே அளவைத் தொடரவும்.</>
+                              ) : (
+                                <><strong>{r.name}</strong> is just right ({userKg.toFixed(1)} kg). Keep giving this exact amount today.</>
+                              )}
                             </span>
                           </div>
                         );
                       })}
 
-                      {/* Water and minerals note in simple English */}
+                      {/* Water and minerals note in simple language */}
                       <div style={{
                         background: '#ffffff',
                         border: '1px solid #cbd5e1',
@@ -1764,10 +1792,11 @@ export default function Step10Review({
                         color: '#475569'
                       }}>
                         <div>
-                          <Droplets size={14} color="#0284c7" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /><strong>Water:</strong> Provide at least <strong>{waterVolume || 200} Litres</strong> of fresh clean drinking water today.
+                          <Droplets size={14} color="#0284c7" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+                          <strong>{currentLang === 'ta' ? 'குடிநீர்:' : 'Water:'}</strong> {currentLang === 'ta' ? <>இன்று குறைந்தது <strong>{waterVolume || 200} லிட்டர்</strong> சுத்தமான குடிநீர் வழங்கவும்.</> : <>Provide at least <strong>{waterVolume || 200} Litres</strong> of fresh clean drinking water today.</>}
                         </div>
                         <div>
-                          <strong>Minerals &amp; Salt:</strong> Add <strong>{calcResult.practicalFeedingReport?.mineralMixtureGrams || 250}g</strong> mineral mixture + <strong>{calcResult.practicalFeedingReport?.saltGrams || 150}g</strong> salt to today's ration.
+                          <strong>{currentLang === 'ta' ? 'தாது உப்பு & உப்பு:' : 'Minerals & Salt:'}</strong> {currentLang === 'ta' ? <>இன்றைய தீவனத்தில் <strong>{calcResult.practicalFeedingReport?.mineralMixtureGrams || 250} கிராம்</strong> தாது உப்புக் கலவை + <strong>{calcResult.practicalFeedingReport?.saltGrams || 150} கிராம்</strong> உப்பு சேர்த்து வழங்கவும்.</> : <>Add <strong>{calcResult.practicalFeedingReport?.mineralMixtureGrams || 250}g</strong> mineral mixture + <strong>{calcResult.practicalFeedingReport?.saltGrams || 150}g</strong> salt to today's ration.</>}
                         </div>
                       </div>
 
@@ -1776,7 +1805,7 @@ export default function Step10Review({
                 );
               })()}
 
-              {/* MOBILE FEED CARDS VIEW (Clean vertical cards for phones - no horizontal scrolling needed!) */}
+              {/* MOBILE FEED CARDS VIEW */}
               <div className="mobile-feed-cards" style={{ display: 'none', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 {calcResult.practicalFeedingReport?.todayRecommendations?.map((rec, i) => {
                   const userKg = rec.userProvidedKg !== undefined 
@@ -1797,32 +1826,32 @@ export default function Step10Review({
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
                         <div>
-                          <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>{stripEmojis(rec.name)}</strong>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{rec.category} • {rec.dmPct}% DM</span>
+                          <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block' }}>{translateFeed(stripEmojis(rec.name), currentLang)}</strong>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{translateCategory(rec.category, currentLang)} • {rec.dmPct}% {currentLang === 'ta' ? 'உலர்சத்து' : 'DM'}</span>
                         </div>
                         {isShortage ? (
                           <span style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #f87171', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                            +{diffKg.toFixed(1)} kg needed
+                            +{diffKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ தேவை' : 'kg needed'}
                           </span>
                         ) : isSurplus ? (
                           <span style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #93c5fd', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                            {Math.abs(diffKg).toFixed(1)} kg surplus
+                            {Math.abs(diffKg).toFixed(1)} {currentLang === 'ta' ? 'கிலோ உபரி' : 'kg surplus'}
                           </span>
                         ) : (
                           <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '3px 8px', borderRadius: '12px', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
-                            Covered
+                            {currentLang === 'ta' ? 'சரியான அளவு' : 'Covered'}
                           </span>
                         )}
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#f8fafc', padding: '8px 10px', borderRadius: '8px', fontSize: '0.8rem' }}>
                         <div>
-                          <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>You entered:</span>
-                          <strong style={{ color: '#1e293b' }}>{userKg > 0 ? `${userKg.toFixed(1)} kg/day` : '0.0 kg/day'}</strong>
+                          <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>{currentLang === 'ta' ? 'நீங்கள் அளிப்பது:' : 'You entered:'}</span>
+                          <strong style={{ color: '#1e293b' }}>{userKg > 0 ? `${userKg.toFixed(1)} ${currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}` : (currentLang === 'ta' ? '0.0 கிலோ/நாள்' : '0.0 kg/day')}</strong>
                         </div>
                         <div>
-                          <span style={{ color: '#15803d', fontSize: '0.72rem', display: 'block' }}>Herd needs:</span>
-                          <strong style={{ color: '#15803d', fontSize: '0.85rem' }}>{neededKg.toFixed(1)} kg/day</strong>
+                          <span style={{ color: '#15803d', fontSize: '0.72rem', display: 'block' }}>{currentLang === 'ta' ? 'மந்தைக்குத் தேவை:' : 'Herd needs:'}</span>
+                          <strong style={{ color: '#15803d', fontSize: '0.85rem' }}>{neededKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}</strong>
                         </div>
                       </div>
                     </div>
@@ -1845,19 +1874,23 @@ export default function Step10Review({
                       flexDirection: 'column',
                       gap: '6px'
                     }}>
-                      <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Total Fresh Trough Feed Today:</strong>
+                      <strong style={{ color: '#166534', fontSize: '0.9rem' }}>
+                        {currentLang === 'ta' ? 'இன்று தொட்டியில் கலந்து வைக்க வேண்டிய மொத்த தீவனம்:' : 'Total Fresh Trough Feed Today:'}
+                      </strong>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#475569' }}>Total Herd Needs:</span>
-                        <strong style={{ color: '#166534', fontSize: '1rem' }}>{totalFreshNeededKg.toFixed(1)} kg/day</strong>
+                        <span style={{ color: '#475569' }}>{currentLang === 'ta' ? 'மந்தையின் மொத்தத் தேவை:' : 'Total Herd Needs:'}</span>
+                        <strong style={{ color: '#166534', fontSize: '1rem' }}>{totalFreshNeededKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#475569' }}>Total You Provided:</span>
-                        <strong style={{ color: '#1e293b' }}>{totalUserProvidedKg.toFixed(1)} kg/day</strong>
+                        <span style={{ color: '#475569' }}>{currentLang === 'ta' ? 'நீங்கள் அளித்த மொத்த அளவு:' : 'Total You Provided:'}</span>
+                        <strong style={{ color: '#1e293b' }}>{totalUserProvidedKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ/நாள்' : 'kg/day'}</strong>
                       </div>
                       <div style={{ marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #bbf7d0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#475569' }}>Action:</span>
+                        <span style={{ color: '#475569' }}>{currentLang === 'ta' ? 'நடவடிக்கை:' : 'Action:'}</span>
                         <strong style={{ color: totalHerdDiffKg > 0.5 ? '#dc2626' : '#15803d' }}>
-                          {totalHerdDiffKg > 0.5 ? `+${totalHerdDiffKg.toFixed(1)} kg extra needed` : 'Balanced & Covered'}
+                          {totalHerdDiffKg > 0.5 
+                            ? (currentLang === 'ta' ? `+${totalHerdDiffKg.toFixed(1)} கிலோ கூடுதலாகத் தேவை` : `+${totalHerdDiffKg.toFixed(1)} kg extra needed`) 
+                            : (currentLang === 'ta' ? 'சமநிலையில் உள்ளது' : 'Balanced & Covered')}
                         </strong>
                       </div>
                     </div>
@@ -1870,11 +1903,11 @@ export default function Step10Review({
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                   <thead>
                     <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
-                      <th style={{ padding: '12px 14px' }}>Feed Ingredient</th>
-                      <th style={{ padding: '12px 14px' }}>Feed Type</th>
-                      <th style={{ padding: '12px 14px', background: '#f1f5f9', color: '#1e293b' }}>What You Put (Input)</th>
-                      <th style={{ padding: '12px 14px', background: '#f0fdf4', color: '#166534' }}>What Herd Needs (Recommendation)</th>
-                      <th style={{ padding: '12px 14px' }}>Shortage / Extra Feed You Need</th>
+                      <th style={{ padding: '12px 14px' }}>{currentLang === 'ta' ? 'தீவனப் பொருள்' : 'Feed Ingredient'}</th>
+                      <th style={{ padding: '12px 14px' }}>{currentLang === 'ta' ? 'தீவன வகை' : 'Feed Type'}</th>
+                      <th style={{ padding: '12px 14px', background: '#f1f5f9', color: '#1e293b' }}>{currentLang === 'ta' ? 'நீங்கள் இடும் தீவனம் (உள்ளீடு)' : 'What You Put (Input)'}</th>
+                      <th style={{ padding: '12px 14px', background: '#f0fdf4', color: '#166534' }}>{currentLang === 'ta' ? 'மந்தைக்குத் தேவையான பரிந்துரை' : 'What Herd Needs (Recommendation)'}</th>
+                      <th style={{ padding: '12px 14px' }}>{currentLang === 'ta' ? 'பற்றாக்குறை / கூடுதல் தேவை' : 'Shortage / Extra Feed You Need'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1891,16 +1924,16 @@ export default function Step10Review({
                       return (
                         <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                           <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
-                            {stripEmojis(rec.name)}
+                            {translateFeed(stripEmojis(rec.name), currentLang)}
                           </td>
                           <td style={{ padding: '12px 14px', color: '#64748b', fontSize: '0.825rem' }}>
-                            {rec.category} ({rec.dmPct}% DM)
+                            {translateCategory(rec.category, currentLang)} ({rec.dmPct}% {currentLang === 'ta' ? 'உலர்சத்து' : 'DM'})
                           </td>
                           <td style={{ padding: '12px 14px', color: '#0f172a', fontWeight: 800, background: '#f8fafc' }}>
-                            {userKg > 0 ? `${userKg.toFixed(1)} kg / day` : '0.0 kg / day'}
+                            {userKg > 0 ? `${userKg.toFixed(1)} ${currentLang === 'ta' ? 'கிலோ / நாள்' : 'kg / day'}` : (currentLang === 'ta' ? '0.0 கிலோ / நாள்' : '0.0 kg / day')}
                           </td>
                           <td style={{ padding: '12px 14px', color: '#15803d', fontWeight: 800, background: '#f0fdf4' }}>
-                            {neededKg.toFixed(1)} kg / day
+                            {neededKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ / நாள்' : 'kg / day'}
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             {isShortage ? (
@@ -1916,7 +1949,7 @@ export default function Step10Review({
                                 fontWeight: 800,
                                 fontSize: '0.825rem' 
                               }}>
-                                +{diffKg.toFixed(1)} kg extra needed
+                                +{diffKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ கூடுதலாகத் தேவை' : 'kg extra needed'}
                               </span>
                             ) : isSurplus ? (
                               <span style={{ 
@@ -1931,7 +1964,7 @@ export default function Step10Review({
                                 fontWeight: 800,
                                 fontSize: '0.825rem' 
                               }}>
-                                {Math.abs(diffKg).toFixed(1)} kg surplus
+                                {Math.abs(diffKg).toFixed(1)} {currentLang === 'ta' ? 'கிலோ உபரி' : 'kg surplus'}
                               </span>
                             ) : (
                               <span style={{ 
@@ -1946,7 +1979,7 @@ export default function Step10Review({
                                 fontWeight: 800,
                                 fontSize: '0.825rem' 
                               }}>
-                                Covered ({neededKg.toFixed(1)} kg)
+                                {currentLang === 'ta' ? `சமநிலையில் உள்ளது (${neededKg.toFixed(1)} கிலோ)` : `Covered (${neededKg.toFixed(1)} kg)`}
                               </span>
                             )}
                           </td>
@@ -1966,16 +1999,16 @@ export default function Step10Review({
                       return (
                         <tr style={{ borderBottom: '1px solid #d1fae5', background: '#f0fdf4' }}>
                           <td style={{ padding: '12px 14px', fontWeight: 800, color: '#065f46' }}>
-                            {displayName}
+                            {currentLang === 'ta' ? 'மேய்ச்சல் புல் (மதிப்பீடு)' : displayName}
                           </td>
                           <td style={{ padding: '12px 14px', color: '#047857', fontSize: '0.825rem' }}>
-                            Grazing Forage (22% DM · Estimated)
+                            {currentLang === 'ta' ? 'மேய்ச்சல் தீவனம் (22% உலர்சத்து · மதிப்பீடு)' : 'Grazing Forage (22% DM · Estimated)'}
                           </td>
                           <td style={{ padding: '12px 14px', color: '#065f46', fontWeight: 800, background: '#ecfdf5' }}>
-                            Grazing Access · Estimated
+                            {currentLang === 'ta' ? 'மேய்ச்சல் அனுமதி · மதிப்பீடு' : 'Grazing Access · Estimated'}
                           </td>
                           <td style={{ padding: '12px 14px', color: '#065f46', fontWeight: 800, background: '#d1fae5' }}>
-                            {pFresh.toFixed(1)} kg / day ({pDm.toFixed(2)} kg DM)
+                            {pFresh.toFixed(1)} {currentLang === 'ta' ? 'கிலோ / நாள்' : 'kg / day'} ({pDm.toFixed(2)} {currentLang === 'ta' ? 'கிலோ உலர்சத்து' : 'kg DM'})
                           </td>
                           <td style={{ padding: '12px 14px' }}>
                             <span style={{ 
@@ -1990,7 +2023,7 @@ export default function Step10Review({
                               fontWeight: 800,
                               fontSize: '0.825rem' 
                             }}>
-                              Covered by Grazing
+                              {currentLang === 'ta' ? 'மேய்ச்சல் மூலம் பெறப்படுகிறது' : 'Covered by Grazing'}
                             </span>
                           </td>
                         </tr>
@@ -2008,13 +2041,15 @@ export default function Step10Review({
                       return (
                         <tr style={{ borderBottom: '1.5px solid #cbd5e1', background: '#f0fdf4' }}>
                           <td colSpan={2} style={{ padding: '14px', fontWeight: 800, color: '#166534', fontSize: '0.95rem' }}>
-                            Total Trough Fresh Feed To Mix Today (Harvested: {troughDm.toFixed(2)} kg DM):
+                            {currentLang === 'ta' 
+                              ? `இன்று தொட்டியில் கலந்து வைக்க வேண்டிய மொத்த தீவனம் (உலர் சத்து: ${troughDm.toFixed(2)} கிலோ DMI):` 
+                              : `Total Trough Fresh Feed To Mix Today (Harvested: ${troughDm.toFixed(2)} kg DM):`}
                           </td>
                           <td style={{ padding: '14px', color: '#1e293b', fontWeight: 900, fontSize: '0.95rem', background: '#e2e8f0' }}>
-                            {totalUserProvidedKg.toFixed(1)} kg / day
+                            {totalUserProvidedKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ / நாள்' : 'kg / day'}
                           </td>
                           <td style={{ padding: '14px', color: '#166534', fontWeight: 900, fontSize: '1.05rem', background: '#dcfce7' }}>
-                            {totalFreshNeededKg.toFixed(1)} kg / day
+                            {totalFreshNeededKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ / நாள்' : 'kg / day'}
                           </td>
                           <td style={{ padding: '14px' }}>
                             {totalHerdDiffKg > 0.5 ? (
@@ -2030,7 +2065,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                +{totalHerdDiffKg.toFixed(1)} kg extra feed needed / day
+                                +{totalHerdDiffKg.toFixed(1)} {currentLang === 'ta' ? 'கிலோ கூடுதல் தீவனம் தேவை / நாள்' : 'kg extra feed needed / day'}
                               </span>
                             ) : totalHerdDiffKg < -0.5 ? (
                               <span style={{ 
@@ -2045,7 +2080,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                {Math.abs(totalHerdDiffKg).toFixed(1)} kg surplus
+                                {Math.abs(totalHerdDiffKg).toFixed(1)} {currentLang === 'ta' ? 'கிலோ உபரி' : 'kg surplus'}
                               </span>
                             ) : (
                               <span style={{ 
@@ -2060,7 +2095,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                100% Fully covered
+                                {currentLang === 'ta' ? '100% முழுமையாக நிறைவடைந்தது' : '100% Fully covered'}
                               </span>
                             )}
                           </td>
@@ -2068,7 +2103,7 @@ export default function Step10Review({
                       );
                     })()}
 
-                    {/* Total Herd DMI Balance Row (Problems 1 & 2: Dynamic status + Trough + Grazing current intake) */}
+                    {/* Total Herd DMI Balance Row */}
                     {(() => {
                       const recDmiTotal = Number(calcResult.practicalFeedingReport?.totalHerdDmiSuppliedKg || calcResult.practicalFeedingReport?.recommendedTotalDmKg) || 0;
                       const reqDmiTotal = Number(calcResult.practicalFeedingReport?.totalEstimatedDmiReqKg || calcResult.nutritionAnalysis?.dmiRequiredKg) || 0;
@@ -2091,18 +2126,20 @@ export default function Step10Review({
                           background: isDeficient ? '#fef2f2' : '#ecfdf5' 
                         }}>
                           <td colSpan={2} style={{ padding: '14px', fontWeight: 900, color: isDeficient ? '#991b1b' : '#065f46', fontSize: '0.95rem' }}>
-                            Total Herd Dry Matter Intake (Trough + Grazing):
+                            {currentLang === 'ta' ? 'மந்தையின் மொத்த உலர் சத்து உட்கொள்ளல் (தொட்டி + மேய்ச்சல்):' : 'Total Herd Dry Matter Intake (Trough + Grazing):'}
                           </td>
                           <td style={{ padding: '14px', color: '#1e293b', fontWeight: 900, fontSize: '0.95rem', background: '#e2e8f0' }}>
-                            <div>{currentTotalDm.toFixed(2)} kg DM / day</div>
+                            <div>{currentTotalDm.toFixed(2)} {currentLang === 'ta' ? 'கிலோ உலர்சத்து / நாள்' : 'kg DM / day'}</div>
                             {Number(calcResult.practicalFeedingReport?.totalPastureDmKg || 0) > 0 && (
                               <div style={{ fontSize: '0.74rem', color: '#475569', fontWeight: 600, marginTop: '2px' }}>
-                                Trough: {Number(calcResult.practicalFeedingReport?.currentFeedDmKg || 0).toFixed(1)}kg + Grazing: {Number(calcResult.practicalFeedingReport?.totalPastureDmKg || 0).toFixed(1)}kg (Est.)
+                                {currentLang === 'ta' 
+                                  ? `தொட்டி: ${Number(calcResult.practicalFeedingReport?.currentFeedDmKg || 0).toFixed(1)}கிலோ + மேய்ச்சல்: ${Number(calcResult.practicalFeedingReport?.totalPastureDmKg || 0).toFixed(1)}கிலோ (மதிப்பீடு)` 
+                                  : `Trough: ${Number(calcResult.practicalFeedingReport?.currentFeedDmKg || 0).toFixed(1)}kg + Grazing: ${Number(calcResult.practicalFeedingReport?.totalPastureDmKg || 0).toFixed(1)}kg (Est.)`}
                               </div>
                             )}
                           </td>
                           <td style={{ padding: '14px', color: isDeficient ? '#991b1b' : '#065f46', fontWeight: 900, fontSize: '1.05rem', background: isDeficient ? '#fee2e2' : '#d1fae5' }}>
-                            {recDmiTotal.toFixed(2)} kg DM / day
+                            {recDmiTotal.toFixed(2)} {currentLang === 'ta' ? 'கிலோ உலர்சத்து / நாள்' : 'kg DM / day'}
                           </td>
                           <td style={{ padding: '14px' }}>
                             {isBalanced ? (
@@ -2118,7 +2155,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                DMI Target Met ({recDmiTotal.toFixed(1)} / {reqDmiTotal.toFixed(1)} kg DM)
+                                {currentLang === 'ta' ? `DMI இலக்கு எட்டப்பட்டது (${recDmiTotal.toFixed(1)} / ${reqDmiTotal.toFixed(1)} கிலோ DM)` : `DMI Target Met (${recDmiTotal.toFixed(1)} / ${reqDmiTotal.toFixed(1)} kg DM)`}
                               </span>
                             ) : isDeficient ? (
                               <span style={{ 
@@ -2133,7 +2170,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                Deficient (-{shortfall} kg DM / Incomplete)
+                                {currentLang === 'ta' ? `பற்றாக்குறை (-${shortfall} கிலோ DM / முழுமையற்றது)` : `Deficient (-${shortfall} kg DM / Incomplete)`}
                               </span>
                             ) : (
                               <span style={{ 
@@ -2148,7 +2185,7 @@ export default function Step10Review({
                                 fontWeight: 900,
                                 fontSize: '0.85rem' 
                               }}>
-                                Surplus (+{surplus} kg DM excess)
+                                {currentLang === 'ta' ? `உபரி (+${surplus} கிலோ DM கூடுதல்)` : `Surplus (+${surplus} kg DM excess)`}
                               </span>
                             )}
                           </td>
@@ -2156,31 +2193,32 @@ export default function Step10Review({
                       );
                     })()}
 
+
                     {/* Minerals, Salt, and Water rows */}
                     <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>Mineral mixture (DCP / Calcite)</td>
-                      <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>Macro/Micro minerals</td>
-                      <td style={{ padding: '10px 14px', color: '#64748b', fontWeight: 700, background: '#f8fafc' }}>0 grams / day</td>
+                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>{currentLang === 'ta' ? 'தாது உப்புக் கலவை (DCP / Calcite)' : 'Mineral mixture (DCP / Calcite)'}</td>
+                      <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>{currentLang === 'ta' ? 'மேக்ரோ / மைக்ரோ தாதுக்கள்' : 'Macro/Micro minerals'}</td>
+                      <td style={{ padding: '10px 14px', color: '#64748b', fontWeight: 700, background: '#f8fafc' }}>{currentLang === 'ta' ? '0 கிராம் / நாள்' : '0 grams / day'}</td>
                       <td style={{ padding: '10px 14px', color: '#15803d', fontWeight: 800, background: '#f0fdf4' }}>
-                        {calcResult.practicalFeedingReport?.mineralMixtureGrams || 250} grams / day
+                        {calcResult.practicalFeedingReport?.mineralMixtureGrams || 250} {currentLang === 'ta' ? 'கிராம் / நாள்' : 'grams / day'}
                       </td>
                       <td style={{ padding: '10px 14px' }}>
                         <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde047', padding: '3px 8px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
-                          +{calcResult.practicalFeedingReport?.mineralMixtureGrams || 250} g needed
+                          +{calcResult.practicalFeedingReport?.mineralMixtureGrams || 250} {currentLang === 'ta' ? 'கி தேவை' : 'g needed'}
                         </span>
                       </td>
                     </tr>
 
                     <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>Common Iodized Salt</td>
-                      <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>Electrolytes & buffer</td>
-                      <td style={{ padding: '10px 14px', color: '#64748b', fontWeight: 700, background: '#f8fafc' }}>0 grams / day</td>
+                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>{currentLang === 'ta' ? 'அயோடைஸ்டு சாதாரண உப்பு' : 'Common Iodized Salt'}</td>
+                      <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>{currentLang === 'ta' ? 'எலக்ட்ரோலைட்டுகள் & அமில சமநிலை' : 'Electrolytes & buffer'}</td>
+                      <td style={{ padding: '10px 14px', color: '#64748b', fontWeight: 700, background: '#f8fafc' }}>{currentLang === 'ta' ? '0 கிராம் / நாள்' : '0 grams / day'}</td>
                       <td style={{ padding: '10px 14px', color: '#15803d', fontWeight: 800, background: '#f0fdf4' }}>
-                        {calcResult.practicalFeedingReport?.saltGrams || 150} grams / day
+                        {calcResult.practicalFeedingReport?.saltGrams || 150} {currentLang === 'ta' ? 'கிராம் / நாள்' : 'grams / day'}
                       </td>
                       <td style={{ padding: '10px 14px' }}>
                         <span style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde047', padding: '3px 8px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
-                          +{calcResult.practicalFeedingReport?.saltGrams || 150} g needed
+                          +{calcResult.practicalFeedingReport?.saltGrams || 150} {currentLang === 'ta' ? 'கி தேவை' : 'g needed'}
                         </span>
                       </td>
                     </tr>
@@ -2191,20 +2229,20 @@ export default function Step10Review({
                       const waterShortage = waterReq - waterAvail;
                       return (
                         <tr>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>Clean Drinking Water</td>
-                          <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>Ad-libitum in troughs</td>
-                          <td style={{ padding: '10px 14px', color: '#0f172a', fontWeight: 700, background: '#f8fafc' }}>{waterAvail} litres / day</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>{currentLang === 'ta' ? 'சுத்தமான குடிநீர்' : 'Clean Drinking Water'}</td>
+                          <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '0.825rem' }}>{currentLang === 'ta' ? 'தொட்டிகளில் தாராளமாக' : 'Ad-libitum in troughs'}</td>
+                          <td style={{ padding: '10px 14px', color: '#0f172a', fontWeight: 700, background: '#f8fafc' }}>{waterAvail} {currentLang === 'ta' ? 'லிட்டர் / நாள்' : 'litres / day'}</td>
                           <td style={{ padding: '10px 14px', color: '#0284c7', fontWeight: 800, background: '#f0f9ff' }}>
-                            {waterReq} litres / day
+                            {waterReq} {currentLang === 'ta' ? 'லிட்டர் / நாள்' : 'litres / day'}
                           </td>
                           <td style={{ padding: '10px 14px' }}>
                             {waterShortage > 0 ? (
                               <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', padding: '3px 8px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
-                                +{waterShortage} L shortage
+                                +{waterShortage} {currentLang === 'ta' ? 'லிட்டர் பற்றாக்குறை' : 'L shortage'}
                               </span>
                             ) : (
                               <span style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '3px 8px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700 }}>
-                                Adequate
+                                {currentLang === 'ta' ? 'போதுமானது' : 'Adequate'}
                               </span>
                             )}
                           </td>
@@ -2230,11 +2268,11 @@ export default function Step10Review({
               }}>
                 <Info size={18} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                  <strong>Farmer Quick Understanding:</strong>
+                  <strong>{currentLang === 'ta' ? 'விவசாயிகளுக்கான எளிய வழிகாட்டி:' : 'Farmer Quick Understanding:'}</strong>
                   <ul style={{ margin: '4px 0 0', paddingLeft: '18px', lineHeight: 1.5 }}>
-                    <li><strong>What You Put (Input):</strong> What you currently have or provide to the farm daily.</li>
-                    <li><strong>What Herd Needs (Recommendation):</strong> The total scientifically calculated feed your whole herd needs today.</li>
-                    <li><strong>Shortage / Extra Needed:</strong> The additional feed you need to bring or buy today so your cattle do not suffer health decline or milk drop.</li>
+                    <li><strong>{currentLang === 'ta' ? 'நீங்கள் இடும் தீவனம் (உள்ளீடு):' : 'What You Put (Input):'}</strong> {currentLang === 'ta' ? 'தற்போது பண்ணையில் தினசரி நீங்கள் கொடுக்கும் அல்லது இருப்பு வைத்துள்ள தீவனம்.' : 'What you currently have or provide to the farm daily.'}</li>
+                    <li><strong>{currentLang === 'ta' ? 'மந்தைக்குத் தேவையான பரிந்துரை:' : 'What Herd Needs (Recommendation):'}</strong> {currentLang === 'ta' ? 'உங்கள் ஒட்டுமொத்த மந்தைக்கும் இன்று தேவைப்படும் அறிவியல் பூர்வமான தீவன அளவு.' : 'The total scientifically calculated feed your whole herd needs today.'}</li>
+                    <li><strong>{currentLang === 'ta' ? 'பற்றாக்குறை / கூடுதல் தேவை:' : 'Shortage / Extra Needed:'}</strong> {currentLang === 'ta' ? 'மாடுகளின் உடல் எடை குறையாமலும் பால் உற்பத்தி குறையாமலும் இருக்க இன்று கூடுதலாக அளிக்க வேண்டிய தீவனம்.' : 'The additional feed you need to bring or buy today so your cattle do not suffer health decline or milk drop.'}</li>
                   </ul>
                 </div>
               </div>
@@ -2266,10 +2304,10 @@ export default function Step10Review({
                         <Activity size={22} color={textColor} style={{ flexShrink: 0 }} />
                         <div>
                           <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 800, color: textColor, opacity: 0.85, display: 'block' }}>
-                            Scientific Feeding Verdict
+                            {currentLang === 'ta' ? 'அறிவியல் ஊட்டச்சத்து தீர்ப்பு' : 'Scientific Feeding Verdict'}
                           </span>
                           <strong style={{ fontSize: '1.15rem', color: textColor }}>
-                            {status}
+                            {currentLang === 'ta' ? translateTerm(status, currentLang) : status}
                           </strong>
                         </div>
                       </div>
@@ -2282,13 +2320,13 @@ export default function Step10Review({
                         color: textColor,
                         border: `1px solid ${border}`
                       }}>
-                        {isInfeasible ? 'Safety Gate: REJECTED (INFEASIBLE)' : (safetyGate.passed ? 'Safety Gate: PASSED' : 'Safety Gate: ADJUSTMENT NEEDED')}
+                        {isInfeasible ? (currentLang === 'ta' ? 'பாதுகாப்பு சோதனை: நிராகரிக்கப்பட்டது (INFEASIBLE)' : 'Safety Gate: REJECTED (INFEASIBLE)') : (safetyGate.passed ? (currentLang === 'ta' ? 'பாதுகாப்பு சோதனை: தேர்ச்சி (PASSED)' : 'Safety Gate: PASSED') : (currentLang === 'ta' ? 'பாதுகாப்பு சோதனை: சரிசெய்தல் தேவை' : 'Safety Gate: ADJUSTMENT NEEDED'))}
                       </span>
                     </div>
 
                     <div style={{ marginTop: '8px', borderTop: `1px solid ${border}`, paddingTop: '10px' }}>
                       <p style={{ fontSize: '0.86rem', color: textColor, margin: '0 0 6px', fontWeight: 800 }}>
-                        {isWellBalanced ? 'Why is this ration approved?' : 'Identified Safety & Nutritional Flags:'}
+                        {isWellBalanced ? (currentLang === 'ta' ? 'இந்த தீவன முறை ஏன் அங்கீகரிக்கப்பட்டது?' : 'Why is this ration approved?') : (currentLang === 'ta' ? 'கண்டறியப்பட்ட ஊட்டச்சத்து எச்சரிக்கைகள்:' : 'Identified Safety & Nutritional Flags:')}
                       </p>
                       {safetyGate.failureReasons && safetyGate.failureReasons.length > 0 ? (
                         <ul style={{ margin: '4px 0 10px', paddingLeft: '20px', fontSize: '0.84rem', color: textColor, lineHeight: 1.6 }}>
@@ -2298,7 +2336,7 @@ export default function Step10Review({
                         </ul>
                       ) : (
                         <p style={{ fontSize: '0.84rem', color: textColor, margin: '0 0 8px', lineHeight: 1.5 }}>
-                          {overall.reason || 'All physiological and safety constraints (DMI, Energy, Protein, NDF, Ca, P, and water) are balanced.'}
+                          {overall.reason || (currentLang === 'ta' ? 'அனைத்து உடலியல் மற்றும் பாதுகாப்பு கட்டுப்பாடுகள் (DMI, ஆற்றல், புரதம், NDF, தாதுக்கள், மற்றும் குடிநீர்) சமநிலையில் உள்ளன.' : 'All physiological and safety constraints (DMI, Energy, Protein, NDF, Ca, P, and water) are balanced.')}
                         </p>
                       )}
 
@@ -2306,7 +2344,7 @@ export default function Step10Review({
                       {safetyGate.checks && safetyGate.checks.length > 0 && (
                         <div style={{ marginTop: '12px' }}>
                           <span style={{ fontSize: '0.78rem', fontWeight: 800, color: textColor, display: 'block', marginBottom: '6px' }}>
-                            PRE-REPORT SAFETY GATE VERIFICATION:
+                            {currentLang === 'ta' ? 'அறிக்கைக்கு முந்தைய பாதுகாப்பு சரிபார்ப்பு:' : 'PRE-REPORT SAFETY GATE VERIFICATION:'}
                           </span>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
                             {safetyGate.checks.map((chk, cIdx) => (
@@ -2330,7 +2368,7 @@ export default function Step10Review({
                                   background: chk.passed ? '#dcfce7' : '#fee2e2',
                                   color: chk.passed ? '#15803d' : '#b91c1c'
                                 }}>
-                                  {chk.passed ? 'PASSED' : 'FLAGGED'}
+                                  {chk.passed ? (currentLang === 'ta' ? 'தேர்ச்சி' : 'PASSED') : (currentLang === 'ta' ? 'கவனிக்கவும்' : 'FLAGGED')}
                                 </span>
                               </div>
                             ))}
@@ -2361,29 +2399,29 @@ export default function Step10Review({
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Milk size={22} color="#0284c7" />
-                          <span>Milking Cows ({totalLactating} Head)</span>
+                          <span>{currentLang === 'ta' ? `கறவை மாடுகள் (${totalLactating} மாடுகள்)` : `Milking Cows (${totalLactating} Head)`}</span>
                         </h4>
                         <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 700, background: '#e0f2fe', padding: '4px 12px', borderRadius: '20px' }}>
-                          Total Milk: {totalDailyMilkL} Litres/day • Avg Weight: {Math.round(wtLactating / Math.max(1, totalLactating))} kg
+                          {currentLang === 'ta' ? `மொத்த பால்: ${totalDailyMilkL} லிட்டர்/நாள் • சராசரி எடை: ${Math.round(wtLactating / Math.max(1, totalLactating))} கிலோ` : `Total Milk: ${totalDailyMilkL} Litres/day • Avg Weight: ${Math.round(wtLactating / Math.max(1, totalLactating))} kg`}
                         </span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
-                        <strong>Cattle Reference:</strong> High-producing dairy cows require prioritized feed energy and bypass protein to sustain peak milk yield without losing body condition.
+                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'அதிக பால் தரும் கறவை மாடுகளுக்கு அவற்றின் உடல் எடை குறையாமல் சீரான பால் உற்பத்தியைத் தக்கவைக்க ஆற்றல் மற்றும் புறப்புரதம் நிறைந்த சரிவிகிதத் தீவனம் முன்னுரிமையாகத் தேவைப்படுகிறது.' : 'High-producing dairy cows require prioritized feed energy and bypass protein to sustain peak milk yield without losing body condition.'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Simple English Daily Guidelines */}
+                  {/* Simple Daily Guidelines */}
                   <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
                     <div style={{ fontWeight: 800, color: '#0369a1', fontSize: '0.9rem', marginBottom: '6px' }}>
-                      Milking Cow Feeding Rules (Simple Daily Guide):
+                      {currentLang === 'ta' ? 'கறவை மாடுகளுக்கான தீவன வழிகாட்டி (தினசரி எளிய விதிகள்):' : 'Milking Cow Feeding Rules (Simple Daily Guide):'}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '0.84rem', color: '#1e293b' }}>
-                      <div>• <strong>Concentrate Rule:</strong> Feed 1 kg cattle feed for every 2 to 2.5 Litres of milk produced daily.</div>
-                      <div>• <strong>Green Fodder:</strong> Give 20–25 kg fresh green fodder daily for vitamins and milk flow.</div>
-                      <div>• <strong>Dry Straw / Hay:</strong> Feed 3–5 kg dry straw daily to support rumination and butterfat.</div>
-                      <div>• <strong>Clean Water:</strong> Milking cows need 70–90 Litres of fresh water daily. Lack of water drops milk.</div>
-                      <div>• <strong>Minerals &amp; Salt:</strong> Add 60–80 grams mineral mixture daily to prevent milk fever.</div>
+                      <div>• <strong>{currentLang === 'ta' ? 'அடர்தீவன விதி:' : 'Concentrate Rule:'}</strong> {currentLang === 'ta' ? 'ஒவ்வொரு 2 முதல் 2.5 லிட்டர் பால் உற்பத்திக்கும் 1 கிலோ அடர்தீவனம் அளிக்க வேண்டும்.' : 'Feed 1 kg cattle feed for every 2 to 2.5 Litres of milk produced daily.'}</div>
+                      <div>• <strong>{currentLang === 'ta' ? 'பசுந்தீவனம்:' : 'Green Fodder:'}</strong> {currentLang === 'ta' ? 'வைட்டமின்கள் மற்றும் தடையற்ற பால் சுரப்புக்கு தினமும் 20–25 கிலோ பசுந்தீவனம் அளிக்க வேண்டும்.' : 'Give 20–25 kg fresh green fodder daily for vitamins and milk flow.'}</div>
+                      <div>• <strong>{currentLang === 'ta' ? 'உலர் தீவனம்:' : 'Dry Straw / Hay:'}</strong> {currentLang === 'ta' ? 'அசைபோடுதலுக்கும் பாலின் கொழுப்புச் சத்துக்கும் (Fat) 3–5 கிலோ உலர் தீவனம் அளிக்க வேண்டும்.' : 'Feed 3–5 kg dry straw daily to support rumination and butterfat.'}</div>
+                      <div>• <strong>{currentLang === 'ta' ? 'சுத்தமான தண்ணீர்:' : 'Clean Water:'}</strong> {currentLang === 'ta' ? 'கறவை மாடுகளுக்கு தினமும் 70–90 லிட்டர் சுத்தமான தண்ணீர் தேவை. தண்ணீர் குறைந்தால் பால் உற்பத்தி குறையும்.' : 'Milking cows need 70–90 Litres of fresh water daily. Lack of water drops milk.'}</div>
+                      <div>• <strong>{currentLang === 'ta' ? 'தாதுக்கள் & உப்பு:' : 'Minerals & Salt:'}</strong> {currentLang === 'ta' ? 'பால் காய்ச்சலைத் தவிர்க்க தினமும் 60–80 கிராம் தாது உப்புக் கலவை சேர்க்க வேண்டும்.' : 'Add 60–80 grams mineral mixture daily to prevent milk fever.'}</div>
                     </div>
                   </div>
 
@@ -2391,28 +2429,28 @@ export default function Step10Review({
                   {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals?.length > 0 && (
                     <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#0369a1', display: 'block', marginBottom: '8px' }}>
-                        Exact Daily Feeding for Each Individual Milking Cow:
+                        {currentLang === 'ta' ? 'ஒவ்வொரு கறவை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Individual Milking Cow:'}
                       </strong>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f0f9ff', borderBottom: '2px solid #bae6fd', textAlign: 'left', color: '#0369a1' }}>
-                            <th style={{ padding: '10px 12px' }}>Cattle</th>
-                            <th style={{ padding: '10px 12px' }}>Weight</th>
-                            <th style={{ padding: '10px 12px' }}>Lactation & BCS</th>
-                            <th style={{ padding: '10px 12px' }}>Milk Yield</th>
-                            <th style={{ padding: '10px 12px' }}>Green Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Concentrate (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Mineral Mix (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Salt (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Water (L)</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Cattle'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பருவம் & BCS' : 'Lactation & BCS'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பால் உற்பத்தி' : 'Milk Yield'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals.map((cow, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid #e0f2fe', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                               <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                <div>{stripEmojis(cow.title) || `Cow #${idx + 1}`}</div>
+                                <div>{stripEmojis(cow.title) || (currentLang === 'ta' ? `கறவை மாடு #${idx + 1}` : `Cow #${idx + 1}`)}</div>
                                 {cow.parity && (
                                   <span style={{ 
                                     background: cow.isFirstLactation ? '#e0f2fe' : '#f1f5f9', 
@@ -2429,12 +2467,11 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {cow.weightKg} kg
+                                {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', fontSize: '0.8rem' }}>
-                                <div style={{ fontWeight: 700, color: '#0369a1' }}>{cow.stage || 'Mid lactation'}</div>
+                                <div style={{ fontWeight: 700, color: '#0369a1' }}>{translateTerm(cow.stage, currentLang) || (currentLang === 'ta' ? 'நடுப்பருவம்' : 'Mid lactation')}</div>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                       
                                   <span style={{ 
                                     background: cow.bcs <= 2.5 ? '#fee2e2' : '#f1f5f9', 
                                     color: cow.bcs <= 2.5 ? '#b91c1c' : '#475569', 
@@ -2443,18 +2480,18 @@ export default function Step10Review({
                                     fontSize: '0.72rem', 
                                     fontWeight: 700 
                                   }}>
-                                    BCS {cow.bcs ?? 3.0} {cow.bcs <= 2.5 ? '(Thin)' : ''}
+                                    BCS {cow.bcs ?? 3.0} {cow.bcs <= 2.5 ? (currentLang === 'ta' ? '(மெலிந்தது)' : '(Thin)') : ''}
                                   </span>
                                 </div>
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.milkYieldL} L/day <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({cow.milkFatPct}% fat)</span>
+                                {cow.milkYieldL} {currentLang === 'ta' ? 'லி/நாள்' : 'L/day'} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({cow.milkFatPct}% {currentLang === 'ta' ? 'கொழுப்பு' : 'fat'})</span>
                               </td>
                               <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#15803d', fontWeight: 800 }}>
-                                {cow.greenFodderKg > 0 ? `${cow.greenFodderKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '— est.' : '0 kg')}
+                                {cow.greenFodderKg > 0 ? `${cow.greenFodderKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}
                               </td>
                               <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#854d0e', fontWeight: 700 }}>
-                                {cow.dryFodderKg > 0 ? `${cow.dryFodderKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '— est.' : '0 kg')}
+                                {cow.dryFodderKg > 0 ? `${cow.dryFodderKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}
                                 {cow.isFeasible !== false && cow.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {cow.dryFodderDetails}
@@ -2463,7 +2500,7 @@ export default function Step10Review({
                               </td>
                               <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#0284c7', fontWeight: 900 }}>
                                 <div>
-                                  <span>{cow.concentrateKg > 0 ? `${cow.concentrateKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : '0 kg')}</span>
+                                  <span>{cow.concentrateKg > 0 ? `${cow.concentrateKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}</span>
                                   {cow.concentrateDmPct > 0 && (
                                     <span style={{ 
                                       display: 'inline-block',
@@ -2475,7 +2512,7 @@ export default function Step10Review({
                                       color: cow.concentrateDmPct > 40 ? '#b91c1c' : '#0369a1',
                                       fontWeight: 700 
                                     }}>
-                                      {cow.concentrateDmPct}% DMI (Max safe 40%)
+                                      {cow.concentrateDmPct}% DMI ({currentLang === 'ta' ? 'அதிகபட்சம் 40%' : 'Max safe 40%'})
                                     </span>
                                   )}
                                 </div>
@@ -2486,13 +2523,13 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
-                                {cow.mineralMixtureG} g
+                                {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
-                                {cow.saltG || 40} g
+                                {cow.saltG || 40} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.waterLiters} L
+                                {cow.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
                               </td>
                             </tr>
                           ))}
@@ -2503,25 +2540,25 @@ export default function Step10Review({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Average per Cow:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>Green fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.greenFodderKg ?? 25} kg</strong></div>
-                        <div>Dry fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.dryFodderKg ?? 4} kg</strong></div>
-                        <div>Concentrate — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.concentrateKg ?? 5} kg</strong></div>
-                        <div>Mineral mixture — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.mineralMixtureG ?? 70} g</strong></div>
-                        <div>Water — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.waterLiters ?? 75} L</strong></div>
+                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.greenFodderKg ?? 25} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.concentrateKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.mineralMixtureG ?? 70} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.waterLiters ?? 75} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                       </div>
                     </div>
 
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Herd Nutrition Balance:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'மந்தையின் ஊட்டச்சத்து சமநிலை:' : 'Herd Nutrition Balance:'}</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '0.8rem' }}>
-                        <div>Energy: <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.energy?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.energy?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{calcResult.nutritionAnalysis?.energy?.status?.split(' ')[0] || 'Adequate'}</span></div>
-                        <div>Protein: <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.protein?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.protein?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{calcResult.nutritionAnalysis?.protein?.status?.split(' ')[0] || 'Adequate'}</span></div>
-                        <div>Fibre: <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.fibre?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.fibre?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{calcResult.nutritionAnalysis?.fibre?.status?.split(' ')[0] || 'Adequate'}</span></div>
-                        <div>Calcium: <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.calcium?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{calcResult.mineralsAnalysis?.calcium?.status || 'Adequate'}</span></div>
-                        <div>Phosphorus: <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.phosphorus?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{calcResult.mineralsAnalysis?.phosphorus?.status || 'Adequate'}</span></div>
-                        <div>Salt: <span style={{ fontWeight: 700, color: '#15803d' }}>Adequate</span></div>
+                        <div>{currentLang === 'ta' ? 'ஆற்றல் (Energy):' : 'Energy:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.energy?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.energy?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.energy?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                        <div>{currentLang === 'ta' ? 'புரதம் (Protein):' : 'Protein:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.protein?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.protein?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.protein?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                        <div>{currentLang === 'ta' ? 'நார்ச்சத்து (Fibre):' : 'Fibre:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.fibre?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.fibre?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.fibre?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                        <div>{currentLang === 'ta' ? 'கால்சியம் (Ca):' : 'Calcium:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.calcium?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.calcium?.status || 'Adequate')}</span></div>
+                        <div>{currentLang === 'ta' ? 'பாஸ்பரஸ் (P):' : 'Phosphorus:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.phosphorus?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.phosphorus?.status || 'Adequate')}</span></div>
+                        <div>{currentLang === 'ta' ? 'உப்பு (Salt):' : 'Salt:'} <span style={{ fontWeight: 700, color: '#15803d' }}>{currentLang === 'ta' ? 'சரியானது' : 'Adequate'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -2542,14 +2579,14 @@ export default function Step10Review({
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <h4 style={{ fontSize: '1.25rem', color: '#c2410c', fontWeight: 900, margin: 0 }}>
-                          Pregnant Cattle ({totalPregnant} Animals: {totalFirstTime} First Pregnancy, {totalRepeat} Repeat)
+                          {currentLang === 'ta' ? `சினை மாடுகள் (${totalPregnant} மாடுகள்: ${totalFirstTime} முதல் சினை, ${totalRepeat} மறு சினை)` : `Pregnant Cattle (${totalPregnant} Animals: ${totalFirstTime} First Pregnancy, ${totalRepeat} Repeat)`}
                         </h4>
                         <span style={{ fontSize: '0.825rem', color: '#c2410c', fontWeight: 700, background: '#fff7ed', padding: '4px 12px', borderRadius: '20px' }}>
-                          Gestation Stages: Months 1–9
+                          {currentLang === 'ta' ? 'சினைப் பருவம்: 1–9 மாதங்கள்' : 'Gestation Stages: Months 1–9'}
                         </span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#7c2d12' }}>
-                        <strong>Cattle Reference:</strong> Late gestation (months 7–9) requires steaming up with energy concentrates to build calf birthweight and colostrum. Months 1–6 need maintenance-level forage.
+                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'கடைசி சினைப் பருவத்தில் (7-9 மாதங்கள்) கன்றின் வளர்ச்சி மற்றும் சீம்பால் உற்பத்திக்காக கூடுதல் சத்துணவு (Steaming up) அளிக்க வேண்டும். 1-6 மாதங்களில் பராமரிப்புத் தீவனம் போதுமானது.' : 'Late gestation (months 7–9) requires steaming up with energy concentrates to build calf birthweight and colostrum. Months 1–6 need maintenance-level forage.'}
                       </p>
                     </div>
                   </div>
@@ -2558,57 +2595,57 @@ export default function Step10Review({
                   {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals?.length > 0 && (
                     <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#c2410c', display: 'block', marginBottom: '8px' }}>
-                        Exact Daily Feeding for Each Pregnant Animal:
+                        {currentLang === 'ta' ? 'ஒவ்வொரு சினை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Pregnant Animal:'}
                       </strong>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#fffaf5', borderBottom: '2px solid #fed7aa', textAlign: 'left', color: '#c2410c' }}>
-                            <th style={{ padding: '10px 12px' }}>Animal</th>
-                            <th style={{ padding: '10px 12px' }}>Type</th>
-                            <th style={{ padding: '10px 12px' }}>Weight</th>
-                            <th style={{ padding: '10px 12px' }}>Gestation Stage</th>
-                            <th style={{ padding: '10px 12px' }}>Green Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Concentrate (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Mineral Mix (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Salt (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Water (L)</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Animal'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வகை' : 'Type'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'சினைப் பருவம்' : 'Gestation Stage'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals.map((cow, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid #ffedd5', background: idx % 2 === 0 ? '#ffffff' : '#fffaf5' }}>
                               <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(cow.title) || `Pregnant #${idx + 1}`}
+                                {stripEmojis(cow.title) || (currentLang === 'ta' ? `சினை மாடு #${idx + 1}` : `Pregnant #${idx + 1}`)}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#9a3412', fontWeight: 600 }}>
-                                {cow.type}
+                                {translateTerm(cow.type, currentLang) || cow.type}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.weightKg} kg
+                                {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px' }}>
                                 <span style={{ 
                                   fontWeight: 800, 
                                   color: cow.pregMonth >= 8 ? '#b91c1c' : cow.pregMonth >= 6 ? '#c2410c' : '#15803d' 
                                 }}>
-                                  {cow.stage || `Month ${cow.pregMonth}`}
+                                  {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : (cow.stage || `Month ${cow.pregMonth}`)}
                                 </span>
                                 {cow.pregMonth >= 8 ? (
                                   <span style={{ display: 'block', fontSize: '0.72rem', background: '#fee2e2', color: '#b91c1c', padding: '1px 6px', borderRadius: '6px', fontWeight: 700, marginTop: '2px', width: 'fit-content' }}>
-                                    Steaming Up (Month {cow.pregMonth})
+                                    {currentLang === 'ta' ? `கூடுதல் சத்துணவு (${cow.pregMonth}-ம் மாதம்)` : `Steaming Up (Month ${cow.pregMonth})`}
                                   </span>
                                 ) : (
                                   <span style={{ display: 'block', fontSize: '0.72rem', background: '#f0fdf4', color: '#166534', padding: '1px 6px', borderRadius: '6px', fontWeight: 600, marginTop: '2px', width: 'fit-content' }}>
-                                    Month {cow.pregMonth}
+                                    {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : `Month ${cow.pregMonth}`}
                                   </span>
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {cow.greenFodderKg} kg
+                                {cow.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {cow.dryFodderKg} kg
+                                {cow.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {cow.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {cow.dryFodderDetails}
@@ -2616,7 +2653,7 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 900 }}>
-                                {cow.concentrateKg} kg
+                                {cow.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {cow.concentrateDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
                                     {cow.concentrateDetails}
@@ -2624,13 +2661,13 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.mineralMixtureG} g
+                                {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.saltG || 35} g
+                                {cow.saltG || 35} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.waterLiters} L
+                                {cow.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
                               </td>
                             </tr>
                           ))}
@@ -2641,20 +2678,20 @@ export default function Step10Review({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                     <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Average per Animal:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Animal:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>Green fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.greenFodderKg ?? 20} kg</strong></div>
-                        <div>Dry fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.dryFodderKg ?? 4} kg</strong></div>
-                        <div>Concentrate — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.concentrateKg ?? 2.5} kg</strong></div>
-                        <div>Mineral mixture — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.mineralMixtureG ?? 60} g</strong></div>
-                        <div>Water — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.waterLiters ?? 55} L</strong></div>
+                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.greenFodderKg ?? 20} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.concentrateKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.mineralMixtureG ?? 60} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.waterLiters ?? 55} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                       </div>
                     </div>
 
                     <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '6px' }}>Why Pregnancy Stage Matters:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '6px' }}>{currentLang === 'ta' ? 'சினைப் பருவம் ஏன் முக்கியம்?' : 'Why Pregnancy Stage Matters:'}</strong>
                       <p style={{ fontSize: '0.8rem', color: '#7c2d12', margin: 0, lineHeight: 1.4 }}>
-                        A cow that is 5 months pregnant has lower fetal requirements and needs mostly fiber/green fodder. A cow in month 9 has rapid calf growth and needs higher concentrate density (steaming up) because rumen capacity decreases.
+                        {currentLang === 'ta' ? '5 மாத சினை மாடுகளுக்கு நார்ச்சத்தும் பசுந்தீவனமும் போதுமானது. ஆனால் 9-வது மாதத்தில் கன்றின் அதிவேக வளர்ச்சி காரணமாக வயிற்றின் கொள்ளளவு குறைகிறது, எனவே செறிவூட்டப்பட்ட அடர்தீவனம் அளிக்க வேண்டும்.' : 'A cow that is 5 months pregnant has lower fetal requirements and needs mostly fiber/green fodder. A cow in month 9 has rapid calf growth and needs higher concentrate density (steaming up) because rumen capacity decreases.'}
                       </p>
                     </div>
                   </div>
@@ -2675,14 +2712,14 @@ export default function Step10Review({
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <h4 style={{ fontSize: '1.25rem', color: '#15803d', fontWeight: 900, margin: 0 }}>
-                          Growing Heifers ({totalHeifers} Head)
+                          {currentLang === 'ta' ? `வளரும் கிடாரிகள் (${totalHeifers} மாடுகள்)` : `Growing Heifers (${totalHeifers} Head)`}
                         </h4>
                         <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 700, background: '#f0fdf4', padding: '4px 12px', borderRadius: '20px' }}>
-                          Target Gain: 500–600 g/day
+                          {currentLang === 'ta' ? 'இலக்கு எடை அதிகரிப்பு: 500–600 கி/நாள்' : 'Target Gain: 500–600 g/day'}
                         </span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#166534' }}>
-                        <strong>Cattle Reference:</strong> Growing replacement heifers require balanced protein and minerals for skeletal frame growth without excess body fat deposition.
+                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'வளரும் கிடாரிகளுக்கு அதிக கொழுப்பு படியாமல் எலும்பு மற்றும் உடல் கட்டமைப்பு வளர்ச்சிக்கு சரிவிகித புரதமும் தாதுக்களும் தேவைப்படுகின்றன.' : 'Growing replacement heifers require balanced protein and minerals for skeletal frame growth without excess body fat deposition.'}
                       </p>
                     </div>
                   </div>
@@ -2691,35 +2728,35 @@ export default function Step10Review({
                   {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.length > 0 && (
                     <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#15803d', display: 'block', marginBottom: '8px' }}>
-                        Exact Daily Feeding for Each Heifer:
+                        {currentLang === 'ta' ? 'ஒவ்வொரு கிடாரிக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Heifer:'}
                       </strong>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f0fdf4', borderBottom: '2px solid #bbf7d0', textAlign: 'left', color: '#15803d' }}>
-                            <th style={{ padding: '10px 12px' }}>Heifer</th>
-                            <th style={{ padding: '10px 12px' }}>Weight</th>
-                            <th style={{ padding: '10px 12px' }}>Green Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Concentrate (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Mineral Mix (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Salt (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Water (L)</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'கிடாரி' : 'Heifer'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals.map((h, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid #dcfce7', background: idx % 2 === 0 ? '#ffffff' : '#f0fdf4' }}>
                               <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(h.title) || `Heifer #${idx + 1}`}
+                                {stripEmojis(h.title) || (currentLang === 'ta' ? `கிடாரி #${idx + 1}` : `Heifer #${idx + 1}`)}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {h.weightKg} kg
+                                {h.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {h.greenFodderKg} kg
+                                {h.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {h.dryFodderKg} kg
+                                {h.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {h.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {h.dryFodderDetails}
@@ -2727,7 +2764,7 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {h.concentrateKg} kg
+                                {h.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {h.concentrateDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
                                     {h.concentrateDetails}
@@ -2735,13 +2772,13 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {h.mineralMixtureG} g
+                                {h.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {h.saltG || 25} g
+                                {h.saltG || 25} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {h.waterLiters} L
+                                {h.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
                               </td>
                             </tr>
                           ))}
@@ -2752,22 +2789,22 @@ export default function Step10Review({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Average per Heifer:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு கிடாரிக்கு:' : 'Average per Heifer:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>Green fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.greenFodderKg ?? 15} kg</strong></div>
-                        <div>Dry fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.dryFodderKg ?? 2.5} kg</strong></div>
-                        <div>Concentrate — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.concentrateKg ?? 1.5} kg</strong></div>
-                        <div>Mineral mixture — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.mineralMixtureG ?? 35} g</strong></div>
-                        <div>Water — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.waterLiters ?? 30} L</strong></div>
+                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.greenFodderKg ?? 15} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.dryFodderKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.concentrateKg ?? 1.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.mineralMixtureG ?? 35} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.waterLiters ?? 30} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                       </div>
                     </div>
 
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Result & Care:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'பராமரிப்பு வழிகாட்டுதல்:' : 'Result & Care:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
-                        <div>• Maintain steady daily growth</div>
-                        <div>• Avoid overfeeding heavy concentrates</div>
-                        <div>• Check mineral mixture balance</div>
+                        <div>• {currentLang === 'ta' ? 'சீராக தினமும் உடல் எடை வளர்ச்சியைப் பராமரிக்கவும்' : 'Maintain steady daily growth'}</div>
+                        <div>• {currentLang === 'ta' ? 'அதிக அடர்தீவனம் கொடுத்து அளவுக்கு மீறி கொழுப்பு சேர்வதைத் தவிர்க்கவும்' : 'Avoid overfeeding heavy concentrates'}</div>
+                        <div>• {currentLang === 'ta' ? 'தாது உப்புக் கலவையை தவறாமல் சேர்க்கவும்' : 'Check mineral mixture balance'}</div>
                       </div>
                     </div>
                   </div>
@@ -2788,14 +2825,14 @@ export default function Step10Review({
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <h4 style={{ fontSize: '1.25rem', color: '#334155', fontWeight: 900, margin: 0 }}>
-                          Dry Cows ({totalDry} Head)
+                          {currentLang === 'ta' ? `வறண்ட மாடுகள் (${totalDry} மாடுகள்)` : `Dry Cows (${totalDry} Head)`}
                         </h4>
                         <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 700, background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
-                          Dry Period: 45–60 Days
+                          {currentLang === 'ta' ? 'வறண்ட காலம்: 45–60 நாட்கள்' : 'Dry Period: 45–60 Days'}
                         </span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
-                        <strong>Cattle Reference:</strong> Mammary gland involution and rumen rest period before next calving. Feed mostly high fiber forage and restrict heavy concentrates.
+                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'மடி திசுக்களின் புத்துணர்ச்சி மற்றும் அடுத்த ஈத்துக்கு வயிற்றின் ஓய்வு காலம். அதிக நார்ச்சத்துள்ள தீவனம் அளித்து அடர்தீவன அளவைக் குறைக்க வேண்டும்.' : 'Mammary gland involution and rumen rest period before next calving. Feed mostly high fiber forage and restrict heavy concentrates.'}
                       </p>
                     </div>
                   </div>
@@ -2804,34 +2841,34 @@ export default function Step10Review({
                   {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals?.length > 0 && (
                     <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#475569', display: 'block', marginBottom: '8px' }}>
-                        Exact Daily Feeding for Each Dry Cow:
+                        {currentLang === 'ta' ? 'ஒவ்வொரு வறண்ட மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Dry Cow:'}
                       </strong>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1', textAlign: 'left', color: '#475569' }}>
-                            <th style={{ padding: '10px 12px' }}>Dry Cow</th>
-                            <th style={{ padding: '10px 12px' }}>Weight</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Period</th>
-                            <th style={{ padding: '10px 12px' }}>Green Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Concentrate (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Mineral Mix (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Salt (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Water (L)</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட மாடு' : 'Dry Cow'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட காலம்' : 'Dry Period'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals.map((d, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
                               <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(d.title) || `Dry Cow #${idx + 1}`}
+                                {stripEmojis(d.title) || (currentLang === 'ta' ? `வறண்ட மாடு #${idx + 1}` : `Dry Cow #${idx + 1}`)}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {d.weightKg} kg
+                                {d.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px' }}>
                                 <span style={{ fontWeight: 700, color: '#475569' }}>
-                                  {d.dryDays} days dry
+                                  {d.dryDays} {currentLang === 'ta' ? 'நாட்கள் வறட்சி' : 'days dry'}
                                 </span>
                                 <span style={{ 
                                   display: 'block', 
@@ -2844,14 +2881,14 @@ export default function Step10Review({
                                   marginTop: '2px', 
                                   width: 'fit-content' 
                                 }}>
-                                  {d.dryDays > 30 ? 'Far-off (Rumen rest)' : 'Close-up (Transition)'}
+                                  {d.dryDays > 30 ? (currentLang === 'ta' ? 'தொடக்க ஓய்வு (வயிற்று ஓய்வு)' : 'Far-off (Rumen rest)') : (currentLang === 'ta' ? 'ஈத்துக்கு முந்தைய மாற்றம்' : 'Close-up (Transition)')}
                                 </span>
                               </td>
                               <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {d.greenFodderKg} kg
+                                {d.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {d.dryFodderKg} kg
+                                {d.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {d.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {d.dryFodderDetails}
@@ -2859,7 +2896,7 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {d.concentrateKg} kg
+                                {d.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {d.concentrateDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
                                     {d.concentrateDetails}
@@ -2867,13 +2904,13 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {d.mineralMixtureG} g
+                                {d.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {d.saltG || 30} g
+                                {d.saltG || 30} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {d.waterLiters} L
+                                {d.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
                               </td>
                             </tr>
                           ))}
@@ -2884,23 +2921,23 @@ export default function Step10Review({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Average per Cow:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>Green fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.greenFodderKg ?? 20} kg</strong></div>
-                        <div>Dry fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.dryFodderKg ?? 4.5} kg</strong></div>
-                        <div>Concentrate — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.concentrateKg ?? 1.2} kg</strong></div>
-                        <div>Mineral mixture — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.mineralMixtureG ?? 45} g</strong></div>
-                        <div>Water — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.waterLiters ?? 50} L</strong></div>
+                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.greenFodderKg ?? 20} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.dryFodderKg ?? 4.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.concentrateKg ?? 1.2} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.mineralMixtureG ?? 45} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.waterLiters ?? 50} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                       </div>
                     </div>
 
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Status:</strong>
+                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'நிலைமை:' : 'Status:'}</strong>
                       <p style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700, margin: '0 0 6px' }}>
-                        Maintenance feeding required
+                        {currentLang === 'ta' ? 'பராமரிப்புத் தீவனம் தேவை' : 'Maintenance feeding required'}
                       </p>
                       <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>
-                        Avoid excessive grains during dry period to prevent fat cow syndrome and metabolic disorders at calving.
+                        {currentLang === 'ta' ? 'கன்று ஈனும் போது ஏற்படும் வளர்சிதை மாற்றக் கோளாறுகளைத் தவிர்க்க வறண்ட காலத்தில் அதிக தானியங்கள் கொடுப்பதைத் தவிர்க்கவும்.' : 'Avoid excessive grains during dry period to prevent fat cow syndrome and metabolic disorders at calving.'}
                       </p>
                     </div>
                   </div>
@@ -2921,14 +2958,14 @@ export default function Step10Review({
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <h4 style={{ fontSize: '1.25rem', color: '#b91c1c', fontWeight: 900, margin: 0 }}>
-                          Breeding Bulls &amp; Draught Cattle ({totalBulls} Head)
+                          {currentLang === 'ta' ? `காளைகள் & உழவு மாடுகள் (${totalBulls} மாடுகள்)` : `Breeding Bulls & Draught Cattle (${totalBulls} Head)`}
                         </h4>
                         <span style={{ fontSize: '0.825rem', color: '#b91c1c', fontWeight: 700, background: '#fef2f2', padding: '4px 12px', borderRadius: '20px' }}>
-                          Basal Metabolism: +10%
+                          {currentLang === 'ta' ? 'அடிப்படை வளர்சிதை மாற்றம்: +10%' : 'Basal Metabolism: +10%'}
                         </span>
                       </div>
                       <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#7f1d1d' }}>
-                        <strong>Cattle Reference:</strong> Breeding bulls and working oxen have higher basal metabolic rates. Feed balanced green roughage with moderate energy concentrate for reproductive vigor.
+                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'இனப்பெருக்க காளைகள் மற்றும் வேலை செய்யும் மாடுகளுக்கு அதிக வளர்சிதை மாற்ற விகிதம் உள்ளது. இனப்பெருக்க சுறுசுறுப்பிற்காக சரிவிகித பசுந்தீவனத்துடன் மிதமான அடர்தீவனம் அளிக்க வேண்டும்.' : 'Breeding bulls and working oxen have higher basal metabolic rates. Feed balanced green roughage with moderate energy concentrate for reproductive vigor.'}
                       </p>
                     </div>
                   </div>
@@ -2937,35 +2974,35 @@ export default function Step10Review({
                   {calcResult.practicalFeedingReport?.perCategory?.bull?.animals?.length > 0 && (
                     <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#b91c1c', display: 'block', marginBottom: '8px' }}>
-                        Exact Daily Feeding for Each Bull:
+                        {currentLang === 'ta' ? 'ஒவ்வொரு காளைக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Bull:'}
                       </strong>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#fef2f2', borderBottom: '2px solid #fca5a5', textAlign: 'left', color: '#b91c1c' }}>
-                            <th style={{ padding: '10px 12px' }}>Bull</th>
-                            <th style={{ padding: '10px 12px' }}>Weight</th>
-                            <th style={{ padding: '10px 12px' }}>Green Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Dry Fodder (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Concentrate (kg)</th>
-                            <th style={{ padding: '10px 12px' }}>Mineral Mix (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Salt (g)</th>
-                            <th style={{ padding: '10px 12px' }}>Water (L)</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'காளை' : 'Bull'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {calcResult.practicalFeedingReport?.perCategory?.bull?.animals.map((b, idx) => (
                             <tr key={idx} style={{ borderBottom: '1px solid #fee2e2', background: idx % 2 === 0 ? '#ffffff' : '#fef2f2' }}>
                               <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(b.title) || `Bull #${idx + 1}`}
+                                {stripEmojis(b.title) || (currentLang === 'ta' ? `காளை #${idx + 1}` : `Bull #${idx + 1}`)}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {b.weightKg} kg
+                                {b.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {b.greenFodderKg} kg
+                                {b.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {b.dryFodderKg} kg
+                                {b.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {b.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {b.dryFodderDetails}
@@ -2973,7 +3010,7 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {b.concentrateKg} kg
+                                {b.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
                                 {b.concentrateDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
                                     {b.concentrateDetails}
@@ -2981,13 +3018,13 @@ export default function Step10Review({
                                 )}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {b.mineralMixtureG} g
+                                {b.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {b.saltG || 40} g
+                                {b.saltG || 40} {currentLang === 'ta' ? 'கி' : 'g'}
                               </td>
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {b.waterLiters} L
+                                {b.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
                               </td>
                             </tr>
                           ))}
@@ -2997,16 +3034,16 @@ export default function Step10Review({
                   )}
 
                   <div style={{ background: '#fef2f2', padding: '14px', borderRadius: '12px', border: '1px solid #fca5a5' }}>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Average per Bull:</strong>
+                    <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு காளைக்கு:' : 'Average per Bull:'}</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.825rem' }}>
-                      <div>Green fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.greenFodderKg ?? 25} kg</strong></div>
-                      <div>Dry fodder — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.dryFodderKg ?? 5} kg</strong></div>
-                      <div>Concentrate — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.concentrateKg ?? 1.8} kg</strong></div>
-                      <div>Mineral mixture — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.mineralMixtureG ?? 50} g</strong></div>
-                      <div>Water — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.waterLiters ?? 65} L</strong></div>
+                      <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.greenFodderKg ?? 25} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                      <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.dryFodderKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                      <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.concentrateKg ?? 1.8} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                      <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.mineralMixtureG ?? 50} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                      <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.waterLiters ?? 65} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                     </div>
                     <p style={{ fontSize: '0.78rem', color: '#b91c1c', margin: '8px 0 0', fontWeight: 600 }}>
-                      * The bull should not receive the same high-energy concentrate level as the lactating cow.
+                      {currentLang === 'ta' ? '* கறவை மாடுகளுக்கு கொடுக்கும் அதிக அடர்தீவன அளவை காளைகளுக்கு அளிக்கக் கூடாது.' : '* The bull should not receive the same high-energy concentrate level as the lactating cow.'}
                     </p>
                   </div>
                 </div>
@@ -3018,10 +3055,14 @@ export default function Step10Review({
             <div style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)' }}>
               <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Droplets size={22} color="#0284c7" />
-                <span>Water Status &amp; Hydration</span>
+                <span>{currentLang === 'ta' ? 'குடிநீர் இருப்பு & நீரேற்ற நிலை' : 'Water Status & Hydration'}</span>
               </h4>
               <p style={{ fontSize: '0.85rem', color: '#0f172a', margin: '0 0 8px' }}>
-                <strong>{waterVolume} L</strong> water available for <strong>{totalCattleCount}</strong> cattle (Average availability: <strong>{Math.round(waterVolume / Math.max(1, totalCattleCount))} L/animal/day</strong>)
+                {currentLang === 'ta' ? (
+                  <><strong>{waterVolume} லிட்டர்</strong> தண்ணீர் <strong>{totalCattleCount}</strong> மாடுகளுக்கு கிடைக்கிறது (சராசரி இருப்பு: <strong>{Math.round(waterVolume / Math.max(1, totalCattleCount))} லிட்டர்/மாடு/நாள்</strong>)</>
+                ) : (
+                  <><strong>{waterVolume} L</strong> water available for <strong>{totalCattleCount}</strong> cattle (Average availability: <strong>{Math.round(waterVolume / Math.max(1, totalCattleCount))} L/animal/day</strong>)</>
+                )}
               </p>
 
               <div style={{
@@ -3032,18 +3073,18 @@ export default function Step10Review({
                 marginTop: '8px'
               }}>
                 <strong style={{ fontSize: '0.95rem', color: calcResult.waterAnalysis?.waterBalanceLiters < 0 ? '#b91c1c' : '#15803d', display: 'block', marginBottom: '4px' }}>
-                  {calcResult.practicalFeedingReport?.waterStatus?.status || 'Water availability status'}
+                  {currentLang === 'ta' ? translateTerm(calcResult.practicalFeedingReport?.waterStatus?.status, currentLang) : (calcResult.practicalFeedingReport?.waterStatus?.status || 'Water availability status')}
                 </strong>
                 <div style={{ fontSize: '0.85rem', color: '#334155' }}>
-                  Available: <strong>{waterVolume} L/day</strong> • Calculated herd requirement: <strong>{calcResult.waterAnalysis?.waterRequiredLiters} L/day</strong>
+                  {currentLang === 'ta' ? 'கிடைக்கும் தண்ணீர்:' : 'Available:'} <strong>{waterVolume} {currentLang === 'ta' ? 'லி/நாள்' : 'L/day'}</strong> • {currentLang === 'ta' ? 'கணக்கிடப்பட்ட மந்தை தேவை:' : 'Calculated herd requirement:'} <strong>{calcResult.waterAnalysis?.waterRequiredLiters} {currentLang === 'ta' ? 'லி/நாள்' : 'L/day'}</strong>
                 </div>
                 {calcResult.waterAnalysis?.waterBalanceLiters < 0 && (
                   <div style={{ marginTop: '6px', fontSize: '0.85rem', color: '#dc2626', fontWeight: 800 }}>
-                    Shortage: {Math.abs(calcResult.waterAnalysis?.waterBalanceLiters)} L/day
+                    {currentLang === 'ta' ? 'பற்றாக்குறை:' : 'Shortage:'} {Math.abs(calcResult.waterAnalysis?.waterBalanceLiters)} {currentLang === 'ta' ? 'லிட்டர்/நாள்' : 'L/day'}
                   </div>
                 )}
                 <div style={{ marginTop: '6px', fontSize: '0.825rem', color: '#0f172a', fontWeight: 700 }}>
-                  Farmer action: {calcResult.practicalFeedingReport?.waterStatus?.farmerAction}
+                  {currentLang === 'ta' ? 'விவசாயி செய்ய வேண்டியது:' : 'Farmer action:'} {calcResult.practicalFeedingReport?.waterStatus?.farmerAction}
                 </div>
               </div>
             </div>
@@ -3051,13 +3092,13 @@ export default function Step10Review({
             {/* 5. WEATHER ADVISORY */}
             <div style={{ background: '#ffffff', border: '1.5px solid #fde047', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(234, 179, 8, 0.04)' }}>
               <h4 style={{ fontSize: '1.15rem', color: '#854d0e', fontWeight: 900, margin: '0 0 6px' }}>
-                {calcResult.practicalFeedingReport?.weatherAdvisory?.title || 'Warm Weather Today'}
+                {calcResult.practicalFeedingReport?.weatherAdvisory?.title || (currentLang === 'ta' ? 'இன்றைய வெப்பநிலை எச்சரிக்கை' : 'Warm Weather Today')}
               </h4>
               <p style={{ fontSize: '0.85rem', color: '#a16207', margin: '0 0 12px', fontWeight: 700 }}>
-                {Math.round(weather?.tempC || 33)}°C | {weather?.humidity || 69}% humidity (THI: {calcResult.climate?.thi})
+                {Math.round(weather?.tempC || 33)}°C | {weather?.humidity || 69}% {currentLang === 'ta' ? 'ஈரப்பதம்' : 'humidity'} (THI: {calcResult.climate?.thi})
               </p>
 
-              <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>Recommended action:</strong>
+              <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'பரிந்துரைக்கப்படும் நடவடிக்கைகள்:' : 'Recommended action:'}</strong>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem', color: '#334155' }}>
                 {calcResult.practicalFeedingReport?.weatherAdvisory?.recommendedActions?.map((act, i) => (
                   <div key={i}>{act}</div>
@@ -3069,17 +3110,17 @@ export default function Step10Review({
             <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)' }}>
               <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 900, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Scale size={20} color="#15803d" />
-                <span>Feed Balance (Are These Feeds Enough?)</span>
+                <span>{currentLang === 'ta' ? 'தீவன ஊட்டச்சத்து சமநிலை (இந்த தீவனங்கள் போதுமானதா?)' : 'Feed Balance (Are These Feeds Enough?)'}</span>
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
                 {calcResult.practicalFeedingReport?.feedBalanceSimple?.map((item, i) => (
                   <div key={i} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '0.875rem', color: '#0f172a', marginBottom: '4px' }}>
-                        {item.label}
+                        {translateTerm(item.label, currentLang)}
                       </div>
                       <div style={{ fontSize: '0.825rem', fontWeight: 700, color: (item.icon === 'ok' || item.status?.toLowerCase().includes('adequate')) ? '#15803d' : '#d97706', marginBottom: item.detail ? '6px' : '0' }}>
-                        {stripEmojis(item.status)}
+                        {translateTerm(stripEmojis(item.status), currentLang)}
                       </div>
                     </div>
                     {item.detail && (
@@ -3137,14 +3178,14 @@ export default function Step10Review({
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <span style={{ background: '#059669', color: '#ffffff', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Technical &amp; Laboratory View
+                          {currentLang === 'ta' ? 'தொழில்நுட்ப & ஆய்வக பார்வை' : 'Technical & Laboratory View'}
                         </span>
                         <h3 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 900, margin: 0 }}>
-                          Scientific Nutritive Fractions &amp; Consolidated Minerals Matrix
+                          {currentLang === 'ta' ? 'அறிவியல் ஊட்டச்சத்து கூறுகள் & தாதுக்கள் அட்டவணை (KT Formulation)' : 'Scientific Nutritive Fractions & Consolidated Minerals Matrix'}
                         </h3>
                       </div>
                       <p style={{ fontSize: '0.825rem', color: '#475569', margin: 0 }}>
-                        Detailed 14 nutritive and protein fractions, 15 minerals profile, and Net Energy (NEL) calculations (available in full in the downloadable PDF report).
+                        {currentLang === 'ta' ? 'விரிவான 14 ஊட்டச்சத்து மற்றும் புரத கூறுகள், 15 தாதுக்களின் விவரம், மற்றும் நிகர ஆற்றல் (NEL) கணக்கீடுகள் (PDF அறிக்கையிலும் பதிவிறக்கலாம்).' : 'Detailed 14 nutritive and protein fractions, 15 minerals profile, and Net Energy (NEL) calculations (available in full in the downloadable PDF report).'}
                       </p>
                     </div>
 
@@ -3168,7 +3209,7 @@ export default function Step10Review({
                         }}
                       >
                         {showTechnicalDetails ? <EyeOff size={16} /> : <Eye size={16} />}
-                        <span>{showTechnicalDetails ? 'Hide Laboratory Details' : 'Show Advanced Laboratory Analysis'}</span>
+                        <span>{showTechnicalDetails ? (currentLang === 'ta' ? 'ஆய்வக விவரங்களை மறைக்க' : 'Hide Laboratory Details') : (currentLang === 'ta' ? 'விரிவான ஆய்வக பகுப்பாய்வைக் காட்ட' : 'Show Advanced Laboratory Analysis')}</span>
                       </button>
                     </div>
                   </div>
@@ -3177,35 +3218,35 @@ export default function Step10Review({
                     <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '18px' }}>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
                         <span style={{ padding: '4px 10px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>
-                          Diet DM: {dietTotals.dmKg || 0} kg
+                          {currentLang === 'ta' ? 'உலர் சத்து (DM):' : 'Diet DM:'} {dietTotals.dmKg || 0} kg
                         </span>
                         <span style={{ padding: '4px 10px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, color: '#1e40af' }}>
-                          Diet ME: {dietTotals.meMcal || 0} Mcal ({dietTotals.nelMcal || 0} NEL)
+                          {currentLang === 'ta' ? 'வளர்சிதை மாற்ற ஆற்றல் (ME):' : 'Diet ME:'} {dietTotals.meMcal || 0} Mcal ({dietTotals.nelMcal || 0} NEL)
                         </span>
                         <span style={{ padding: '4px 10px', background: fndf.isSufficient ? '#f0fdf4' : '#fef2f2', border: fndf.isSufficient ? '1px solid #86efac' : '1px solid #fca5a5', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, color: fndf.isSufficient ? '#166534' : '#991b1b' }}>
-                          Forage NDF: {fndf.forageNdfPct || 0}% ({fndf.isSufficient ? '>= 21% OK' : '< 21% Low'})
+                          {currentLang === 'ta' ? 'தீவன நார்ச்சத்து NDF:' : 'Forage NDF:'} {fndf.forageNdfPct || 0}% ({fndf.isSufficient ? (currentLang === 'ta' ? '>= 21% சரியானது' : '>= 21% OK') : (currentLang === 'ta' ? '< 21% குறைவு' : '< 21% Low')})
                         </span>
                       </div>
 
                   {/* TAB SELECTOR */}
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
                     <button type="button" onClick={() => setKtTab('proximate')} style={tabBtnStyle('proximate')}>
-                      14 Nutritive &amp; Protein Fractions
+                      {currentLang === 'ta' ? '14 ஊட்டச்சத்து & புரத கூறுகள்' : '14 Nutritive & Protein Fractions'}
                     </button>
                     <button type="button" onClick={() => setKtTab('minerals')} style={tabBtnStyle('minerals')}>
-                      15 Minerals Profile
+                      {currentLang === 'ta' ? '15 தாதுக்கள் விவரம்' : '15 Minerals Profile'}
                     </button>
                     <button type="button" onClick={() => setKtTab('energy')} style={tabBtnStyle('energy')}>
-                      Net Energy (NEL) Matrix
+                      {currentLang === 'ta' ? 'நிகர ஆற்றல் (NEL) அட்டவணை' : 'Net Energy (NEL) Matrix'}
                     </button>
                     <button type="button" onClick={() => setKtTab('ndf')} style={tabBtnStyle('ndf')}>
-                      Forage NDF Buffer (&gt;21%)
+                      {currentLang === 'ta' ? 'நார்ச்சத்து NDF தாங்கல் (>21%)' : 'Forage NDF Buffer (>21%)'}
                     </button>
                     <button type="button" onClick={() => setKtTab('water')} style={tabBtnStyle('water')}>
-                      Free Water Intake
+                      {currentLang === 'ta' ? 'குடிநீர் நுகர்வு (FWI)' : 'Free Water Intake'}
                     </button>
                     <button type="button" onClick={() => setKtTab('baselines')} style={tabBtnStyle('baselines')}>
-                      Body Weight Targets
+                      {currentLang === 'ta' ? 'உடல் எடை இலக்குகள்' : 'Body Weight Targets'}
                     </button>
                   </div>
 
@@ -3589,45 +3630,45 @@ export default function Step10Review({
                           </div>
 
                           <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                            <strong style={{ color: '#2563eb' }}>Multiparous Target Weight:</strong>
+                            <strong style={{ color: '#2563eb' }}>{currentLang === 'ta' ? 'பல முறை ஈன்ற மாடுகளின் எடை:' : 'Multiparous Target Weight:'}</strong>
                             <div style={{ fontSize: '1.1rem', fontWeight: 800, margin: '4px 0' }}>
                               {bwBaselines.multiparousTargetBwKg || 0} kg
                             </div>
-                            <span style={{ fontSize: '0.725rem', color: '#64748b' }}>Mature BW x 95% | 4.5% BW Ref: {bwBaselines.multiparousRequiredAsFedKg || 0} kg/day</span>
+                            <span style={{ fontSize: '0.725rem', color: '#64748b' }}>{currentLang === 'ta' ? `முதிர்ந்த எடை x 95% | 4.5% உடல் எடை குறிப்பு: ${bwBaselines.multiparousRequiredAsFedKg || 0} kg/நாள்` : `Mature BW x 95% | 4.5% BW Ref: ${bwBaselines.multiparousRequiredAsFedKg || 0} kg/day`}</span>
                           </div>
 
                           <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                            <strong style={{ color: '#7c3aed' }}>Moisture-Derived As-Fed:</strong>
+                            <strong style={{ color: '#7c3aed' }}>{currentLang === 'ta' ? 'ஈரப்பதம் சார்ந்த மொத்த தீவனம்:' : 'Moisture-Derived As-Fed:'}</strong>
                             <div style={{ fontSize: '1.1rem', fontWeight: 800, margin: '4px 0', color: '#7c3aed' }}>
-                              {bwBaselines.moistureRequiredAsFedKg || 0} kg/day
+                              {bwBaselines.moistureRequiredAsFedKg || 0} kg/{currentLang === 'ta' ? 'நாள்' : 'day'}
                             </div>
-                            <span style={{ fontSize: '0.725rem', color: '#64748b' }}>True requirement = DMI / (Diet DM% / 100) (Thumb-rule 4.5% BW: {bwBaselines.herdAsFedBaselineKg || 0} kg)</span>
+                            <span style={{ fontSize: '0.725rem', color: '#64748b' }}>{currentLang === 'ta' ? `உண்மையான தேவை = DMI / (உணவு DM% / 100) (உடல் எடையில் 4.5%: ${bwBaselines.herdAsFedBaselineKg || 0} kg)` : `True requirement = DMI / (Diet DM% / 100) (Thumb-rule 4.5% BW: ${bwBaselines.herdAsFedBaselineKg || 0} kg)`}</span>
                           </div>
                         </div>
 
                         <h5 style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 800, margin: '10px 0 6px' }}>
-                          NRC DMI Equations Benchmarks:
+                          {currentLang === 'ta' ? 'NRC உலர் பொருள் உட்கொள்ளல் (DMI) அளவுகோல்கள்:' : 'NRC DMI Equations Benchmarks:'}
                         </h5>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '0.775rem' }}>
                           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <strong>Heifer Target DMI (Eq 20-10):</strong>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#047857' }}>{kt.dmiFormulations?.primiparousFarOffTargetDmiKg} kg DM/day</div>
+                            <strong>{currentLang === 'ta' ? 'கிடேரி இலக்கு DMI (Eq 20-10):' : 'Heifer Target DMI (Eq 20-10):'}</strong>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#047857' }}>{kt.dmiFormulations?.primiparousFarOffTargetDmiKg} kg DM/{currentLang === 'ta' ? 'நாள்' : 'day'}</div>
                             <span style={{ fontSize: '0.7rem', color: '#64748b' }}>0.022 x MatBW x [1 - e^(-1.54*BW/MatBW)]</span>
                           </div>
                           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <strong>Heifer Diet-Based DMI (Eq 20-11):</strong>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0284c7' }}>{kt.dmiFormulations?.heiferDietDmiKg} kg DM/day</div>
+                            <strong>{currentLang === 'ta' ? 'கிடேரி உணவு சார்ந்த DMI (Eq 20-11):' : 'Heifer Diet-Based DMI (Eq 20-11):'}</strong>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0284c7' }}>{kt.dmiFormulations?.heiferDietDmiKg} kg DM/{currentLang === 'ta' ? 'நாள்' : 'day'}</div>
                             <span style={{ fontSize: '0.7rem', color: '#64748b' }}>0.0226 x MatBW - 0.082 x [NDF deviation]</span>
                           </div>
                           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <strong>Lactating Target DMI (Eq 20-18):</strong>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#d97706' }}>{kt.dmiFormulations?.lactatingTargetDmiEqKg} kg DM/day</div>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>4% FCM &amp; Parity corrected</span>
+                            <strong>{currentLang === 'ta' ? 'கறவை மாடு இலக்கு DMI (Eq 20-18):' : 'Lactating Target DMI (Eq 20-18):'}</strong>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#d97706' }}>{kt.dmiFormulations?.lactatingTargetDmiEqKg} kg DM/{currentLang === 'ta' ? 'நாள்' : 'day'}</div>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{currentLang === 'ta' ? '4% FCM & ஈற்று திருத்தம்' : '4% FCM & Parity corrected'}</span>
                           </div>
                           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                            <strong>Total Ingested DM:</strong>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#4338ca' }}>{kt.dmiFormulations?.totalDmIngestedKg} kg DM/day</div>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Trough: {kt.dmiFormulations?.troughDmKg} kg + Grazing: {kt.dmiFormulations?.grazingDmKg} kg</span>
+                            <strong>{currentLang === 'ta' ? 'மொத்த உட்கொள்ளப்பட்ட உலர் பொருள்:' : 'Total Ingested DM:'}</strong>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#4338ca' }}>{kt.dmiFormulations?.totalDmIngestedKg} kg DM/{currentLang === 'ta' ? 'நாள்' : 'day'}</div>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{currentLang === 'ta' ? `தொட்டி: ${kt.dmiFormulations?.troughDmKg} kg + மேய்ச்சல்: ${kt.dmiFormulations?.grazingDmKg} kg` : `Trough: ${kt.dmiFormulations?.troughDmKg} kg + Grazing: ${kt.dmiFormulations?.grazingDmKg} kg`}</span>
                           </div>
                         </div>
                       </div>
@@ -3656,7 +3697,9 @@ export default function Step10Review({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <AlertTriangle size={20} color={!feasibility.isFeasible ? '#dc2626' : '#d97706'} />
                     <h4 style={{ fontSize: '1.1rem', color: !feasibility.isFeasible ? '#991b1b' : '#92400e', fontWeight: 900, margin: 0 }}>
-                      {!feasibility.isFeasible ? 'Ration Feasibility Alert: Deficits Detected' : 'Feed Inclusion Advisory'}
+                      {!feasibility.isFeasible 
+                        ? (currentLang === 'ta' ? 'தீவன சாத்தியக்கூறு எச்சரிக்கை: ஊட்டச்சத்து பற்றாக்குறைகள் கண்டறியப்பட்டுள்ளன' : 'Ration Feasibility Alert: Deficits Detected')
+                        : (currentLang === 'ta' ? 'தீவன வரம்பு மற்றும் உள்ளடக்க ஆலோசனை' : 'Feed Inclusion Advisory')}
                     </h4>
                   </div>
                   <p style={{ fontSize: '0.85rem', color: !feasibility.isFeasible ? '#b91c1c' : '#78350f', margin: '0 0 12px', fontWeight: 600 }}>
@@ -3667,7 +3710,7 @@ export default function Step10Review({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                       {feasibility.missingNutrients.map((n, idx) => (
                         <div key={idx} style={{ background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 14px', fontSize: '0.825rem' }}>
-                          <strong style={{ color: '#b91c1c' }}>{n.nutrient || n.name || (typeof n === 'string' ? 'Deficit Alert' : 'Warning')}:</strong> {n.advice || n.message || (typeof n === 'string' ? n : '')}
+                          <strong style={{ color: '#b91c1c' }}>{n.nutrient || n.name || (typeof n === 'string' ? (currentLang === 'ta' ? 'பற்றாக்குறை எச்சரிக்கை' : 'Deficit Alert') : (currentLang === 'ta' ? 'எச்சரிக்கை' : 'Warning'))}:</strong> {n.advice || n.message || (typeof n === 'string' ? n : '')}
                         </div>
                       ))}
                     </div>
@@ -3677,7 +3720,7 @@ export default function Step10Review({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {feasibility.inclusionWarnings.map((w, idx) => (
                         <div key={idx} style={{ background: '#ffffff', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px 14px', fontSize: '0.825rem', color: '#92400e' }}>
-                          <strong>{w.feed} Limit:</strong> {w.message}
+                          <strong>{translateFeed ? translateFeed(w.feed, currentLang) : w.feed} {currentLang === 'ta' ? 'வரம்பு:' : 'Limit:'}</strong> {w.message}
                         </div>
                       ))}
                     </div>
@@ -3702,7 +3745,7 @@ export default function Step10Review({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Leaf size={20} color={isLowRisk ? "#166534" : "#854d0e"} />
                       <h4 style={{ fontSize: '1.15rem', color: isLowRisk ? '#166534' : '#854d0e', fontWeight: 900, margin: 0 }}>
-                        Rumen Fiber Health & Acidosis Prevention (NRC & ICAR)
+                        {currentLang === 'ta' ? 'அசைபோடும் இரைப்பை நார்ச்சத்து & அமிலத்தன்மை தடுப்பு (SARA)' : 'Rumen Fiber Health & Acidosis Prevention (NRC & ICAR)'}
                       </h4>
                     </div>
                     <span style={{
@@ -3714,7 +3757,9 @@ export default function Step10Review({
                       fontSize: '0.8rem',
                       fontWeight: 800
                     }}>
-                      SARA Risk: {rfh.saraRisk}
+                      {currentLang === 'ta' 
+                        ? `SARA அமிலத்தன்மை அபாயம்: ${rfh.saraRisk === 'Low' ? 'குறைவு (பாதுகாப்பானது)' : rfh.saraRisk === 'Medium' ? 'நடுத்தரம்' : 'அதிகம்'}` 
+                        : `SARA Risk: ${rfh.saraRisk}`}
                     </span>
                   </div>
 
@@ -3724,35 +3769,35 @@ export default function Step10Review({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
                     <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>Forage NDF (fNDF)</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? 'தீவன நார்ச்சத்து (fNDF)' : 'Forage NDF (fNDF)'}</div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 900, color: rfh.forageNdfPct >= 19 ? '#15803d' : '#dc2626' }}>
-                        {rfh.forageNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>(Min 19%)</span>
+                        {rfh.forageNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({currentLang === 'ta' ? 'குறைந்தது 19%' : 'Min 19%'})</span>
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Protects rumen buffering</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{currentLang === 'ta' ? 'இரைப்பை அமிலத்தன்மையை சீராக்கும்' : 'Protects rumen buffering'}</div>
                     </div>
 
                     <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>Effective NDF (peNDF)</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? 'பயனுள்ள நார்ச்சத்து (peNDF)' : 'Effective NDF (peNDF)'}</div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 900, color: rfh.physicallyEffectiveNdfPct >= 21 ? '#15803d' : '#d97706' }}>
-                        {rfh.physicallyEffectiveNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>(Min 21%)</span>
+                        {rfh.physicallyEffectiveNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({currentLang === 'ta' ? 'குறைந்தது 21%' : 'Min 21%'})</span>
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Stimulates cud chewing</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{currentLang === 'ta' ? 'அசைபோடுதலை தூண்டுகிறது' : 'Stimulates cud chewing'}</div>
                     </div>
 
                     <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>Total Dietary NDF</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? 'மொத்த உணவு நார்ச்சத்து (NDF)' : 'Total Dietary NDF'}</div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 900, color: rfh.totalNdfPct <= 48 ? '#15803d' : '#d97706' }}>
-                        {rfh.totalNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>(Max 48%)</span>
+                        {rfh.totalNdfPct}% <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({currentLang === 'ta' ? 'அதிகபட்சம் 48%' : 'Max 48%'})</span>
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Prevents rumen gut-fill limit</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{currentLang === 'ta' ? 'வயிறு அடைப்பு வரம்பைத் தடுக்கும்' : 'Prevents rumen gut-fill limit'}</div>
                     </div>
 
                     <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>Est. Cud Chews</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? 'மதிப்பிடப்பட்ட அசைபோடுதல்' : 'Est. Cud Chews'}</div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
                         ~{rfh.estimatedCudChewsPerDay?.toLocaleString()}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>Chews / herd / day</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{currentLang === 'ta' ? 'அசைபோடுதல் / மந்தை / நாள்' : 'Chews / herd / day'}</div>
                     </div>
                   </div>
                 </div>
@@ -3774,15 +3819,17 @@ export default function Step10Review({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <MapPin size={20} color="#0f172a" />
                       <h4 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: 900, margin: 0 }}>
-                        Agro-Climatic Feed Intelligence: {reg.zoneName}
+                        {currentLang === 'ta' ? `வேளாண் காலநிலை தீவன வழிகாட்டுதல்: ${reg.zoneName}` : `Agro-Climatic Feed Intelligence: ${reg.zoneName}`}
                       </h4>
                     </div>
                     <span style={{ background: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
-                      Location: {reg.detectedLocation || 'National'}
+                      {currentLang === 'ta' ? `இருப்பிடம்: ${reg.detectedLocation || 'நாடு தழுவியது'}` : `Location: ${reg.detectedLocation || 'National'}`}
                     </span>
                   </div>
                   <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '0 0 14px' }}>
-                    Scientifically recommended regional feeds and agro-byproducts suited for your local climate to optimize costs and milk solids.
+                    {currentLang === 'ta'
+                      ? 'உங்கள் உள்ளூர் தட்பவெப்ப நிலைக்கு ஏற்ற, பால் தரம் மற்றும் அடர்த்தியை அதிகரித்து செலவைக் குறைக்கும் பரிந்துரைக்கப்பட்ட தீவனங்கள் மற்றும் விவசாய துணைப்பொருட்கள்.'
+                      : 'Scientifically recommended regional feeds and agro-byproducts suited for your local climate to optimize costs and milk solids.'}
                   </p>
 
                   {/* Deficiency Bridges Alerts (if any) */}
@@ -3810,12 +3857,12 @@ export default function Step10Review({
                     {/* Greens */}
                     <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <div style={{ fontSize: '0.825rem', fontWeight: 800, color: '#166534', marginBottom: '6px' }}>
-                        Top Regional Greens
+                        {currentLang === 'ta' ? 'சிறந்த பிராந்திய பசுந்தீவனங்கள்' : 'Top Regional Greens'}
                       </div>
                       <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.78rem', color: '#334155', lineHeight: 1.4 }}>
                         {reg.topRegionalGreens?.map((g, i) => (
                           <li key={i} style={{ marginBottom: '4px' }}>
-                            <strong>{g.name}</strong> ({g.cpPct}% CP)
+                            <strong>{translateFeed ? translateFeed(g.name, currentLang) : g.name}</strong> ({g.cpPct}% CP)
                           </li>
                         ))}
                       </ul>
@@ -3824,12 +3871,12 @@ export default function Step10Review({
                     {/* Dry Roughage */}
                     <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <div style={{ fontSize: '0.825rem', fontWeight: 800, color: '#854d0e', marginBottom: '6px' }}>
-                        Top Dry Roughages
+                        {currentLang === 'ta' ? 'சிறந்த உலர் தீவனங்கள்' : 'Top Dry Roughages'}
                       </div>
                       <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.78rem', color: '#334155', lineHeight: 1.4 }}>
                         {reg.topRegionalDry?.map((d, i) => (
                           <li key={i} style={{ marginBottom: '4px' }}>
-                            <strong>{d.name}</strong>
+                            <strong>{translateFeed ? translateFeed(d.name, currentLang) : d.name}</strong>
                           </li>
                         ))}
                       </ul>
@@ -3838,12 +3885,12 @@ export default function Step10Review({
                     {/* Concentrates & Oil Cakes */}
                     <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <div style={{ fontSize: '0.825rem', fontWeight: 800, color: '#1e3a8a', marginBottom: '6px' }}>
-                        Top Oil Cakes & Byproducts
+                        {currentLang === 'ta' ? 'சிறந்த புண்ணாக்குகள் & துணைப்பொருட்கள்' : 'Top Oil Cakes & Byproducts'}
                       </div>
                       <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.78rem', color: '#334155', lineHeight: 1.4 }}>
                         {reg.topRegionalConcentrates?.map((c, i) => (
                           <li key={i} style={{ marginBottom: '4px' }}>
-                            <strong>{c.name}</strong> ({c.cpPct}% CP)
+                            <strong>{translateFeed ? translateFeed(c.name, currentLang) : c.name}</strong> ({c.cpPct}% CP)
                           </li>
                         ))}
                       </ul>
@@ -3861,21 +3908,24 @@ export default function Step10Review({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <button onClick={() => onEditStep(9)} className="btn-secondary">
           <ArrowLeft size={16} />
-          <span>{t ? t('previous') : 'Previous'}</span>
+          <span>{currentLang === 'ta' ? 'முந்தையது' : (t ? t('previous') : 'Previous')}</span>
         </button>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {onResetAllData && (
             <button 
               onClick={() => {
-                if (window.confirm('Are you sure you want to clear all recorded farm data and start fresh?')) {
+                const confirmMsg = currentLang === 'ta' 
+                  ? 'பதிவு செய்யப்பட்ட அனைத்து பண்ணை தரவுகளையும் அழித்து புதிதாக தொடங்க விரும்புகிறீர்களா?' 
+                  : 'Are you sure you want to clear all recorded farm data and start fresh?';
+                if (window.confirm(confirmMsg)) {
                   onResetAllData();
                 }
               }} 
               className="btn-secondary" 
               style={{ padding: '12px 18px', color: '#dc2626', borderColor: '#fca5a5' }}
             >
-              <span>Reset & Start New Record</span>
+              <span>{currentLang === 'ta' ? 'அனைத்தையும் அழித்து புதிதாகத் தொடங்கு' : 'Reset & Start New Record'}</span>
             </button>
           )}
 
@@ -3903,10 +3953,10 @@ export default function Step10Review({
               })}
               className="btn-secondary"
               style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: '8px', border: '1.5px solid #0284c7', color: '#0369a1', fontWeight: 700 }}
-              title="Download recorded farm inputs in colorful PDF format"
+              title={currentLang === 'ta' ? 'பதிவு செய்யப்பட்ட பண்ணை உள்ளீடுகளை வண்ணமயமான PDF வடிவத்தில் பதிவிறக்கவும்' : 'Download recorded farm inputs in colorful PDF format'}
             >
               <FileText size={18} color="#0284c7" />
-              <span>Download Inputs (PDF)</span>
+              <span>{currentLang === 'ta' ? 'உள்ளீடுகள் பதிவிறக்கம் (PDF)' : 'Download Inputs (PDF)'}</span>
             </button>
           )}
 
@@ -3936,17 +3986,17 @@ export default function Step10Review({
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
               }}
-              title="Download generated feeding report in colorful PDF format"
+              title={currentLang === 'ta' ? 'உருவாக்கப்பட்ட தீவன அறிக்கையை வண்ணமயமான PDF வடிவத்தில் பதிவிறக்கவும்' : 'Download generated feeding report in colorful PDF format'}
             >
               <Download size={18} />
-              <span>Download Feeding Report (PDF)</span>
+              <span>{currentLang === 'ta' ? 'தீவன அறிக்கை பதிவிறக்கம் (PDF)' : 'Download Feeding Report (PDF)'}</span>
             </button>
           )}
 
           {canGenerateNutrition && (
             <button onClick={generateCSV} className="btn-primary" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Download size={18} />
-              <span>{t ? t('step10.download_csv') : 'Download CSV Report'}</span>
+              <span>{currentLang === 'ta' ? 'CSV அறிக்கை பதிவிறக்கம்' : (t ? t('step10.download_csv') : 'Download CSV Report')}</span>
             </button>
           )}
         </div>

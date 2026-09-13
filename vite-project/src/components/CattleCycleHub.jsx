@@ -6,6 +6,7 @@ import {
   HEIFER_WEIGHT_RANGES,
   BULL_WEIGHT_RANGES,
 } from '../data/weightRanges';
+import { ANIMAL_STAGE_TRANSLATIONS, translateTerm } from '../utils/tamilTranslations';
 
 // 5 Stages in the Cattle Production Cycle with Cartoon Images & Theme Colors
 const STAGES = [
@@ -144,11 +145,29 @@ export default function CattleCycleHub({
   acknowledgeStep,
   onNext,
   onPrev,
+  currentLang = 'ta',
   t,
 }) {
   const [activeKey, setActiveKey] = useState(initialActiveStage);
   const [tapBounce, setTapBounce] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
+
+  // Localized stages based on active language
+  const localizedStages = STAGES.map(s => {
+    const tr = ANIMAL_STAGE_TRANSLATIONS[s.key];
+    if (tr && currentLang === 'ta') {
+      return {
+        ...s,
+        label: tr.label?.ta || s.label,
+        shortLabel: tr.shortLabel?.ta || s.shortLabel,
+        questionTitle: tr.questionTitle?.ta || s.questionTitle,
+        questionSub: tr.questionSub?.ta || s.questionSub,
+        tagline: tr.tagline?.ta || s.tagline,
+        nextLabel: tr.nextLabel?.ta || s.nextLabel,
+      };
+    }
+    return s;
+  });
 
   // Track which stages the user has reviewed / answered (even if 0)
   const [visitedStages, setVisitedStages] = useState(() => {
@@ -179,7 +198,7 @@ export default function CattleCycleHub({
     return 'both';
   });
 
-  const activeStage = STAGES.find(s => s.key === activeKey) || STAGES[0];
+  const activeStage = localizedStages.find(s => s.key === activeKey) || localizedStages[0];
 
   // Combined pregnant cattle helper
   const unifiedPregnant = [
@@ -658,17 +677,19 @@ export default function CattleCycleHub({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span style={{ background: '#0f172a', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              STEP 2 OF 6
+              {currentLang === 'ta' ? 'படி 2 / 6' : 'STEP 2 OF 6'}
             </span>
             <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>
-              CATTLE HERD & PRODUCTION CYCLE
+              {currentLang === 'ta' ? 'மாடுகள் மந்தை & உற்பத்தி சுழற்சி' : 'CATTLE HERD & PRODUCTION CYCLE'}
             </span>
           </div>
           <h2 style={{ fontSize: '1.4rem', color: '#0f172a', fontWeight: 900, margin: '0 0 4px' }}>
-            Cattle Herd Management
+            {currentLang === 'ta' ? 'மாடுகள் மந்தை மேலாண்மை' : 'Cattle Herd Management'}
           </h2>
           <p style={{ fontSize: '0.825rem', color: '#475569', margin: 0 }}>
-            Tap each cattle stage in the cycle below, enter counts, and configure body weight & details on the right.
+            {currentLang === 'ta' 
+              ? 'கீழே உள்ள சுழற்சியில் ஒவ்வொரு பருவத்தையும் தொட்டு, மாடுகளின் எண்ணிக்கையை உள்ளிட்டு, உடல் எடை மற்றும் விவரங்களை அமைக்கவும்.' 
+              : 'Tap each cattle stage in the cycle below, enter counts, and configure body weight & details on the right.'}
           </p>
         </div>
 
@@ -684,8 +705,12 @@ export default function CattleCycleHub({
           boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         }}>
           <div>
-            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, display: 'block' }}>TOTAL HERD</span>
-            <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>{totalCattleCount} animals</span>
+            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
+              {currentLang === 'ta' ? 'மொத்த மந்தை' : 'TOTAL HERD'}
+            </span>
+            <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>
+              {totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : 'animals'}
+            </span>
           </div>
         </div>
       </div>
@@ -716,10 +741,10 @@ export default function CattleCycleHub({
               color: '#475569',
               textTransform: 'uppercase',
             }}>
-              Cattle Production Cycle
+              {currentLang === 'ta' ? 'மாடுகள் உற்பத்தி சுழற்சி' : 'Cattle Production Cycle'}
             </span>
             <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '3px 0 0' }}>
-              Click any stage in the cycle below to configure
+              {currentLang === 'ta' ? 'அமைக்க கீழே உள்ள ஏதேனும் ஒரு பருவத்தைத் தொடுங்கள்' : 'Click any stage in the cycle below to configure'}
             </p>
           </div>
 
@@ -732,7 +757,7 @@ export default function CattleCycleHub({
               style={{ display: 'block', overflow: 'visible', filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.06))' }}
             >
               <defs>
-                {STAGES.map(s => {
+                {localizedStages.map(s => {
                   const rad = s.angle * Math.PI / 180;
                   const nx = cx + R * Math.cos(rad);
                   const ny = cy + R * Math.sin(rad);
@@ -754,17 +779,18 @@ export default function CattleCycleHub({
               {/* Center Hub */}
               <circle cx={cx} cy={cy} r={60} fill="#ffffff" stroke="#e2e8f0" strokeWidth="2.5" />
               <text x={cx} y={cy - 16} textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing="1.2">
-                QUESTION {activeStage.questionNum} OF 5
+                {currentLang === 'ta' ? `கேள்வி ${activeStage.questionNum} / 5` : `QUESTION ${activeStage.questionNum} OF 5`}
               </text>
               <text x={cx} y={cy + 14} textAnchor="middle" fill="#0f172a" fontSize="30" fontWeight="900">
                 {totalCattleCount}
               </text>
               <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="800" letterSpacing="1">
-                TOTAL HERD
+                {currentLang === 'ta' ? 'மொத்த மந்தை' : 'TOTAL HERD'}
               </text>
 
               {/* Stage Nodes orbiting on the circle */}
-              {STAGES.map(s => {
+              {localizedStages.map(s => {
+
                 const rad = s.angle * Math.PI / 180;
                 const nx = cx + R * Math.cos(rad);
                 const ny = cy + R * Math.sin(rad);
@@ -895,7 +921,7 @@ export default function CattleCycleHub({
             width: '100%',
             marginTop: '4px',
           }}>
-            {STAGES.map((s, idx) => {
+            {localizedStages.map((s, idx) => {
               const isSelected = activeKey === s.key;
               const count = counts[s.key] || 0;
               const isDone = visitedStages[s.key] || count > 0;
@@ -971,7 +997,7 @@ export default function CattleCycleHub({
             border: '1.5px solid #e2e8f0',
             overflowX: 'auto',
           }}>
-            {STAGES.map(s => {
+            {localizedStages.map(s => {
               const isCur = activeKey === s.key;
               const isDone = visitedStages[s.key] || counts[s.key] > 0;
               return (
@@ -2542,14 +2568,14 @@ export default function CattleCycleHub({
       }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
-          <span>Previous (Breed)</span>
+          <span>{currentLang === 'ta' ? 'முந்தையது (இனம்)' : 'Previous (Breed)'}</span>
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
-            Herd Questions:
+            {currentLang === 'ta' ? 'மந்தைக் கேள்விகள்:' : 'Herd Questions:'}
           </span>
-          {STAGES.map(s => {
+          {localizedStages.map(s => {
             const isCur = activeKey === s.key;
             const stageCheck = checkStageValidity(s.key);
             const hasCattle = counts[s.key] > 0;
@@ -2614,9 +2640,10 @@ export default function CattleCycleHub({
           onClick={handleAttemptNext}
           className="btn-primary"
         >
-          <span>Next Step (Grazing Management)</span>
+          <span>{currentLang === 'ta' ? 'அடுத்த படி (மேய்ச்சல் மேலாண்மை)' : 'Next Step (Grazing Management)'}</span>
           <ChevronRight size={18} />
         </button>
+
       </div>
 
     </div>
