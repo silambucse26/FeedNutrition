@@ -86,6 +86,105 @@ function CattleVector({ size = 26, color = '#16a34a', type = 'heifer', label, we
   );
 }
 
+// Cattle Cartoon Badge with Animal Number and Entered Details for Summary Review
+function CattleSummaryBadge({
+  imgSrc,
+  number,
+  title,
+  weight,
+  details = [],
+  color = '#16a34a',
+  onClick,
+  isMissing = false,
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '8px 12px',
+        background: isMissing ? '#fef2f2' : '#ffffff',
+        border: `1.5px solid ${isMissing ? '#ef4444' : color + '40'}`,
+        borderRadius: '12px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+      }}
+      title={onClick ? 'Click to edit this cattle in Herd Management' : ''}
+    >
+      {/* Cartoon Cattle Image with Prominent Number Badge Underneath */}
+      <div style={{
+        position: 'relative',
+        width: '44px',
+        height: '44px',
+        borderRadius: '10px',
+        overflow: 'hidden',
+        border: `2px solid ${isMissing ? '#ef4444' : color}`,
+        flexShrink: 0,
+        background: '#f8fafc',
+      }}>
+        <img
+          src={imgSrc}
+          alt={title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: isMissing ? '#ef4444' : color,
+          color: '#ffffff',
+          fontSize: '0.60rem',
+          fontWeight: 900,
+          textAlign: 'center',
+          lineHeight: '13px',
+          letterSpacing: '0.2px',
+        }}>
+          #{number}
+        </div>
+      </div>
+
+      {/* Details */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#0f172a' }}>
+            {title}
+          </span>
+          {isMissing ? (
+            <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 5px', borderRadius: '4px' }}>
+              Missing Data
+            </span>
+          ) : (
+            <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 5px', borderRadius: '4px' }}>
+              ✓
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+          {weight ? (
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: color, background: `${color}15`, padding: '1px 6px', borderRadius: '5px' }}>
+              {weight} kg
+            </span>
+          ) : (
+            <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 5px', borderRadius: '5px' }}>
+              ⚠️ Missing Weight
+            </span>
+          )}
+          {details.map((d, idx) => (
+            <span key={idx} style={{ fontSize: '0.68rem', fontWeight: 600, color: '#475569', background: '#f1f5f9', padding: '1px 5px', borderRadius: '5px' }}>
+              {d}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Step10Review({ 
   weather, 
   setWeather,
@@ -140,14 +239,11 @@ export default function Step10Review({
   const isWeatherOk = Boolean(isWeatherComplete);
   const stepCatalog = [
     { num: 1, title: t ? t('steps.step_1') : 'Breed Selection' },
-    { num: 2, title: t ? t('steps.step_2') : 'Heifers' },
-    { num: 3, title: t ? t('steps.step_3') : 'Pregnant Cows' },
-    { num: 4, title: t ? t('steps.step_4') : 'Lactating Herd' },
-    { num: 5, title: t ? t('steps.step_5') : 'Dry Cows' },
-    { num: 6, title: t ? t('steps.step_6') : 'Bulls' },
-    { num: 7, title: t ? t('steps.step_7') : 'Grazing Management' },
-    { num: 8, title: t ? t('steps.step_8') : 'Water Availability' },
-    { num: 9, title: t ? t('steps.step_9') : 'Feed & Fodder' }
+    { num: 2, title: t ? t('steps.step_2') : 'Cattle Herd' },
+    { num: 3, title: t ? t('steps.step_3') : 'Grazing Management' },
+    { num: 4, title: t ? t('steps.step_4') : 'Water Availability' },
+    { num: 5, title: t ? t('steps.step_5') : 'Feed & Fodder' },
+    { num: 6, title: t ? t('steps.step_6') : 'Summary & Review' }
   ];
 
   const hasCattle = totalCattleCount > 0;
@@ -166,10 +262,10 @@ export default function Step10Review({
 
   const requiredMissingItems = [];
   if (!hasBreed) requiredMissingItems.push({ num: 1, title: t ? t('steps.step_1') : 'Breed Selection', reason: 'Select a cattle or buffalo breed' });
-  if (!hasCattle) requiredMissingItems.push({ num: 2, title: 'Cattle Herd Inventory', reason: 'Record at least one animal in your herd (Heifers, Pregnant, Lactating, Dry, or Bulls)' });
-  if (hasInvalidCattle) requiredMissingItems.push({ num: 4, title: 'Cattle Details Incomplete', reason: 'Ensure all recorded cattle have valid live weights and production values' });
-  if (!hasWater) requiredMissingItems.push({ num: 8, title: t ? t('steps.step_8') : 'Water Availability', reason: 'Daily water supply volume and water source are required' });
-  if (!hasFeed) requiredMissingItems.push({ num: 9, title: t ? t('steps.step_9') : 'Feed & Fodder', reason: 'Select feed ingredients with daily quantity (kg/day)' });
+  if (!hasCattle) requiredMissingItems.push({ num: 2, title: t ? t('steps.step_2') : 'Cattle Herd', reason: 'Record at least one animal in your herd (Heifers, Pregnant, Lactating, Dry, or Bulls)' });
+  if (hasInvalidCattle) requiredMissingItems.push({ num: 2, title: 'Cattle Details Incomplete', reason: 'Ensure all recorded cattle have valid live weights and production values' });
+  if (!hasWater) requiredMissingItems.push({ num: 4, title: t ? t('steps.step_4') : 'Water Availability', reason: 'Daily water supply volume and water source are required' });
+  if (!hasFeed) requiredMissingItems.push({ num: 5, title: t ? t('steps.step_5') : 'Feed & Fodder', reason: 'Select feed ingredients with daily quantity (kg/day)' });
 
   // Check backend connectivity on mount (calculation is triggered on user button click)
   useEffect(() => {
@@ -442,7 +538,7 @@ export default function Step10Review({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{t ? t('step10.badge') : 'STEP 10 OF 10'}</span>
+            <span className="badge-green">FINAL STEP 6</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>
               {t ? t('step10.tag') : 'COMPREHENSIVE FARM REVIEW'}
             </span>
@@ -683,8 +779,12 @@ export default function Step10Review({
           {/* HEIFERS */}
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', background: totalHeifers > 0 ? '#ffffff' : '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: totalHeifers > 0 ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CattleVector size={24} color={totalHeifers > 0 ? '#16a34a' : '#94a3b8'} type="heifer" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/cattle_art/cartoon_heifer.jpg" 
+                  alt="Heifers" 
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #16a34a', flexShrink: 0 }} 
+                />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
                   {t ? t('step7.heifers') : 'Heifers'}: {totalHeifers > 0 ? `${totalHeifers} head` : '0 head (None on farm)'}
                 </strong>
@@ -692,15 +792,18 @@ export default function Step10Review({
               <button onClick={() => onEditStep(2)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
             </div>
             {totalHeifers > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
                 {heifersData.map((h, i) => (
-                  <CattleVector 
+                  <CattleSummaryBadge 
                     key={h.id || i}
-                    size={32}
-                    color="#16a34a"
-                    type="heifer"
-                    label={`Heifer #${i + 1}`}
+                    imgSrc="/cattle_art/cartoon_heifer.jpg"
+                    number={i + 1}
+                    title={`Heifer #${i + 1}`}
                     weight={h.weight}
+                    details={[`${h.ageMonths || 18} mo`]}
+                    color="#16a34a"
+                    onClick={() => onEditStep(2)}
+                    isMissing={!h.weight || Number(h.weight) <= 0}
                   />
                 ))}
               </div>
@@ -714,8 +817,12 @@ export default function Step10Review({
           {/* PREGNANT COWS */}
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', background: totalPregnant > 0 ? '#ffffff' : '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: totalPregnant > 0 ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CattleVector size={24} color={totalPregnant > 0 ? '#d97706' : '#94a3b8'} type="pregnant" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/cattle_art/cartoon_pregnant.jpg" 
+                  alt="Pregnant Cattle" 
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #d97706', flexShrink: 0 }} 
+                />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
                   {t ? t('step7.pregnant') : 'Pregnant Cows'}: {totalPregnant > 0 ? `${totalPregnant} head` : '0 head (None on farm)'}
                 </strong>
@@ -724,17 +831,20 @@ export default function Step10Review({
             </div>
 
             {totalFirstTime > 0 && (
-              <div style={{ marginBottom: '10px', marginTop: '6px' }}>
+              <div style={{ marginBottom: '10px', marginTop: '8px' }}>
                 <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>First-Time Pregnant ({totalFirstTime}):</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
                   {firstTimeCattle.map((c, i) => (
-                    <CattleVector 
+                    <CattleSummaryBadge 
                       key={c.id || i}
-                      size={32}
-                      color="#d97706"
-                      type="pregnant"
-                      label={`1st-Preg #${i + 1}`}
+                      imgSrc="/cattle_art/cartoon_pregnant.jpg"
+                      number={i + 1}
+                      title={`1st-Preg #${i + 1}`}
                       weight={c.weight}
+                      details={[`${c.pregDays || 150}d preg`]}
+                      color="#d97706"
+                      onClick={() => onEditStep(3)}
+                      isMissing={!c.weight || Number(c.weight) <= 0}
                     />
                   ))}
                 </div>
@@ -742,17 +852,20 @@ export default function Step10Review({
             )}
 
             {totalRepeat > 0 && (
-              <div style={{ marginTop: '6px' }}>
+              <div style={{ marginTop: '8px' }}>
                 <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>Repeat / Multiparous ({totalRepeat}):</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
                   {repeatCattle.map((c, i) => (
-                    <CattleVector 
+                    <CattleSummaryBadge 
                       key={c.id || i}
-                      size={32}
-                      color="#b45309"
-                      type="pregnant"
-                      label={`Repeat #${i + 1}`}
+                      imgSrc="/cattle_art/cartoon_pregnant.jpg"
+                      number={i + 1}
+                      title={`Repeat #${i + 1}`}
                       weight={c.weight}
+                      details={[`${c.pregDays || 210}d preg`]}
+                      color="#b45309"
+                      onClick={() => onEditStep(3)}
+                      isMissing={!c.weight || Number(c.weight) <= 0}
                     />
                   ))}
                 </div>
@@ -769,8 +882,12 @@ export default function Step10Review({
           {/* LACTATING COWS */}
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', background: totalLactating > 0 ? '#ffffff' : '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: totalLactating > 0 ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CattleVector size={24} color={totalLactating > 0 ? '#0284c7' : '#94a3b8'} type="lactating" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/cattle_art/cartoon_lactating.jpg" 
+                  alt="Lactating Cows" 
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #0284c7', flexShrink: 0 }} 
+                />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
                   {t ? t('step7.lactating') : 'Lactating Cows'}: {totalLactating > 0 ? `${totalLactating} head (${totalDailyMilkL} L/day total)` : '0 head (None on farm)'}
                 </strong>
@@ -778,15 +895,22 @@ export default function Step10Review({
               <button onClick={() => onEditStep(4)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
             </div>
             {totalLactating > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
                 {lactatingData.map((c, i) => (
-                  <CattleVector 
+                  <CattleSummaryBadge 
                     key={c.id || i}
-                    size={32}
-                    color="#0284c7"
-                    type="lactating"
-                    label={`Cow #${i + 1} (${(c.lactationType === 'first_lactation' || c.isFirstLactation) ? '1st Lact' : '2nd+'})`}
+                    imgSrc="/cattle_art/cartoon_lactating.jpg"
+                    number={i + 1}
+                    title={`Cow #${i + 1} (${(c.lactationType === 'first_lactation' || c.isFirstLactation) ? '1st Lact' : '2nd+'})`}
                     weight={c.weight}
+                    details={[
+                      `${c.milkYield || 10} L/d`,
+                      `${c.milkFat || 4.2}% Fat`,
+                      c.stage === 'early' ? 'Early (<100d)' : c.stage === 'late' ? 'Late (>200d)' : 'Mid (100–200d)'
+                    ]}
+                    color="#0284c7"
+                    onClick={() => onEditStep(4)}
+                    isMissing={!c.weight || Number(c.weight) <= 0 || c.milkYield === '' || Number(c.milkYield) <= 0 || c.milkFat === '' || Number(c.milkFat) <= 0}
                   />
                 ))}
               </div>
@@ -800,8 +924,12 @@ export default function Step10Review({
           {/* DRY COWS */}
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', background: totalDry > 0 ? '#ffffff' : '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: totalDry > 0 ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CattleVector size={24} color={totalDry > 0 ? '#059669' : '#94a3b8'} type="dry" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/cattle_art/cartoon_dry_cow.jpg" 
+                  alt="Dry Cows" 
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #9333ea', flexShrink: 0 }} 
+                />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
                   {t ? t('step7.dry') : 'Dry Cows'}: {totalDry > 0 ? `${totalDry} head` : '0 head (None on farm)'}
                 </strong>
@@ -809,15 +937,18 @@ export default function Step10Review({
               <button onClick={() => onEditStep(5)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
             </div>
             {totalDry > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
                 {dryCowsData.map((c, i) => (
-                  <CattleVector 
+                  <CattleSummaryBadge 
                     key={c.id || i}
-                    size={32}
-                    color="#059669"
-                    type="dry"
-                    label={`Dry #${i + 1}`}
+                    imgSrc="/cattle_art/cartoon_dry_cow.jpg"
+                    number={i + 1}
+                    title={`Dry Cow #${i + 1}`}
                     weight={c.weight}
+                    details={[`${c.dryDays || 60}d dry`]}
+                    color="#9333ea"
+                    onClick={() => onEditStep(5)}
+                    isMissing={!c.weight || Number(c.weight) <= 0}
                   />
                 ))}
               </div>
@@ -831,8 +962,12 @@ export default function Step10Review({
           {/* BULLS */}
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px', background: totalBulls > 0 ? '#ffffff' : '#f8fafc' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: totalBulls > 0 ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CattleVector size={24} color={totalBulls > 0 ? '#dc2626' : '#94a3b8'} type="bull" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/cattle_art/cartoon_bull.jpg" 
+                  alt="Bulls" 
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1.5px solid #dc2626', flexShrink: 0 }} 
+                />
                 <strong style={{ color: '#0f172a', fontSize: '0.92rem' }}>
                   {t ? t('step7.bulls') : 'Bulls'}: {totalBulls > 0 ? `${totalBulls} head` : '0 head (None on farm)'}
                 </strong>
@@ -840,15 +975,18 @@ export default function Step10Review({
               <button onClick={() => onEditStep(6)} className="btn-secondary" style={{ padding: '3px 8px', fontSize: '0.72rem' }}>Edit</button>
             </div>
             {totalBulls > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '8px' }}>
                 {bullsData.map((b, i) => (
-                  <CattleVector 
+                  <CattleSummaryBadge 
                     key={b.id || i}
-                    size={32}
-                    color="#dc2626"
-                    type="bull"
-                    label={`Bull #${i + 1}`}
+                    imgSrc="/cattle_art/cartoon_bull.jpg"
+                    number={i + 1}
+                    title={`Bull #${i + 1}`}
                     weight={b.weight}
+                    details={[`${b.purpose || 'Breeding Bull'}`]}
+                    color="#dc2626"
+                    onClick={() => onEditStep(6)}
+                    isMissing={!b.weight || Number(b.weight) <= 0}
                   />
                 ))}
               </div>
@@ -2312,20 +2450,20 @@ export default function Step10Review({
                               <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
                                 {cow.milkYieldL} L/day <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({cow.milkFatPct}% fat)</span>
                               </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#dc2626' : '#15803d', fontWeight: 800 }}>
-                                {cow.isFeasible === false ? 'Incomplete' : `${cow.greenFodderKg} kg`}
+                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#15803d', fontWeight: 800 }}>
+                                {cow.greenFodderKg > 0 ? `${cow.greenFodderKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '— est.' : '0 kg')}
                               </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#dc2626' : '#854d0e', fontWeight: 700 }}>
-                                {cow.isFeasible === false ? 'Incomplete' : `${cow.dryFodderKg} kg`}
+                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#854d0e', fontWeight: 700 }}>
+                                {cow.dryFodderKg > 0 ? `${cow.dryFodderKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '— est.' : '0 kg')}
                                 {cow.isFeasible !== false && cow.dryFodderDetails && (
                                   <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
                                     {cow.dryFodderDetails}
                                   </div>
                                 )}
                               </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#dc2626' : '#0284c7', fontWeight: 900 }}>
+                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#0284c7', fontWeight: 900 }}>
                                 <div>
-                                  <span>{cow.isFeasible === false ? 'Feeds needed' : `${cow.concentrateKg} kg`}</span>
+                                  <span>{cow.concentrateKg > 0 ? `${cow.concentrateKg} kg${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : '0 kg')}</span>
                                   {cow.concentrateDmPct > 0 && (
                                     <span style={{ 
                                       display: 'inline-block',

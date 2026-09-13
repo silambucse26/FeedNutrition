@@ -38,7 +38,7 @@ export default function Step8Water({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#0284c7', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>{t ? t('step8.badge') : 'STEP 8 OF 9'}</span>
+            <span style={{ background: '#0284c7', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>STEP 4 OF 6</span>
             <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>{t ? t('step8.tag') : 'HYDRATION & WATER QUALITY'}</span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0c4a6e' }}>

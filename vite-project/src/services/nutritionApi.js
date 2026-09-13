@@ -1,24 +1,114 @@
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 // Strip any trailing slash to prevent double slashes like https://domain.com//api/...
-const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+const DEFAULT_API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+
+let resolvedApiUrl = null;
+let cachedHealthStatus = null;
+let prewarmPromise = null;
+let heartbeatTimer = null;
+
+/**
+ * Fast resolution of active API URL.
+ * If running on localhost / 127.0.0.1, checks if local python backend is active (1s timeout).
+ * If local is alive, connects to local in 2ms.
+ * Otherwise uses configured DEFAULT_API_BASE_URL (e.g. Render cloud).
+ */
+export async function getActiveApiUrl() {
+  if (resolvedApiUrl) return resolvedApiUrl;
+
+  const isLocalHost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (isLocalHost) {
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 1200);
+      const res = await fetch('http://127.0.0.1:8000/api/health', { signal: ctrl.signal });
+      clearTimeout(tid);
+      if (res.ok) {
+        resolvedApiUrl = 'http://127.0.0.1:8000';
+        cachedHealthStatus = { connected: true, timestamp: Date.now() };
+        return resolvedApiUrl;
+      }
+    } catch {
+      // Local server not running, fall back to remote
+    }
+  }
+
+  resolvedApiUrl = DEFAULT_API_BASE_URL;
+  return resolvedApiUrl;
+}
+
+/**
+ * Pre-warm the backend immediately on app load.
+ * For Render free-tier, waking from cold start takes 40-50s.
+ * Starting the wake-up ping right when the app loads ensures the server is
+ * fully awake and warm by the time the user reaches Step 6 (Summary & Calculation).
+ */
+export function prewarmBackend() {
+  if (prewarmPromise) return prewarmPromise;
+
+  prewarmPromise = (async () => {
+    try {
+      const url = await getActiveApiUrl();
+      const ctrl = new AbortController();
+      // Generous timeout for initial cold-start wake
+      const tid = setTimeout(() => ctrl.abort(), 55000);
+      const res = await fetch(`${url}/api/health`, { signal: ctrl.signal });
+      clearTimeout(tid);
+      if (res.ok) {
+        const data = await res.json();
+        cachedHealthStatus = { connected: true, data, timestamp: Date.now() };
+        return { connected: true, data };
+      }
+    } catch (e) {
+      // Silent in background pre-warm
+    }
+
+    // Keep-alive heartbeat: ping every 10 minutes to prevent Render from going to sleep
+    if (!heartbeatTimer && typeof window !== 'undefined') {
+      heartbeatTimer = setInterval(async () => {
+        try {
+          const url = resolvedApiUrl || DEFAULT_API_BASE_URL;
+          await fetch(`${url}/api/health`);
+        } catch {}
+      }, 10 * 60 * 1000);
+    }
+
+    return { connected: false };
+  })();
+
+  return prewarmPromise;
+}
 
 /**
  * Health check to verify if the Python backend is reachable.
- * Render free-tier cold starts can take up to 50 seconds.
+ * Uses cached result if checked within last 25 seconds for instant response.
  */
 export async function checkBackendStatus() {
+  // If recently verified, return instantly
+  if (cachedHealthStatus && (Date.now() - cachedHealthStatus.timestamp < 25000)) {
+    return cachedHealthStatus;
+  }
+
   try {
+    const url = await getActiveApiUrl();
     const controller = new AbortController();
-    // 50s timeout — Render free tier needs up to 50s to wake from a cold start
+    // 50s timeout for cold start if needed
     const timeoutId = setTimeout(() => controller.abort(), 50000);
-    const res = await fetch(`${API_BASE_URL}/api/health`, {
+    const res = await fetch(`${url}/api/health`, {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-    if (!res.ok) return { connected: false, error: `HTTP ${res.status}` };
+    if (!res.ok) {
+      cachedHealthStatus = null;
+      return { connected: false, error: `HTTP ${res.status}` };
+    }
     const data = await res.json();
-    return { connected: true, data };
+    cachedHealthStatus = { connected: true, data, timestamp: Date.now() };
+    return cachedHealthStatus;
   } catch (err) {
+    cachedHealthStatus = null;
     const isTimeout = err.name === 'AbortError';
     return {
       connected: false,
@@ -89,17 +179,21 @@ export async function runNutritionCalculation(farmData) {
         stage: stageVal,
         lactationType: isFirst ? 'first_lactation' : 'second_plus',
         isFirstLactation: isFirst,
+        parity: isFirst ? 1 : 2,
         dim: Number(l.dim) || (stageVal.includes('Early') ? 30 : stageVal.includes('Late') ? 210 : 90)
       };
     }),
     dryCowsData: (farmData.dryCowsData || []).map(d => ({
       id: String(d.id || ''),
       weight: Number(d.weight) || 400,
-      dryDays: Number(d.dryDays !== undefined && d.dryDays !== '' ? d.dryDays : 45)
+      dryDays: Number(d.dryDays !== undefined && d.dryDays !== '' ? d.dryDays : 45),
+      daysToCalving: Number(d.daysToCalving !== undefined && d.daysToCalving !== '' ? d.daysToCalving : 21),
+      bcs: Number(d.bcs !== undefined && d.bcs !== '' ? d.bcs : 3.5),
     })),
     bullsData: (farmData.bullsData || []).map(b => ({
       id: String(b.id || ''),
-      weight: Number(b.weight) || 550
+      weight: Number(b.weight) || 550,
+      purpose: b.purpose || 'Breeding Bull',
     })),
     grazingSystem: farmData.grazingSystem || 'no_grazing',
     grazingData: farmData.grazingData || {},
@@ -115,7 +209,8 @@ export async function runNutritionCalculation(farmData) {
     }))
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/nutrition/calculate`, {
+  const url = await getActiveApiUrl();
+  const res = await fetch(`${url}/api/nutrition/calculate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

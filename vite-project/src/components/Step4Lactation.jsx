@@ -1,84 +1,150 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import WeightRangeSelect from './WeightRangeSelect';
-import { COW_WEIGHT_RANGES, MILK_YIELD_RANGES, MILK_FAT_RANGES, getMatchingRangeValue } from '../data/weightRanges';
+import React from 'react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import CattleCounter from './CattleCounter';
+import WeightChipSelect from './WeightChipSelect';
+import { COW_WEIGHT_RANGES } from '../data/weightRanges';
 
-export default function Step4Lactation({ 
-  lactatingData, 
-  setLactatingData, 
-  defaultBreed, 
+const ACCENT = '#0284c7'; // Vibrant dairy blue
+
+// Popular numeric milk yield chips (L/day)
+const MILK_YIELD_CHIPS = [4, 6, 8, 10, 12, 15, 18, 22, 26];
+
+// Popular numeric fat percentage chips
+const MILK_FAT_CHIPS = [3.5, 4.0, 4.5, 5.0, 6.0, 7.0];
+
+export default function Step4Lactation({
+  lactatingData,
+  setLactatingData,
+  defaultBreed,
   acknowledgeStep,
-  onNext, 
+  onNext,
   onPrev,
-  t
+  t,
 }) {
-  const baseWeight = defaultBreed ? defaultBreed.avgWeightCow : 520;
+  const count = lactatingData.length;
 
-  const [countInput, setCountInput] = useState(lactatingData.length > 0 ? String(lactatingData.length) : '');
-
-  useEffect(() => {
-    setCountInput(lactatingData.length > 0 ? String(lactatingData.length) : '');
-  }, [lactatingData.length]);
-
-  const handleCountChange = (count) => {
+  const handleAddOne = () => {
     if (acknowledgeStep) acknowledgeStep();
-    const num = Math.max(0, Math.min(count, 200));
-    if (num > lactatingData.length) {
-      const newEntries = [];
-      for (let i = lactatingData.length; i < num; i++) {
-        newEntries.push({
-          id: Date.now() + i,
-          weight: '',
-          bcs: 3.5,
-          milkYield: '',
-          milkFat: '',
-          stage: 'Early lactation',
-          lactationType: 'second_plus',
-          isFirstLactation: false,
-          milkPricePerLitre: ''
-        });
-      }
-      setLactatingData([...lactatingData, ...newEntries]);
-    } else if (num < lactatingData.length) {
-      setLactatingData(lactatingData.slice(0, num));
+    if (count >= 200) return;
+    setLactatingData([
+      ...lactatingData,
+      {
+        id: Date.now() + Math.random(),
+        weight: '',
+        bcs: 3.5,
+        milkYield: 10,
+        milkFat: 4.2,
+        stage: 'Mid lactation',
+        lactationType: 'second_plus',
+        isFirstLactation: false,
+      },
+    ]);
+  };
+
+  const handleRemoveOne = () => {
+    if (acknowledgeStep) acknowledgeStep();
+    if (count === 0) return;
+    setLactatingData(lactatingData.slice(0, -1));
+  };
+
+  const handleRemoveIndex = (idx) => {
+    if (acknowledgeStep) acknowledgeStep();
+    const updated = [...lactatingData];
+    updated.splice(idx, 1);
+    setLactatingData(updated);
+  };
+
+  const handleClearAll = () => {
+    if (acknowledgeStep) acknowledgeStep();
+    setLactatingData([]);
+  };
+
+  const handleSetExactCount = (newCount) => {
+    if (acknowledgeStep) acknowledgeStep();
+    if (newCount === 0) {
+      handleClearAll();
+      return;
+    }
+    if (count === newCount) return;
+    if (count < newCount) {
+      const needed = newCount - count;
+      const base = lactatingData[0] || {};
+      const added = Array.from({ length: needed }).map((_, i) => ({
+        id: Date.now() + i + Math.random(),
+        weight: base.weight || '',
+        milkYield: base.milkYield || 10,
+        milkFat: base.milkFat || 4.2,
+        bcs: base.bcs || 3.0,
+        stage: base.stage || 'Mid lactation',
+        dim: base.dim || 90,
+        isFirstLactation: false,
+      }));
+      setLactatingData([...lactatingData, ...added]);
+    } else {
+      setLactatingData(lactatingData.slice(0, newCount));
     }
   };
 
-  const handleUpdateCow = (index, fieldOrUpdates, value) => {
+  const handleUpdateCow = (idx, fieldOrUpdates, value) => {
     if (acknowledgeStep) acknowledgeStep();
-    setLactatingData(prev => {
-      const updated = [...prev];
-      if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
-        updated[index] = { ...updated[index], ...fieldOrUpdates };
-      } else {
-        updated[index] = { ...updated[index], [fieldOrUpdates]: value };
-      }
-      return updated;
-    });
+    const updated = [...lactatingData];
+    if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
+      updated[idx] = { ...updated[idx], ...fieldOrUpdates };
+    } else {
+      updated[idx] = { ...updated[idx], [fieldOrUpdates]: value };
+    }
+    setLactatingData(updated);
+  };
+
+  // Step milk yield by delta
+  const handleStepMilk = (idx, delta) => {
+    const current = Number(lactatingData[idx].milkYield) || 10;
+    const clamped = Math.max(1, Math.min(60, Math.round((current + delta) * 10) / 10));
+    handleUpdateCow(idx, 'milkYield', clamped);
+  };
+
+  // Step milk fat by delta
+  const handleStepFat = (idx, delta) => {
+    const current = Number(lactatingData[idx].milkFat) || 4.2;
+    const clamped = Math.max(2.5, Math.min(10.0, Math.round((current + delta) * 10) / 10));
+    handleUpdateCow(idx, 'milkFat', clamped);
   };
 
   const getBcsLabel = (bcs) => {
-    if (bcs <= 1.5) return t ? t('step4.bcs_1') : '1 - Very Thin';
-    if (bcs <= 2.5) return t ? t('step4.bcs_2') : '2 - Thin';
-    if (bcs <= 3.5) return t ? t('step4.bcs_3') : '3 - Good Condition';
-    if (bcs <= 4.5) return t ? t('step4.bcs_4') : '4 - Fat / Overweight';
-    return t ? t('step4.bcs_5') : '5 - Very Fat / Excellent Condition';
+    if (bcs <= 1.5) return '1 - Very Thin';
+    if (bcs <= 2.5) return '2 - Thin';
+    if (bcs <= 3.5) return '3 - Good';
+    if (bcs <= 4.5) return '4 - Heavy';
+    return '5 - Very Heavy';
   };
+
+  const totalMilk = lactatingData.reduce((acc, cow) => acc + (Number(cow.milkYield) || 0), 0);
+  const allConfigured = count > 0 && lactatingData.every(c =>
+    c.weight && Number(c.weight) > 0 &&
+    c.milkYield !== '' && Number(c.milkYield) > 0 &&
+    c.milkFat !== '' && Number(c.milkFat) > 0
+  );
+  const unconfiguredCount = lactatingData.filter(c =>
+    !c.weight || Number(c.weight) <= 0 ||
+    c.milkYield === '' || Number(c.milkYield) <= 0 ||
+    c.milkFat === '' || Number(c.milkFat) <= 0
+  ).length;
 
   return (
     <div className="wg-card animate-fade-in">
-      {/* Visual Header Banner - Blue Theme */}
-      <div 
+
+      {/* Visual Header Banner */}
+      <div
         className="step-banner"
         style={{
           background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-          border: '1.5px solid #7dd3fc'
+          border: '1.5px solid #7dd3fc',
         }}
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#0284c7', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              {t ? t('step4.badge') : 'STEP 4 OF 9'}
+            <span style={{ background: ACCENT, color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
+              {t ? t('step4.badge') : 'STEP 4 OF 10'}
             </span>
             <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>
               {t ? t('step4.tag') : 'MILK PRODUCING HERD'}
@@ -88,390 +154,726 @@ export default function Step4Lactation({
             {t ? t('step4.title') : 'Lactating Cattle Management'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#334155' }}>
-            {t ? t('step4.subtitle') : 'Record your milking cows, body condition scores, daily milk production (L/day), and milk fat %.'}
+            Record body weight, daily milk production (L/day), and milk fat % for each milking cow.
           </p>
         </div>
 
-        <img 
-          src="/cattle_art/lactating.jpg" 
-          alt="Milking Cow" 
+        <img
+          src="/cattle_art/cartoon_lactating.jpg"
+          alt="Milking Cow"
           className="step-banner-img"
+          onError={e => { e.target.style.display = 'none'; }}
         />
       </div>
 
-      {/* Lactating Count Input */}
+      {/* ── Question & Quick Count Selection ── */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px',
         background: '#ffffff',
-        border: '2px solid #0284c7',
-        borderRadius: '14px',
+        border: '1.5px solid #bae6fd',
+        borderRadius: '16px',
         padding: '16px 20px',
         marginBottom: '20px',
-        flexWrap: 'wrap'
+        boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)',
       }}>
-        <div style={{ flex: '1 1 200px' }}>
-          <h3 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-            {t ? t('step4.count_label') : 'Number of Lactating Cows'}
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0', fontWeight: 500 }}>
-            {t ? t('step4.count_hint') : 'Currently in-milk cows on the farm. Enter 0 if none.'}
-          </p>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginBottom: '12px',
+        }}>
+          <div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0c4a6e', margin: '0 0 4px' }}>
+              How many Lactating Cows are on your farm?
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+              Currently in-milk cows on the farm. Tap a quick number or use the counter button.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#f0f9ff',
+            padding: '6px 14px',
+            borderRadius: '12px',
+            border: `1.5px solid ${ACCENT}30`,
+          }}>
+            <span style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: 700 }}>Total Milking:</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ACCENT }}>{count}</span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {lactatingData.length > 0 && (
-            <div style={{ fontSize: '0.9rem', color: '#0284c7', fontWeight: 800, background: '#f0f9ff', padding: '8px 14px', borderRadius: '8px', border: '1px solid #bae6fd' }}>
-              {t ? t('step4.total_milk', { litres: lactatingData.reduce((a, b) => a + (Number(b.milkYield) || 0), 0) }) : `Total Daily Milk: ${lactatingData.reduce((a, b) => a + (Number(b.milkYield) || 0), 0)} L/day`}
-            </div>
-          )}
-
-          <input 
-            type="number"
-            min="0"
-            max="200"
-            placeholder="0"
-            value={countInput}
-            onFocus={(e) => {
-              e.target.select();
-            }}
-            onWheel={(e) => e.target.blur()}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setCountInput('');
-                handleCountChange(0);
-                return;
-              }
-              const num = parseInt(raw, 10);
-              if (!isNaN(num)) {
-                const clamped = Math.max(0, Math.min(num, 200));
-                setCountInput(num === 0 ? '0' : String(clamped));
-                handleCountChange(clamped);
-              }
-            }}
-            onBlur={() => {
-              if (!countInput || countInput === '0') {
-                setCountInput('');
-                handleCountChange(0);
-              }
-            }}
-            style={{ 
-              width: '110px', 
-              fontSize: '1.25rem', 
-              fontWeight: 800, 
-              textAlign: 'center',
-              color: '#0284c7',
-              borderRadius: '10px',
-              border: '2px solid #0284c7',
-              padding: '8px 12px'
-            }}
-          />
+        {/* Quick Count Buttons */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', marginRight: '4px' }}>
+            Quick Select:
+          </span>
+          {[0, 1, 2, 3, 5, 8, 10].map((qty) => {
+            const isSelected = count === qty;
+            return (
+              <button
+                key={qty}
+                type="button"
+                onClick={() => handleSetExactCount(qty)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: `2px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                  background: isSelected ? ACCENT : '#ffffff',
+                  color: isSelected ? '#ffffff' : '#475569',
+                  fontSize: '0.8rem',
+                  fontWeight: isSelected ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? `0 2px 8px ${ACCENT}40` : 'none',
+                }}
+              >
+                {qty === 0 ? '0 Milking (None)' : `${qty} Cow${qty > 1 ? 's' : ''}`}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 0 Lactating Cows Notice */}
-      {lactatingData.length === 0 && (
-        <div style={{ padding: '14px 18px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-            No lactating cows recorded on this farm. Enter the number above or click below to add.
+      {/* Tap Counter Component with Cartoon Avatar */}
+      <CattleCounter
+        count={count}
+        onAdd={handleAddOne}
+        onRemove={handleRemoveOne}
+        onClear={handleClearAll}
+        cattleType="lactating"
+        accentColor={ACCENT}
+        label="Milking Cow"
+        description="Currently in-milk cows on the farm"
+        showCycle={true}
+      />
+
+      {/* Empty State Prompt */}
+      {count === 0 && (
+        <div style={{
+          padding: '18px',
+          borderRadius: '14px',
+          background: '#f0f9ff',
+          border: '1.5px dashed #7dd3fc',
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}>
+          <p style={{ fontSize: '0.9rem', color: '#0369a1', fontWeight: 700, margin: '0 0 6px' }}>
+            No milking cows currently on your farm?
+          </p>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+            Click <strong>"Next Step"</strong> below to proceed to Dry Cows, or tap above to add milking cows.
+          </p>
+        </div>
+      )}
+
+      {/* Summary Stat when Cows > 0 */}
+      {count > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#f0f9ff',
+          border: '1.5px solid #bae6fd',
+          borderRadius: '12px',
+          padding: '12px 18px',
+          marginBottom: '20px',
+        }}>
+          <div>
+            <span style={{ fontSize: '0.82rem', color: '#0369a1', fontWeight: 700 }}>
+              Total Daily Milk Production:
+            </span>
+            <span style={{ fontSize: '1.15rem', fontWeight: 900, color: ACCENT, marginLeft: '8px' }}>
+              {totalMilk.toFixed(1)} Litres/day
+            </span>
+          </div>
+          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
+            Avg: {(totalMilk / count).toFixed(1)} L/cow
           </span>
-          <button 
-            type="button" 
-            onClick={() => handleCountChange(1)} 
-            className="btn-secondary" 
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-          >
-            + Add Lactating Cow
-          </button>
         </div>
       )}
 
-      {/* Lactating Cows List */}
-      {lactatingData.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px' }}>
-          {lactatingData.map((cow, idx) => (
-            <div key={cow.id || idx} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '20px' }}>
-              
-              {/* Header / Summary Badge */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>
-                      {t ? t('step4.cow_num', { num: idx + 1 }) : `Milking Cow ${idx + 1}`}
-                    </span>
-                    <span style={{ 
-                      background: (cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '#fef3c7' : '#f1f5f9', 
-                      color: (cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '#92400e' : '#475569', 
-                      padding: '2px 8px', 
-                      borderRadius: '6px', 
-                      fontSize: '0.72rem', 
-                      fontWeight: 700 
-                    }}>
-                      {(cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '1st Lactation' : '2nd+ Lactation'}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '4px' }}>
-                    Weight: {cow.weight} kg | {(cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '1st Lactation' : '2nd+ Lactation'} | BCS: {cow.bcs} | Milk: {cow.milkYield} L/day | Fat: {cow.milkFat}% | Stage: {cow.stage}
-                  </div>
-                </div>
-              </div>
+      {/* List of Lactating Cows */}
+      {count > 0 && (
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '14px',
+          }}>
+            <div style={{
+              height: '2px',
+              flex: 1,
+              background: 'linear-gradient(90deg, #bae6fd, transparent)',
+              borderRadius: '2px',
+            }} />
+            <span style={{
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: ACCENT,
+              whiteSpace: 'nowrap',
+            }}>
+              CONFIGURE EACH MILKING COW ({count})
+            </span>
+            <div style={{
+              height: '2px',
+              flex: 1,
+              background: 'linear-gradient(270deg, #bae6fd, transparent)',
+              borderRadius: '2px',
+            }} />
+          </div>
 
-              {/* Inputs Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                
-                {/* Body Weight */}
-                <WeightRangeSelect 
-                  value={cow.weight}
-                  onChange={(val) => handleUpdateCow(idx, 'weight', val)}
-                  ranges={COW_WEIGHT_RANGES}
-                  label={t ? t('step4.body_weight') : 'Body Weight (Range)'}
-                  accentColor="#0284c7"
-                />
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))',
+            gap: '16px',
+          }}>
+            {lactatingData.map((cow, idx) => {
+              const hasWeight = cow.weight && Number(cow.weight) > 0;
+              const yieldNum = Number(cow.milkYield) || 0;
+              const fatNum = Number(cow.milkFat) || 0;
+              const isReady = hasWeight && yieldNum > 0 && fatNum > 0;
 
-                {/* Lactation Parity (1st Lactation vs 2nd+ Lactation) */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>
-                      {t ? t('step4.lactation_type') : 'Lactation Parity / Type'} *
-                    </label>
-                    <span style={{ 
-                      fontSize: '0.70rem', 
-                      color: (cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '#0369a1' : '#16a34a', 
-                      fontWeight: 800, 
-                      background: (cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '#e0f2fe' : '#f0fdf4', 
-                      padding: '1px 6px', 
-                      borderRadius: '4px' 
-                    }}>
-                      {(cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '+20% Growth Allowance' : 'Mature Cow'}
-                    </span>
-                  </div>
-                  <select
-                    value={(cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? 'first_lactation' : 'second_plus'}
-                    onChange={(e) => {
-                      const isFirst = e.target.value === 'first_lactation';
-                      handleUpdateCow(idx, {
-                        lactationType: isFirst ? 'first_lactation' : 'second_plus',
-                        isFirstLactation: isFirst
-                      });
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: '#0f172a',
-                      border: '1.5px solid #cbd5e1',
-                      background: (cow.lactationType === 'first_lactation' || cow.isFirstLactation) ? '#f0f9ff' : '#ffffff'
-                    }}
-                  >
-                    <option value="first_lactation">{t ? t('step4.type_first') : '1st Lactation (First time milking / Primiparous)'}</option>
-                    <option value="second_plus">{t ? t('step4.type_second_plus') : '2nd+ Lactation (More than first time / Multiparous)'}</option>
-                  </select>
-                </div>
-
-                {/* Milk Yield */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>
-                      {t ? t('step4.milk_yield') : 'Daily Milk Yield'} *
-                    </label>
-                    {cow.milkYield !== '' && (
-                      <span style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 800 }}>
-                        Avg: {cow.milkYield} L/day
+              return (
+                <div
+                  key={cow.id || idx}
+                  className="cattle-icon-anim"
+                  style={{
+                    background: '#ffffff',
+                    border: `1.5px solid ${isReady ? '#7dd3fc' : '#fca5a5'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    animationDelay: `${idx * 0.04}s`,
+                  }}
+                >
+                  {/* Card Header: Cow #, Status Badge, Delete */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #f1f5f9',
+                    paddingBottom: '10px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: isReady ? ACCENT : '#f1f5f9',
+                        color: isReady ? '#ffffff' : '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
+                        Milking Cow #{idx + 1}
                       </span>
-                    )}
-                  </div>
-                  <select
-                    value={getMatchingRangeValue(cow.milkYield, MILK_YIELD_RANGES)}
-                    onChange={(e) => {
-                      const match = MILK_YIELD_RANGES.find(r => r.value === e.target.value);
-                      if (match && match.avg !== '') {
-                        handleUpdateCow(idx, 'milkYield', match.avg);
-                      } else if (e.target.value === 'custom') {
-                        // Keep current or set to empty
-                      } else {
-                        handleUpdateCow(idx, 'milkYield', '');
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: 400,
-                      color: '#000000',
-                      border: cow.milkYield === '' ? '1.5px solid #f87171' : '1.5px solid #cbd5e1',
-                      background: cow.milkYield === '' ? '#fff5f5' : '#ffffff'
-                    }}
-                  >
-                    {MILK_YIELD_RANGES.map((r, i) => (
-                      <option key={i} value={r.value} style={{ color: '#000000', fontWeight: 400 }}>{r.label}</option>
-                    ))}
-                  </select>
-                  {getMatchingRangeValue(cow.milkYield, MILK_YIELD_RANGES) === 'custom' && (
-                    <input 
-                      type="number" 
-                      step="0.5" 
-                      placeholder="e.g. 15"
-                      value={cow.milkYield === undefined ? '' : cow.milkYield} 
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleUpdateCow(idx, 'milkYield', '');
-                        e.target.select();
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                      onChange={(e) => handleUpdateCow(idx, 'milkYield', e.target.value === '' ? '' : (parseFloat(e.target.value) >= 0 ? parseFloat(e.target.value) : ''))}
-                      style={{ marginTop: '4px', width: '100%', padding: '6px 10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, color: '#000000' }}
-                    />
-                  )}
-                  {cow.milkYield === '' && (
-                    <span style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 600, display: 'block', marginTop: '2px' }}>
-                      * Milk yield required
-                    </span>
-                  )}
-                </div>
+                    </div>
 
-                {/* Fat % */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <label style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>
-                      {t ? t('step4.fat_pct') : 'Milk Fat %'} *
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {isReady && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          background: '#f0f9ff',
+                          color: '#0369a1',
+                          border: '1px solid #bae6fd',
+                          borderRadius: '20px',
+                          padding: '2px 8px',
+                          fontWeight: 800,
+                        }}>
+                          ✓ Ready
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveIndex(idx)}
+                        title="Remove this cow"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#94a3b8',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Parity Toggle (1st Lactation vs 2nd+ Lactation) */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.76rem',
+                      color: '#64748b',
+                      fontWeight: 700,
+                      marginBottom: '6px',
+                    }}>
+                      Lactation Type
                     </label>
-                    {cow.milkFat !== '' && (
-                      <span style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 800 }}>
-                        Avg: {cow.milkFat}%
-                      </span>
-                    )}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '6px',
+                      background: '#f8fafc',
+                      padding: '4px',
+                      borderRadius: '10px',
+                      border: '1px solid #e2e8f0',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateCow(idx, { lactationType: 'first_lactation', isFirstLactation: true })}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: cow.isFirstLactation || cow.lactationType === 'first_lactation' ? ACCENT : 'transparent',
+                          color: cow.isFirstLactation || cow.lactationType === 'first_lactation' ? '#ffffff' : '#64748b',
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        1st Lactation (+20% Growth)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateCow(idx, { lactationType: 'second_plus', isFirstLactation: false })}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: !cow.isFirstLactation && cow.lactationType !== 'first_lactation' ? ACCENT : 'transparent',
+                          color: !cow.isFirstLactation && cow.lactationType !== 'first_lactation' ? '#ffffff' : '#64748b',
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        2nd+ Lactation (Mature)
+                      </button>
+                    </div>
                   </div>
-                  <select
-                    value={getMatchingRangeValue(cow.milkFat, MILK_FAT_RANGES)}
-                    onChange={(e) => {
-                      const match = MILK_FAT_RANGES.find(r => r.value === e.target.value);
-                      if (match && match.avg !== '') {
-                        handleUpdateCow(idx, 'milkFat', match.avg);
-                      } else if (e.target.value === 'custom') {
-                        // Keep current
-                      } else {
-                        handleUpdateCow(idx, 'milkFat', '');
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: 400,
-                      color: '#000000',
-                      border: !cow.milkFat ? '1.5px solid #f87171' : '1.5px solid #cbd5e1',
-                      background: !cow.milkFat ? '#fff5f5' : '#ffffff'
-                    }}
-                  >
-                    {MILK_FAT_RANGES.map((r, i) => (
-                      <option key={i} value={r.value} style={{ color: '#000000', fontWeight: 400 }}>{r.label}</option>
-                    ))}
-                  </select>
-                  {getMatchingRangeValue(cow.milkFat, MILK_FAT_RANGES) === 'custom' && (
-                    <input 
-                      type="number" 
-                      step="0.1" 
-                      placeholder="e.g. 4.2"
-                      value={cow.milkFat === undefined ? '' : cow.milkFat} 
-                      onFocus={(e) => {
-                        if (e.target.value === '0') handleUpdateCow(idx, 'milkFat', '');
-                        e.target.select();
-                      }}
-                      onWheel={(e) => e.target.blur()}
-                      onChange={(e) => handleUpdateCow(idx, 'milkFat', e.target.value === '' ? '' : (parseFloat(e.target.value) || ''))}
-                      style={{ marginTop: '4px', width: '100%', padding: '6px 10px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500, color: '#000000' }}
+
+                  {/* Body Weight Chips (Numeric Only) */}
+                  <WeightChipSelect
+                    value={cow.weight}
+                    onChange={val => handleUpdateCow(idx, 'weight', val)}
+                    ranges={COW_WEIGHT_RANGES}
+                    label="Body Weight"
+                    accentColor={ACCENT}
+                    required={true}
+                  />
+
+                  {/* Daily Milk Yield (Numeric Stepper & Chips) */}
+                  <div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}>
+                      <label style={{
+                        fontSize: '0.8rem',
+                        color: '#475569',
+                        fontWeight: 700,
+                      }}>
+                        Daily Milk Yield *
+                      </label>
+                      <span style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        color: ACCENT,
+                        background: '#f0f9ff',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                      }}>
+                        {yieldNum} Litres/day
+                      </span>
+                    </div>
+
+                    {/* Numeric Stepper [-] [Litres Input] [+] */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleStepMilk(idx, -1)}
+                        disabled={yieldNum <= 1}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: yieldNum <= 1 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        −
+                      </button>
+
+                      <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${ACCENT}`,
+                        background: '#ffffff',
+                      }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="60"
+                          step="0.5"
+                          value={yieldNum}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val)) {
+                              handleUpdateCow(idx, 'milkYield', Math.max(0, Math.min(60, val)));
+                            }
+                          }}
+                          onWheel={e => e.target.blur()}
+                          style={{
+                            width: '60px',
+                            textAlign: 'center',
+                            fontSize: '1.05rem',
+                            fontWeight: 800,
+                            color: ACCENT,
+                            border: 'none',
+                            outline: 'none',
+                          }}
+                        />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+                          L/day
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStepMilk(idx, 1)}
+                        disabled={yieldNum >= 60}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: yieldNum >= 60 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Quick-tap Milk Yield Chips */}
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                    }}>
+                      {MILK_YIELD_CHIPS.map(litres => {
+                        const isSelected = Math.abs(yieldNum - litres) < 0.2;
+                        return (
+                          <button
+                            key={litres}
+                            type="button"
+                            onClick={() => handleUpdateCow(idx, 'milkYield', litres)}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '16px',
+                              border: `1.5px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                              background: isSelected ? ACCENT : '#f8fafc',
+                              color: isSelected ? '#ffffff' : '#64748b',
+                              fontSize: '0.72rem',
+                              fontWeight: isSelected ? 800 : 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {litres} L
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Milk Fat % (Numeric Stepper & Chips) */}
+                  <div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}>
+                      <label style={{
+                        fontSize: '0.8rem',
+                        color: '#475569',
+                        fontWeight: 700,
+                      }}>
+                        Milk Fat % *
+                      </label>
+                      <span style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        color: ACCENT,
+                        background: '#f0f9ff',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                      }}>
+                        {fatNum}% Fat
+                      </span>
+                    </div>
+
+                    {/* Numeric Stepper [-] [Fat Input] [+] */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleStepFat(idx, -0.1)}
+                        disabled={fatNum <= 2.5}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: fatNum <= 2.5 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        −
+                      </button>
+
+                      <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${ACCENT}`,
+                        background: '#ffffff',
+                      }}>
+                        <input
+                          type="number"
+                          min="2.5"
+                          max="10.0"
+                          step="0.1"
+                          value={fatNum}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val)) {
+                              handleUpdateCow(idx, 'milkFat', Math.max(2.5, Math.min(10.0, val)));
+                            }
+                          }}
+                          onWheel={e => e.target.blur()}
+                          style={{
+                            width: '60px',
+                            textAlign: 'center',
+                            fontSize: '1.05rem',
+                            fontWeight: 800,
+                            color: ACCENT,
+                            border: 'none',
+                            outline: 'none',
+                          }}
+                        />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+                          %
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStepFat(idx, 0.1)}
+                        disabled={fatNum >= 10.0}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: fatNum >= 10.0 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Quick-tap Fat Chips */}
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                    }}>
+                      {MILK_FAT_CHIPS.map(fat => {
+                        const isSelected = Math.abs(fatNum - fat) < 0.1;
+                        return (
+                          <button
+                            key={fat}
+                            type="button"
+                            onClick={() => handleUpdateCow(idx, 'milkFat', fat)}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '16px',
+                              border: `1.5px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                              background: isSelected ? ACCENT : '#f8fafc',
+                              color: isSelected ? '#ffffff' : '#64748b',
+                              fontSize: '0.72rem',
+                              fontWeight: isSelected ? 800 : 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {fat}%
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Body Condition Score Slider */}
+                  <div style={{
+                    background: '#f8fafc',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>
+                        Body Condition: <strong style={{ color: ACCENT }}>{getBcsLabel(cow.bcs)}</strong>
+                      </span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 900, color: ACCENT }}>
+                        BCS {cow.bcs}
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="0.5"
+                      value={cow.bcs || 3.5}
+                      onChange={e => handleUpdateCow(idx, 'bcs', parseFloat(e.target.value) || 3.5)}
+                      style={{ width: '100%', accentColor: ACCENT }}
                     />
-                  )}
-                  {(!cow.milkFat || Number(cow.milkFat) <= 0) && (
-                    <span style={{ fontSize: '0.7rem', color: '#dc2626', fontWeight: 600, display: 'block', marginTop: '2px' }}>
-                      * Fat % required
-                    </span>
-                  )}
+                  </div>
+
                 </div>
-
-                {/* Lactation Stage */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
-                    {t ? t('step4.lactation_stage') : 'Lactation Stage'}
-                  </label>
-                  <select 
-                    value={cow.stage}
-                    onChange={(e) => handleUpdateCow(idx, 'stage', e.target.value)}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="Early lactation">{t ? t('step4.stage_early') : 'Early lactation (Months 1-3)'}</option>
-                    <option value="Mid lactation">{t ? t('step4.stage_mid') : 'Mid lactation (Months 4-6)'}</option>
-                    <option value="Late lactation">{t ? t('step4.stage_late') : 'Late lactation (Months 7-10)'}</option>
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Visual BCS Score Slider (1 - 5) */}
-              <div style={{ marginTop: '16px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#0f172a' }}>
-                    {t ? t('step4.bcs_label') : 'Body Condition Score (BCS 1 to 5):'} <strong style={{ color: '#0284c7' }}>{getBcsLabel(cow.bcs)}</strong>
-                  </span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0284c7' }}>BCS {cow.bcs}</span>
-                </div>
-
-                <input 
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="0.5"
-                  value={cow.bcs}
-                  onChange={(e) => handleUpdateCow(idx, 'bcs', parseFloat(e.target.value) || 3.5)}
-                  style={{ width: '100%' }}
-                />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.725rem', color: '#64748b', marginTop: '6px' }}>
-                  <span>1 ({t ? t('step4.bcs_1') : 'Very Thin'})</span>
-                  <span>2 ({t ? t('step4.bcs_2') : 'Thin'})</span>
-                  <span>3 ({t ? t('step4.bcs_3') : 'Good'})</span>
-                  <span>4 ({t ? t('step4.bcs_4') : 'Fat'})</span>
-                  <span>5 ({t ? t('step4.bcs_5') : 'Very Fat'})</span>
-                </div>
-              </div>
-
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+      {/* Progress & Validation Alert */}
+      {count > 0 && (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: '10px',
+          background: allConfigured ? '#f0f9ff' : '#fff1f2',
+          border: `1px solid ${allConfigured ? '#bae6fd' : '#fecdd3'}`,
+          marginBottom: '20px',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          color: allConfigured ? '#0369a1' : '#be123c',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <span style={{ fontSize: '1rem' }}>{allConfigured ? '✅' : '⚠️'}</span>
+          {allConfigured
+            ? `All ${count} milking cows configured — ready to proceed!`
+            : `${unconfiguredCount} cow${unconfiguredCount > 1 ? 's' : ''} still need weight, milk yield, or fat % specified.`
+          }
+        </div>
+      )}
+
+      {/* Navigation Buttons */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTop: '1px solid #e2e8f0',
+        paddingTop: '20px',
+      }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{t ? t('previous') : 'Previous'}</span>
         </button>
 
-        <button 
+        <button
           onClick={() => {
-            const hasEmpty = lactatingData.length > 0 && lactatingData.some(c => 
-              !c.weight || Number(c.weight) <= 0 || 
-              c.milkYield === '' || Number(c.milkYield) < 0 || 
-              c.milkFat === '' || Number(c.milkFat) <= 0
-            );
-            if (hasEmpty) {
-              alert('Please enter weight, milk yield, and fat percentage for all milking cows before proceeding.');
+            if (unconfiguredCount > 0) {
+              alert('Please specify weight, milk yield, and fat % for all milking cows before proceeding.');
               return;
             }
             onNext();
-          }} 
+          }}
           className="btn-primary"
+          style={{ background: ACCENT, borderColor: ACCENT }}
         >
           <span>{t ? t('next_step') : 'Next Step'}</span>
           <ChevronRight size={18} />
         </button>
       </div>
+
     </div>
   );
 }

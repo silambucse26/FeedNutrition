@@ -830,6 +830,23 @@ def calculate_feed_nutrition(req: NutritionRequest):
         a = ent["record"]
         pasture_dm = ent["pasture_dm"]
         cow_alloc_dm = joint_opt["animalAllocations"].get(a_id, {})
+        # FALLBACK: When LP is infeasible, distribute animal's trough DMI
+        # proportionally across feeds (by inventory kg), so the farmer still
+        # sees a meaningful estimate rather than all-zero "Incomplete" columns.
+        # Note: on infeasibility, optimizer returns {feed: 0.0} (not {}),
+        # so we check if all allocated values are zero (sum == 0).
+        # -------------------------------------------------------------------
+        alloc_is_all_zero = not cow_alloc_dm or (sum(cow_alloc_dm.values()) == 0.0)
+        if not ration_feasible and alloc_is_all_zero:
+            trough_dmi_target = max(0.1, ent.get("target_dmi_kg", a.get("dmiKg", 0.0)))
+            total_inv = sum(float(farm_inv_map.get(f["name"], 0.0)) for f in feed_optimizer_input)
+            for f in feed_optimizer_input:
+                fname = f["name"]
+                inv_kg = float(farm_inv_map.get(fname, 0.0))
+                # Proportion of DMI assigned to this feed by its share of inventory
+                share = (inv_kg / max(0.001, total_inv))
+                adm = round(trough_dmi_target * share, 2)
+                cow_alloc_dm[fname] = adm
 
         feed_fresh = {}
         feed_dm = {}
@@ -854,6 +871,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
             tot_anim_cp_g += adm * f["cpPct"] * 10.0
             tot_anim_me += adm * f["mePerKgDm"]
             tot_anim_ndf_g += adm * f["ndfPct"] * 10.0
+
 
         green_fresh = round(sum(feed_fresh[f["name"]] for f in feed_optimizer_input if f["group"] == "green"), 1)
         dry_fresh = round(sum(feed_fresh[f["name"]] for f in feed_optimizer_input if f["group"] == "dry"), 1)

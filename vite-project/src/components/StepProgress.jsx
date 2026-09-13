@@ -11,30 +11,35 @@ export default function StepProgress({
 }) {
   const steps = [
     { number: 1, key: 'step_1', fallback: 'Breed' },
-    { number: 2, key: 'step_2', fallback: 'Heifers' },
-    { number: 3, key: 'step_3', fallback: 'Pregnant' },
-    { number: 4, key: 'step_4', fallback: 'Lactating' },
-    { number: 5, key: 'step_5', fallback: 'Dry Cows' },
-    { number: 6, key: 'step_6', fallback: 'Bulls' },
-    { number: 7, key: 'step_7', fallback: 'Grazing' },
-    { number: 8, key: 'step_8', fallback: 'Water' },
-    { number: 9, key: 'step_9', fallback: 'Feed' },
-    { number: 10, key: 'step_10', fallback: 'Summary' }
+    { number: 2, key: 'step_2', fallback: 'Cattle Herd' },
+    { number: 3, key: 'step_3', fallback: 'Grazing' },
+    { number: 4, key: 'step_4', fallback: 'Water' },
+    { number: 5, key: 'step_5', fallback: 'Feed' },
+    { number: 6, key: 'step_6', fallback: 'Summary' }
   ];
 
-  const currentStepObj = steps[currentStep - 1];
-  const currentTitle = t ? t(`steps.${currentStepObj?.key}`) : currentStepObj?.fallback;
+  const currentStepObj = steps[currentStep - 1] || steps[0];
+  const currentTitle = (t ? t(`steps.${currentStepObj.key}`) : null) || currentStepObj?.fallback;
+
+  // Translated step counter e.g. "STEP 2 OF 6"
+  const stepOfLabel = `STEP ${currentStep} OF 6`;
+
+  const locationWarning = t ? t('location_required') : 'Location & Temp/RH Required';
+  const legendGreen  = t ? t('legend_green')  : 'Completed';
+  const legendYellow = t ? t('legend_yellow') : 'Partially Filled';
+  const legendRed    = t ? t('legend_red')    : 'Not Filled';
+  const autoSaved    = t ? t('auto_saved')    : 'Auto-saved';
 
   return (
     <div className="wg-card" style={{ padding: 'clamp(10px, 2.5vw, 16px) clamp(12px, 3vw, 20px)', marginBottom: '16px' }}>
       {/* Top Auto-Save & Status Strip */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.78rem', flexWrap: 'wrap', gap: '6px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ color: '#0f172a', fontWeight: 800 }}>
-            STEP {currentStep > 9 ? 10 : currentStep} OF 10 • {currentTitle?.toUpperCase()}
+            {stepOfLabel} • {currentTitle?.toUpperCase()}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#16a34a', fontWeight: 600, fontSize: '0.75rem' }}>
-            <Save size={13} color="#16a34a" /> {t ? t('auto_saved') : 'Auto-saved'}
+            <Save size={13} color="#16a34a" /> {autoSaved}
           </span>
         </div>
 
@@ -45,7 +50,7 @@ export default function StepProgress({
           ) : (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700 }}>
               <AlertCircle size={12} />
-              Location & Temp/RH Required
+              {locationWarning}
             </span>
           )}
         </div>
@@ -174,30 +179,30 @@ export default function StepProgress({
         })}
       </div>
 
-      {/* Visual Status Legend */}
+      {/* Visual Status Legend — fully translated */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '18px',
+        gap: 'clamp(10px, 3vw, 18px)',
         marginTop: '10px',
         paddingTop: '10px',
         borderTop: '1px solid #f1f5f9',
-        fontSize: '0.72rem',
+        fontSize: 'clamp(0.68rem, 1.8vw, 0.72rem)',
         color: '#64748b',
         flexWrap: 'wrap'
       }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
-          <strong style={{ color: '#15803d' }}>Green:</strong> Completed
+          <strong style={{ color: '#15803d' }}>●</strong> {legendGreen}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#fef08a', border: '1.5px solid #ca8a04', display: 'inline-block' }}></span>
-          <strong style={{ color: '#a16207' }}>Yellow:</strong> Partially Filled
+          <strong style={{ color: '#a16207' }}>●</strong> {legendYellow}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600 }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#fee2e2', border: '1.5px solid #ef4444', display: 'inline-block' }}></span>
-          <strong style={{ color: '#b91c1c' }}>Red:</strong> Not Filled
+          <strong style={{ color: '#b91c1c' }}>●</strong> {legendRed}
         </span>
       </div>
     </div>

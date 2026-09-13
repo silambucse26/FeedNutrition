@@ -125,7 +125,7 @@ export default function Step7Grazing({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{t ? t('step7.badge') : 'STEP 7 OF 9'}</span>
+            <span className="badge-green">STEP 3 OF 6</span>
             <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 800 }}>{t ? t('step7.tag') : 'PASTURE & FORAGING'}</span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#14532d' }}>

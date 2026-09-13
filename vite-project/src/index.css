@@ -245,6 +245,17 @@ input[type="range"] {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Cattle icon pop-in animation */
+.cattle-icon-anim {
+  animation: cattlePopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cattlePopIn {
+  0%   { opacity: 0; transform: scale(0.4) translateY(10px); }
+  70%  { opacity: 1; transform: scale(1.08) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 /* Custom Smooth Horizontal Scrollbar */
 .horizontal-scroll {
   overflow-x: auto;
@@ -403,6 +414,67 @@ input[type="range"] {
   .chip-btn {
     padding: 6px 10px;
     font-size: 0.75rem;
+  }
+}
+
+/* Tablet Responsive Rules (iPads, Android Tablets: 641px to 1024px) */
+@media (max-width: 1024px) {
+  .cattle-cycle-grid {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+  .cattle-cycle-left-col {
+    border-right: none !important;
+    border-bottom: 1.5px solid #e2e8f0 !important;
+    padding: 20px 16px !important;
+  }
+  .cattle-cycle-left-col > div:nth-child(2) {
+    max-width: 400px !important;
+    margin: 0 auto !important;
+  }
+  .cattle-cycle-right-col {
+    padding: 20px 16px !important;
+  }
+  .step-banner {
+    padding: 16px 20px;
+    gap: 16px;
+  }
+  .step-banner-img {
+    width: 110px !important;
+    height: 95px !important;
+  }
+  .responsive-grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .navbar-inner {
+    padding: 10px 18px !important;
+    gap: 10px !important;
+  }
+  .nav-location-pill {
+    max-width: 240px !important;
+  }
+  .nav-location-text {
+    max-width: 110px !important;
+  }
+  .wg-card {
+    padding: clamp(16px, 3vw, 24px) !important;
+  }
+  /* Ensure tablet touch targets are spacious */
+  .chip-btn {
+    min-height: 38px;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+  }
+  .btn-primary, .btn-secondary {
+    min-height: 38px;
+  }
+  /* Ensure tables scroll smoothly on tablet touchscreens */
+  .responsive-table-container {
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e2e8f0;
   }
 }
 

@@ -1,223 +1,309 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import WeightRangeSelect from './WeightRangeSelect';
+import CattleCounter from './CattleCounter';
+import WeightChipSelect from './WeightChipSelect';
 import { BULL_WEIGHT_RANGES } from '../data/weightRanges';
 
-export default function Step6Bulls({ 
-  bullsData, 
-  setBullsData, 
-  defaultBreed, 
+const ACCENT = '#dc2626';
+
+export default function Step6Bulls({
+  bullsData,
+  setBullsData,
+  defaultBreed,
   acknowledgeStep,
-  onNext, 
+  onNext,
   onPrev,
-  t
+  t,
 }) {
-  const baseWeight = defaultBreed ? (defaultBreed.avgWeightCow + 150) : 650;
-
-  const [countInput, setCountInput] = useState(bullsData.length > 0 ? String(bullsData.length) : '');
-
-  useEffect(() => {
-    setCountInput(bullsData.length > 0 ? String(bullsData.length) : '');
-  }, [bullsData.length]);
-
-  const handleCountChange = (count) => {
+  // ── helpers ──────────────────────────────────────────────────────
+  const addOne = () => {
     if (acknowledgeStep) acknowledgeStep();
-    const num = Math.max(0, Math.min(count, 200));
-    if (num > bullsData.length) {
-      const newEntries = [];
-      for (let i = bullsData.length; i < num; i++) {
-        newEntries.push({
-          id: Date.now() + i,
-          weight: ''
-        });
-      }
-      setBullsData([...bullsData, ...newEntries]);
-    } else if (num < bullsData.length) {
-      setBullsData(bullsData.slice(0, num));
+    if (bullsData.length >= 200) return;
+    setBullsData([...bullsData, { id: Date.now(), weight: '' }]);
+  };
+
+  const removeOne = () => {
+    if (acknowledgeStep) acknowledgeStep();
+    if (bullsData.length === 0) return;
+    setBullsData(bullsData.slice(0, -1));
+  };
+
+  const clearAll = () => {
+    if (acknowledgeStep) acknowledgeStep();
+    setBullsData([]);
+  };
+
+  const setExactCount = (count) => {
+    if (acknowledgeStep) acknowledgeStep();
+    if (count === 0) {
+      setBullsData([]);
+      return;
+    }
+    const current = [...bullsData];
+    if (current.length === count) return;
+    if (current.length < count) {
+      const needed = count - current.length;
+      const added = Array.from({ length: needed }).map((_, i) => ({
+        id: Date.now() + i + Math.random(),
+        weight: current[0]?.weight || '',
+      }));
+      setBullsData([...current, ...added]);
+    } else {
+      setBullsData(current.slice(0, count));
     }
   };
 
-  const handleUpdateBull = (index, val) => {
+  const updateWeight = (idx, val) => {
     if (acknowledgeStep) acknowledgeStep();
     const updated = [...bullsData];
-    updated[index] = { ...updated[index], weight: val };
+    updated[idx] = { ...updated[idx], weight: val };
     setBullsData(updated);
   };
 
+  const allReady = bullsData.length > 0 && bullsData.every(b => b.weight && Number(b.weight) > 0);
+  const needsWeight = bullsData.filter(b => !b.weight || Number(b.weight) <= 0).length;
+
+  // ── render ────────────────────────────────────────────────────────
   return (
     <div className="wg-card animate-fade-in">
-      {/* Visual Header Banner - Red Theme */}
-      <div 
-        className="step-banner"
-        style={{
-          background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-          border: '1.5px solid #fca5a5'
-        }}
-      >
+
+      {/* ── Header banner ── */}
+      <div className="step-banner" style={{
+        background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+        border: '1.5px solid #fca5a5',
+      }}>
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#dc2626', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              {t ? t('step6.badge') : 'STEP 6 OF 9'}
+            <span style={{ background: ACCENT, color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
+              {t ? t('step6.badge') : 'STEP 6 OF 10'}
             </span>
             <span style={{ fontSize: '0.825rem', color: '#b91c1c', fontWeight: 800 }}>
               {t ? t('step6.tag') : 'BREEDING & WORK MALES'}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#7f1d1d' }}>
-            {t ? t('step6.title') : 'Bulls Management'}
+            {t ? t('step6.title') : 'Bull Cattle Management'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#334155' }}>
-            {t ? t('step6.subtitle') : 'Enter breeding bulls and working oxen to account for higher maintenance energy requirements.'}
+            <strong>Bulls</strong> are adult male cattle used for breeding or draft work. They have higher maintenance energy needs due to their large body size.
           </p>
         </div>
-
-        <img 
-          src="/cattle_art/bulls.jpg" 
-          alt="Breeding Bull" 
+        <img
+          src="/cattle_art/cartoon_bull.jpg"
+          alt="Breeding Bull"
           className="step-banner-img"
+          onError={e => { e.target.style.display = 'none'; }}
         />
       </div>
 
-      {/* Bull Count Input Box */}
+      {/* ── Prominent Question & Quick Count Selection ── */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px',
         background: '#ffffff',
-        border: bullsData.length === 0 ? '2px solid #fca5a5' : '2px solid #dc2626',
-        borderRadius: '14px',
+        border: '1.5px solid #fca5a5',
+        borderRadius: '16px',
         padding: '16px 20px',
         marginBottom: '20px',
-        flexWrap: 'wrap'
+        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.04)',
       }}>
-        <div style={{ flex: '1 1 200px' }}>
-          <h3 style={{ fontSize: '1.1rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-            {t ? t('step6.count_label') : 'Number of Bulls'}
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0', fontWeight: 500 }}>
-            {t ? t('step6.count_hint') : 'Breeding males or draft oxen on farm. Keep at 0 if none.'}
-          </p>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginBottom: '12px',
+        }}>
+          <div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#7f1d1d', margin: '0 0 4px' }}>
+              How many Bulls are on your farm?
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+              Adult males for breeding or draft work. Tap a quick number or use the counter button.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#fef2f2',
+            padding: '6px 14px',
+            borderRadius: '12px',
+            border: `1.5px solid ${ACCENT}30`,
+          }}>
+            <span style={{ fontSize: '0.8rem', color: '#b91c1c', fontWeight: 700 }}>Total Bulls:</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ACCENT }}>{bullsData.length}</span>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            type="button"
-            onClick={() => handleCountChange(0)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              background: '#f8fafc',
-              color: '#64748b',
-              border: '1px solid #cbd5e1',
-              cursor: 'pointer'
-            }}
-          >
-            {bullsData.length === 0 ? '0 Bulls' : 'Clear to 0 Bulls'}
-          </button>
-
-          <input 
-            type="number"
-            min="0"
-            max="200"
-            placeholder="0"
-            value={countInput}
-            onFocus={(e) => {
-              e.target.select();
-            }}
-            onWheel={(e) => e.target.blur()}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
-                setCountInput('');
-                handleCountChange(0);
-                return;
-              }
-              const num = parseInt(raw, 10);
-              if (!isNaN(num)) {
-                const clamped = Math.max(0, Math.min(num, 200));
-                setCountInput(num === 0 ? '0' : String(clamped));
-                handleCountChange(clamped);
-              }
-            }}
-            onBlur={() => {
-              if (!countInput || countInput === '0') {
-                setCountInput('');
-                handleCountChange(0);
-              }
-            }}
-            style={{ 
-              width: '90px', 
-              fontSize: '1.25rem', 
-              fontWeight: 800, 
-              textAlign: 'center',
-              color: '#dc2626',
-              borderRadius: '10px',
-              border: '2px solid #dc2626',
-              padding: '8px 10px'
-            }}
-          />
+        {/* Quick Count Buttons */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', marginRight: '4px' }}>
+            Quick Select:
+          </span>
+          {[0, 1, 2, 3, 5].map((qty) => {
+            const isSelected = bullsData.length === qty;
+            return (
+              <button
+                key={qty}
+                type="button"
+                onClick={() => setExactCount(qty)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: `2px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                  background: isSelected ? ACCENT : '#ffffff',
+                  color: isSelected ? '#ffffff' : '#475569',
+                  fontSize: '0.8rem',
+                  fontWeight: isSelected ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? `0 2px 8px ${ACCENT}40` : 'none',
+                }}
+              >
+                {qty === 0 ? '0 Bulls (None)' : `${qty} Bull${qty > 1 ? 's' : ''}`}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 0 Bulls Notice */}
+      {/* ── Tap counter ── */}
+      <CattleCounter
+        count={bullsData.length}
+        onAdd={addOne}
+        onRemove={removeOne}
+        onClear={clearAll}
+        cattleType="bull"
+        accentColor={ACCENT}
+        label="Bull"
+        description="Adult males for breeding or draft work"
+        showCycle={true}
+      />
+
+      {/* ── Empty State Prompt ── */}
       {bullsData.length === 0 && (
-        <div style={{ padding: '14px 18px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-            No bulls recorded on this farm. Enter the number above or click below to add.
-          </span>
-          <button 
-            type="button" 
-            onClick={() => handleCountChange(1)} 
-            className="btn-secondary" 
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-          >
-            + Add Bull
-          </button>
+        <div style={{
+          padding: '18px',
+          borderRadius: '14px',
+          background: '#fef2f2',
+          border: '1.5px dashed #fca5a5',
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}>
+          <p style={{ fontSize: '0.9rem', color: '#b91c1c', fontWeight: 700, margin: '0 0 6px' }}>
+            No bulls currently on your farm?
+          </p>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+            Click <strong>"Next Step"</strong> below to proceed to Grazing Management, or tap above to add bulls.
+          </p>
         </div>
       )}
 
-      {/* Bull Cards */}
+      {/* ── Weight chips for each bull ── */}
       {bullsData.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px', marginBottom: '28px' }}>
-          {bullsData.map((bull, idx) => (
-            <div key={bull.id || idx} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>
-                  {t ? t('step6.bull_num', { num: idx + 1 }) : `Bull ${idx + 1}`}
-                </span>
-              </div>
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '14px',
+          }}>
+            <div style={{ height: '2px', flex: 1, background: 'linear-gradient(90deg, #fca5a5, transparent)', borderRadius: '2px' }} />
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: ACCENT, whiteSpace: 'nowrap' }}>
+              SET WEIGHT FOR EACH BULL
+            </span>
+            <div style={{ height: '2px', flex: 1, background: 'linear-gradient(270deg, #fca5a5, transparent)', borderRadius: '2px' }} />
+          </div>
 
-              <WeightRangeSelect 
-                value={bull.weight}
-                onChange={(val) => handleUpdateBull(idx, val)}
-                ranges={BULL_WEIGHT_RANGES}
-                label={t ? t('step6.body_weight') : 'Body Weight (Range)'}
-                accentColor="#dc2626"
-              />
-            </div>
-          ))}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
+            gap: '14px',
+          }}>
+            {bullsData.map((bull, idx) => (
+              <div
+                key={bull.id || idx}
+                className="cattle-icon-anim"
+                style={{
+                  background: '#ffffff',
+                  border: `1.5px solid ${bull.weight && Number(bull.weight) > 0 ? '#fca5a5' : '#fca5a5'}`,
+                  borderRadius: '16px',
+                  padding: '14px 16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  animationDelay: `${idx * 0.05}s`,
+                }}
+              >
+                {/* Card header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: bull.weight && Number(bull.weight) > 0 ? ACCENT : '#f1f5f9',
+                    color: bull.weight && Number(bull.weight) > 0 ? '#ffffff' : '#94a3b8',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.7rem', fontWeight: 900, flexShrink: 0,
+                  }}>
+                    {idx + 1}
+                  </div>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>
+                    Bull #{idx + 1}
+                  </span>
+                  {bull.weight && Number(bull.weight) > 0 && (
+                    <span style={{
+                      marginLeft: 'auto', fontSize: '0.72rem', background: '#fef2f2',
+                      color: ACCENT, border: '1px solid #fca5a5', borderRadius: '20px',
+                      padding: '2px 8px', fontWeight: 800,
+                    }}>
+                      ✓ Ready
+                    </span>
+                  )}
+                </div>
+
+                <WeightChipSelect
+                  value={bull.weight}
+                  onChange={val => updateWeight(idx, val)}
+                  ranges={BULL_WEIGHT_RANGES}
+                  label={t ? t('step6.body_weight') : 'Body Weight'}
+                  accentColor={ACCENT}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Navigation */}
+      {/* ── Progress ── */}
+      {bullsData.length > 0 && (
+        <div style={{
+          padding: '10px 14px', borderRadius: '10px',
+          background: allReady ? '#fef2f2' : '#fffbeb',
+          border: `1px solid ${allReady ? '#fca5a5' : '#fde68a'}`,
+          marginBottom: '20px', fontSize: '0.8rem', fontWeight: 700,
+          color: allReady ? '#b91c1c' : '#92400e',
+          display: 'flex', alignItems: 'center', gap: '8px',
+        }}>
+          <span style={{ fontSize: '1rem' }}>{allReady ? '✅' : '⚠️'}</span>
+          {allReady
+            ? `All ${bullsData.length} bull${bullsData.length > 1 ? 's' : ''} configured — ready to proceed!`
+            : `${needsWeight} bull${needsWeight > 1 ? 's' : ''} still need a weight selected.`
+          }
+        </div>
+      )}
+
+      {/* ── Navigation ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{t ? t('previous') : 'Previous'}</span>
         </button>
-
-        <button 
+        <button
           onClick={() => {
-            const hasEmpty = bullsData.length > 0 && bullsData.some(b => !b.weight || Number(b.weight) <= 0);
-            if (hasEmpty) {
-              alert('Please enter weights for all bulls before proceeding.');
+            if (bullsData.length > 0 && bullsData.some(b => !b.weight || Number(b.weight) <= 0)) {
+              alert('Please select weights for all bulls before proceeding.');
               return;
             }
             onNext();
-          }} 
+          }}
           className="btn-primary"
         >
           <span>{t ? t('next_step') : 'Next Step'}</span>

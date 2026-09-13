@@ -1,14 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronRight, Check, ChevronDown, Plus } from 'lucide-react';
+import { Search, ChevronRight, Check } from 'lucide-react';
 import { CATTLE_BREEDS, getBreedName } from '../data/breeds';
 
 export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnteredAnimals = [], onNext, t }) {
   // Empty search term by default so ALL breeds are displayed on load!
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customBreedName, setCustomBreedName] = useState('');
-  const [customCategory, setCustomCategory] = useState('Cattle');
   
   const dropdownRef = useRef(null);
 
@@ -33,32 +30,12 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
   });
 
   const handleSelectBreed = (breed) => {
-    // Toggle: second click deselects
-    if (selectedBreed?.id === breed.id) {
-      onSelectBreed(null);
-    } else {
-      onSelectBreed(breed);
-    }
+    onSelectBreed(breed);
     setIsOpen(false);
-  };
-
-  const handleAddCustomBreed = (e) => {
-    e.preventDefault();
-    if (!customBreedName.trim()) return;
-    const newBreed = {
-      id: `custom_${Date.now()}`,
-      name: customBreedName.trim(),
-      category: customCategory,
-      subCategory: 'Custom',
-      origin: 'Farm Custom Breed',
-      avgWeightHeifer: 350,
-      avgWeightCow: 500,
-      image: 'https://images.unsplash.com/photo-1546445317-29f4545f9d52?auto=format&fit=crop&w=400&q=80',
-      description: 'Custom added breed for farm ration calculation.',
-      badge: 'Custom'
-    };
-    onSelectBreed(newBreed);
-    setShowCustomModal(false);
+    // Instant advance to Step 2 on breed selection!
+    if (onNext) {
+      onNext();
+    }
   };
 
   return (
@@ -73,14 +50,14 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 10'}</span>
+            <span className="badge-green">{t ? t('step1.badge') : 'STEP 1 OF 6'}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('steps.step_1') : 'BREED SELECTION'}</span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0f172a' }}>
             {t ? t('step1.title') : 'Select Cattle or Buffalo Breed'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#475569' }}>
-            {t ? t('step1.subtitle') : 'Search or pick your breed from the single combined field below, or click any breed card to select.'}
+            Click any breed card to select and proceed directly to Cattle Herd Management.
           </p>
         </div>
 
@@ -97,25 +74,6 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
           <label style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 800 }}>
             {t ? t('step1.search_label') : 'Search & Select Cattle Breed'}
           </label>
-
-          <button
-            type="button"
-            onClick={() => setShowCustomModal(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#16a34a',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <Plus size={15} />
-            <span>{t ? t('step1.add_custom') : 'Add Custom Breed'}</span>
-          </button>
         </div>
         
         <div style={{ position: 'relative' }}>
@@ -132,51 +90,40 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
             onFocus={() => setIsOpen(true)}
             style={{ 
               width: '100%', 
-              paddingLeft: '42px',
+              paddingLeft: '42px', 
               paddingRight: '40px',
               paddingTop: '12px',
               paddingBottom: '12px',
               fontSize: '0.95rem',
               fontWeight: '700',
-              borderColor: isOpen ? '#16a34a' : '#cbd5e1',
-              borderRadius: '12px'
+              borderRadius: '12px',
+              border: '2px solid #cbd5e1'
             }}
-          />
-
-          <ChevronDown 
-            size={18} 
-            style={{ 
-              position: 'absolute', 
-              right: '14px', 
-              top: '50%', 
-              transform: `translateY(-50%) rotate(${isOpen ? 180 : 0}deg)`, 
-              color: '#64748b',
-              transition: 'transform 0.2s ease',
-              cursor: 'pointer' 
-            }} 
-            onClick={() => setIsOpen(!isOpen)}
           />
         </div>
 
-        {/* Dropdown Options List */}
+        {/* Dropdown Results List */}
         {isOpen && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            marginTop: '6px',
-            background: '#ffffff',
-            border: '2px solid #16a34a',
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-            maxHeight: '280px',
-            overflowY: 'auto',
-            zIndex: 100
-          }}>
+          <div 
+            className="custom-scrollbar"
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '6px',
+              background: '#ffffff',
+              border: '1.5px solid #cbd5e1',
+              borderRadius: '12px',
+              maxHeight: '280px',
+              overflowY: 'auto',
+              zIndex: 100,
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+            }}
+          >
             {filteredBreeds.length > 0 ? (
               filteredBreeds.map(breed => (
-                <div
+                <div 
                   key={breed.id}
                   onClick={() => handleSelectBreed(breed)}
                   style={{
@@ -196,7 +143,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
                       src={breed.image} 
                       alt={getBreedName(breed, t)}
                       style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }}
-                      onError={(e) => e.target.src = '/cattle_art/breed_select.jpg'}
+                      onError={(e) => { e.target.src = '/cattle_art/breed_select.jpg'; }}
                     />
                     <div>
                       <div style={{ fontSize: '0.925rem', fontWeight: 800, color: '#0f172a' }}>{getBreedName(breed, t)}</div>
@@ -247,55 +194,26 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
           </div>
 
           <button onClick={onNext} className="btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
-            <span>{t ? t('step1.proceed_step2') : 'Proceed to Step 2 (Heifers)'}</span>
+            <span>Proceed to Step 2 (Cattle Herd)</span>
             <ChevronRight size={16} />
           </button>
-
-          {(() => {
-            const breedRefWeight = selectedBreed?.avgWeightCow || 450;
-            const deviating = (allEnteredAnimals || []).filter(a => {
-              const w = parseFloat(a.weight);
-              return w > 0 && (w < breedRefWeight * 0.65 || w > breedRefWeight * 1.45);
-            });
-            if (deviating.length === 0) return null;
-            return (
-              <div style={{
-                width: '100%',
-                background: '#fffbeb',
-                border: '1.5px solid #fde68a',
-                borderRadius: '10px',
-                padding: '10px 14px',
-                marginTop: '10px',
-                fontSize: '0.85rem',
-                color: '#92400e',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <span style={{ fontSize: '1.1rem' }}>⚠️</span>
-                <div>
-                  <strong>Breed-Switch Notice:</strong> You have {deviating.length} previously entered animal(s) whose weights differ from the typical mature weight of {getBreedName(selectedBreed, t)} ({breedRefWeight} kg). The system automatically formulates using your actual entered animal weights, but you may review them in steps 2–6 if desired.
-                </div>
-              </div>
-            );
-          })()}
         </div>
       )}
 
-      {/* Breed Cards Grid: DISPLAYS ALL BREEDS ON LOAD */}
+      {/* BREED CARDS GRID */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(130px, 28vw, 170px), 1fr))',
-        gap: 'clamp(8px, 2vw, 14px)'
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 170px), 1fr))',
+        gap: '14px',
+        marginBottom: '28px'
       }}>
         {filteredBreeds.map(breed => {
           const isSelected = selectedBreed?.id === breed.id;
-
           return (
-            <div
+            <div 
               key={breed.id}
               onClick={() => handleSelectBreed(breed)}
-              className="wg-card wg-card-hover"
+              className="cattle-icon-anim"
               style={{
                 borderRadius: '12px',
                 overflow: 'hidden',
@@ -304,7 +222,8 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
                 background: isSelected ? '#f0fdf4' : '#ffffff',
                 position: 'relative',
                 textAlign: 'center',
-                padding: 0
+                padding: 0,
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease'
               }}
             >
               <div style={{ position: 'relative', height: 'clamp(100px, 22vw, 135px)', overflow: 'hidden', background: '#f8fafc' }}>
@@ -350,55 +269,6 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
           );
         })}
       </div>
-
-      {/* Add Custom Breed Modal */}
-      {showCustomModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 200,
-          padding: '20px'
-        }}>
-          <div className="wg-card" style={{ maxWidth: '420px', width: '100%', padding: '24px' }}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '12px' }}>{t ? t('step1.custom_modal_title') : 'Add Custom Breed'}</h3>
-            <form onSubmit={handleAddCustomBreed}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '6px', fontWeight: 600 }}>{t ? t('step1.breed_name') : 'Breed Name'}</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Local Crossbreed..." 
-                  value={customBreedName}
-                  onChange={(e) => setCustomBreedName(e.target.value)}
-                  style={{ width: '100%' }}
-                  required
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '6px', fontWeight: 600 }}>{t ? t('step1.category') : 'Category'}</label>
-                <select 
-                  value={customCategory} 
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  style={{ width: '100%' }}
-                >
-                  <option value="Cattle">Cattle</option>
-                  <option value="Buffalo">Buffalo</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setShowCustomModal(false)} className="btn-secondary">{t ? t('cancel') : 'Cancel'}</button>
-                <button type="submit" className="btn-primary">{t ? t('step1.add_and_select') : 'Add & Select'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Bottom Navigation */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>

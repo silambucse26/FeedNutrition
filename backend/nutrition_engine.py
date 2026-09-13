@@ -214,7 +214,13 @@ def rumDigestionNDF_Starch(actCp, actNfe, actfNdf, actNdf, actAdf, wet, Dmi):
 # ---------------------------------------------------------
 # 5. Mineral & Vitamin Analysis Engine (NRC + user data)
 # ---------------------------------------------------------
+_MINERALS_CACHE = None
+
 def load_mineral_dataset():
+    global _MINERALS_CACHE
+    if _MINERALS_CACHE is not None:
+        return _MINERALS_CACHE
+
     paths = [
         os.path.join(DATA_DIR, "consolidated_minerals.dat"),
         os.path.join(os.path.dirname(__file__), "consolidated_minerals.dat")
@@ -226,12 +232,14 @@ def load_mineral_dataset():
                 df = pd.read_csv(p, sep="\t")
                 df.columns = [str(c).strip() for c in df.columns]
                 df = df.replace("-", np.nan)
+                _MINERALS_CACHE = df
                 return df
             except Exception:
                 try:
                     df = pd.read_csv(p, delim_whitespace=True)
                     df.columns = [str(c).strip() for c in df.columns]
                     df = df.replace("-", np.nan)
+                    _MINERALS_CACHE = df
                     return df
                 except Exception:
                     pass
@@ -469,9 +477,15 @@ def calculate_minerals_and_vitamins(
     }
 
 # ---------------------------------------------------------
-# Helper to load reference datasets
+# Helper to load reference datasets (cached in memory)
 # ---------------------------------------------------------
+_DATASETS_CACHE = None
+
 def load_datasets():
+    global _DATASETS_CACHE
+    if _DATASETS_CACHE is not None:
+        return _DATASETS_CACHE
+
     breeds_path = os.path.join(DATA_DIR, "breedspecificanimaldata.csv")
     rough_path = os.path.join(DATA_DIR, "roughages.csv")
     conc_path = os.path.join(DATA_DIR, "concentrates.csv")
@@ -482,7 +496,8 @@ def load_datasets():
     conc_df = pd.read_csv(conc_path) if os.path.exists(conc_path) else pd.DataFrame()
     unconv_df = pd.read_csv(unconv_path) if os.path.exists(unconv_path) else pd.DataFrame()
 
-    return breeds_df, rough_df, conc_df, unconv_df
+    _DATASETS_CACHE = (breeds_df, rough_df, conc_df, unconv_df)
+    return _DATASETS_CACHE
 
 
 # ---------------------------------------------------------

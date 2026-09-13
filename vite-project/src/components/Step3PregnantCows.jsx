@@ -1,342 +1,614 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, CheckSquare, Square } from 'lucide-react';
-import WeightRangeSelect from './WeightRangeSelect';
-import { COW_WEIGHT_RANGES, PREGNANCY_MONTH_OPTIONS, PREGNANCY_DAYS_OPTIONS } from '../data/weightRanges';
+import React from 'react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus } from 'lucide-react';
+import CattleCounter from './CattleCounter';
+import WeightChipSelect from './WeightChipSelect';
+import { COW_WEIGHT_RANGES } from '../data/weightRanges';
 
-export default function Step3PregnantCows({ 
-  pregnantCategory, // 'firstTime', 'repeat', 'both'
+const ACCENT = '#d97706'; // Warm amber
+
+// Standard numeric day chips for pregnancy
+const PREG_DAY_CHIPS = [30, 60, 90, 120, 150, 180, 210, 240, 270];
+
+export default function Step3PregnantCows({
+  pregnantCategory,
   setPregnantCategory,
-  firstTimeCattle, setFirstTimeCattle,
-  repeatCattle, setRepeatCattle,
+  firstTimeCattle,
+  setFirstTimeCattle,
+  repeatCattle,
+  setRepeatCattle,
   defaultBreed,
   acknowledgeStep,
   onNext,
   onPrev,
-  t
+  t,
 }) {
-  const baseWeight = defaultBreed ? defaultBreed.avgWeightCow : 480;
+  // Combine both arrays into a unified list for single-place editing
+  // Each unified cow has a `category`: 'firstTime' | 'repeat'
+  const unifiedCattle = [
+    ...firstTimeCattle.map(c => ({ ...c, category: 'firstTime' })),
+    ...repeatCattle.map(c => ({ ...c, category: 'repeat' })),
+  ];
 
-  const [firstTimeInput, setFirstTimeInput] = useState(firstTimeCattle.length > 0 ? String(firstTimeCattle.length) : '');
-  const [repeatInput, setRepeatInput] = useState(repeatCattle.length > 0 ? String(repeatCattle.length) : '');
+  const totalCount = unifiedCattle.length;
 
-  useEffect(() => {
-    setFirstTimeInput(firstTimeCattle.length > 0 ? String(firstTimeCattle.length) : '');
-  }, [firstTimeCattle.length]);
-
-  useEffect(() => {
-    setRepeatInput(repeatCattle.length > 0 ? String(repeatCattle.length) : '');
-  }, [repeatCattle.length]);
-
-  // Handle count change for First-Time Pregnant
-  const handleFirstTimeCountChange = (count) => {
+  // Helper to split unified back into firstTimeCattle and repeatCattle
+  const commitUnified = (updatedList) => {
     if (acknowledgeStep) acknowledgeStep();
-    const num = Math.max(0, Math.min(count, 200));
-    if (num > firstTimeCattle.length) {
-      const newEntries = [];
-      for (let i = firstTimeCattle.length; i < num; i++) {
-        newEntries.push({
-          id: Date.now() + i,
-          weight: '',
-          inputType: 'months',
-          pregMonth: 5,
-          pregDays: 150
-        });
-      }
-      setFirstTimeCattle([...firstTimeCattle, ...newEntries]);
-    } else if (num < firstTimeCattle.length) {
-      setFirstTimeCattle(firstTimeCattle.slice(0, num));
+    const first = updatedList
+      .filter(c => c.category === 'firstTime')
+      .map(({ category, ...rest }) => ({
+        ...rest,
+        pregDays: Number(rest.pregDays) || 150,
+        pregMonth: Math.max(1, Math.min(9, Math.round((Number(rest.pregDays) || 150) / 30.4))),
+      }));
+
+    const rep = updatedList
+      .filter(c => c.category === 'repeat')
+      .map(({ category, ...rest }) => ({
+        ...rest,
+        pregDays: Number(rest.pregDays) || 210,
+        pregMonth: Math.max(1, Math.min(9, Math.round((Number(rest.pregDays) || 210) / 30.4))),
+      }));
+
+    setFirstTimeCattle(first);
+    setRepeatCattle(rep);
+
+    if (first.length > 0 && rep.length > 0) {
+      setPregnantCategory('both');
+    } else if (first.length > 0) {
+      setPregnantCategory('firstTime');
+    } else if (rep.length > 0) {
+      setPregnantCategory('repeat');
+    } else {
+      setPregnantCategory('both');
     }
   };
 
-  // Handle count change for Repeat Pregnant
-  const handleRepeatCountChange = (count) => {
+  // Tap to add one pregnant cow (defaults to repeat pregnant cow)
+  const handleAddOne = () => {
+    if (totalCount >= 200) return;
+    const newCow = {
+      id: Date.now() + Math.random(),
+      weight: '',
+      pregDays: 150,
+      category: 'repeat',
+    };
+    commitUnified([...unifiedCattle, newCow]);
+  };
+
+  // Remove the last cow
+  const handleRemoveOne = () => {
+    if (totalCount === 0) return;
+    commitUnified(unifiedCattle.slice(0, -1));
+  };
+
+  // Remove a specific cow
+  const handleRemoveIndex = (idx) => {
+    const next = [...unifiedCattle];
+    next.splice(idx, 1);
+    commitUnified(next);
+  };
+
+  // Clear all
+  const handleClearAll = () => {
     if (acknowledgeStep) acknowledgeStep();
-    const num = Math.max(0, Math.min(count, 200));
-    if (num > repeatCattle.length) {
-      const newEntries = [];
-      for (let i = repeatCattle.length; i < num; i++) {
-        newEntries.push({
-          id: Date.now() + i,
-          weight: '',
-          inputType: 'months',
-          pregMonth: 7,
-          pregDays: 210
-        });
-      }
-      setRepeatCattle([...repeatCattle, ...newEntries]);
-    } else if (num < repeatCattle.length) {
-      setRepeatCattle(repeatCattle.slice(0, num));
+    setFirstTimeCattle([]);
+    setRepeatCattle([]);
+  };
+
+  const handleSetExactCount = (count) => {
+    if (acknowledgeStep) acknowledgeStep();
+    if (count === 0) {
+      handleClearAll();
+      return;
+    }
+    if (unifiedCattle.length === count) return;
+    if (unifiedCattle.length < count) {
+      const needed = count - unifiedCattle.length;
+      const added = Array.from({ length: needed }).map((_, i) => ({
+        id: Date.now() + i + Math.random(),
+        weight: unifiedCattle[0]?.weight || '',
+        pregDays: unifiedCattle[0]?.pregDays || 150,
+        category: 'repeat',
+      }));
+      commitUnified([...unifiedCattle, ...added]);
+    } else {
+      commitUnified(unifiedCattle.slice(0, count));
     }
   };
 
-  const getPregStage = (daysOrMonths, inputType) => {
-    const months = inputType === 'days' ? Math.round(daysOrMonths / 30) : daysOrMonths;
-    if (months <= 3) return { label: t ? t('step3.early_preg') : 'Early Pregnancy (Months 1-3)', color: '#16a34a', bg: '#f0fdf4' };
-    if (months <= 6) return { label: t ? t('step3.mid_preg') : 'Mid Pregnancy (Months 4-6)', color: '#0d9488', bg: '#ccfbf1' };
-    return { label: t ? t('step3.late_preg') : 'Late Pregnancy (Months 7-9)', color: '#d97706', bg: '#fffbeb' };
+  // Update specific cow field
+  const handleUpdateCow = (idx, field, val) => {
+    const next = [...unifiedCattle];
+    next[idx] = { ...next[idx], [field]: val };
+    commitUnified(next);
   };
 
-  const showFirst = pregnantCategory === 'firstTime' || pregnantCategory === 'both';
-  const showRepeat = pregnantCategory === 'repeat' || pregnantCategory === 'both';
+  // Adjust days by delta
+  const handleStepDays = (idx, delta) => {
+    const current = Number(unifiedCattle[idx].pregDays) || 150;
+    const clamped = Math.max(1, Math.min(283, current + delta));
+    handleUpdateCow(idx, 'pregDays', clamped);
+  };
+
+  const allWeightsFilled = totalCount > 0 && unifiedCattle.every(c => c.weight && Number(c.weight) > 0);
+  const emptyWeightsCount = unifiedCattle.filter(c => !c.weight || Number(c.weight) <= 0).length;
 
   return (
     <div className="wg-card animate-fade-in">
-      {/* Visual Header Banner - Warm Amber Maternity Theme */}
-      <div 
+
+      {/* Visual Header Banner */}
+      <div
         className="step-banner"
         style={{
           background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-          border: '1.5px solid #fde68a'
+          border: '1.5px solid #fde68a',
         }}
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#d97706', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              {t ? t('step3.badge') : 'STEP 3 OF 9'}
+            <span style={{ background: ACCENT, color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
+              {t ? t('step3.badge') : 'STEP 3 OF 10'}
             </span>
             <span style={{ fontSize: '0.825rem', color: '#b45309', fontWeight: 800 }}>
-              {t ? t('step3.tag') : 'MATERNITY & CALVING'}
+              {t ? t('step3.tag') : 'GESTATION & MATERNITY'}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#78350f' }}>
             {t ? t('step3.title') : 'Pregnant Cattle Management'}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#92400e' }}>
-            {t ? t('step3.subtitle') : 'Track gestation stages, expected calving dates, and fetal growth nutritional demands.'}
+            Record body weight and exact <strong>number of days pregnant</strong> for each expectant cow or heifer.
           </p>
         </div>
 
-        <img 
-          src="/cattle_art/pregnant.jpg" 
-          alt="Pregnant Cow" 
+        <img
+          src="/cattle_art/cartoon_pregnant.jpg"
+          alt="Pregnant Cow"
           className="step-banner-img"
+          onError={e => { e.target.style.display = 'none'; }}
         />
       </div>
 
-      {/* Category Checkboxes / Choice Cards */}
-      <div style={{ marginBottom: '28px' }}>
-        <label style={{ display: 'block', fontSize: '0.875rem', color: '#0f172a', fontWeight: 800, marginBottom: '12px' }}>
-          {t ? t('step3.category_label') : 'Pregnancy Category Selection:'}
-        </label>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
-          <div
-            onClick={() => setPregnantCategory('firstTime')}
-            style={{
-              background: pregnantCategory === 'firstTime' ? '#f0fdf4' : '#ffffff',
-              border: pregnantCategory === 'firstTime' ? '2.5px solid #16a34a' : '1.5px solid #cbd5e1',
-              borderRadius: '12px',
-              padding: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{t ? t('step3.first_time') : 'First-Time Pregnant'}</strong>
-              {pregnantCategory === 'firstTime' ? <CheckSquare color="#16a34a" size={18} /> : <Square color="#94a3b8" size={18} />}
-            </div>
-            <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>{t ? t('step3.first_time_sub') : 'Primiparous Heifer Cows'}</p>
-          </div>
-
-          <div
-            onClick={() => setPregnantCategory('repeat')}
-            style={{
-              background: pregnantCategory === 'repeat' ? '#f0fdf4' : '#ffffff',
-              border: pregnantCategory === 'repeat' ? '2.5px solid #16a34a' : '1.5px solid #cbd5e1',
-              borderRadius: '12px',
-              padding: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{t ? t('step3.repeat') : 'Repeat Pregnant'}</strong>
-              {pregnantCategory === 'repeat' ? <CheckSquare color="#16a34a" size={18} /> : <Square color="#94a3b8" size={18} />}
-            </div>
-            <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>{t ? t('step3.repeat_sub') : 'Multiparous Mature Cows'}</p>
-          </div>
-
-          <div
-            onClick={() => setPregnantCategory('both')}
-            style={{
-              background: pregnantCategory === 'both' ? '#f0fdf4' : '#ffffff',
-              border: pregnantCategory === 'both' ? '2.5px solid #16a34a' : '1.5px solid #cbd5e1',
-              borderRadius: '12px',
-              padding: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{t ? t('step3.both') : 'Both Categories'}</strong>
-              {pregnantCategory === 'both' ? <CheckSquare color="#16a34a" size={18} /> : <Square color="#94a3b8" size={18} />}
-            </div>
-            <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>{t ? t('step3.both_sub') : 'First-time & Repeat Pregnant'}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Timeline Display */}
+      {/* ── Question & Quick Count Selection ── */}
       <div style={{
-        background: '#f8fafc',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '14px 20px',
-        marginBottom: '28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        fontSize: '0.8rem',
-        fontWeight: 700
+        background: '#ffffff',
+        border: '1.5px solid #fed7aa',
+        borderRadius: '16px',
+        padding: '16px 20px',
+        marginBottom: '20px',
+        boxShadow: '0 2px 8px rgba(217, 119, 6, 0.04)',
       }}>
-        <span style={{ color: '#16a34a' }}>{t ? t('step3.early_preg') : 'Early Pregnancy (Months 1-3)'}</span>
-        <span style={{ color: '#94a3b8' }}>→</span>
-        <span style={{ color: '#0d9488' }}>{t ? t('step3.mid_preg') : 'Mid Pregnancy (Months 4-6)'}</span>
-        <span style={{ color: '#94a3b8' }}>→</span>
-        <span style={{ color: '#d97706' }}>{t ? t('step3.late_preg') : 'Late Pregnancy (Months 7-9)'}</span>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginBottom: '12px',
+        }}>
+          <div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#78350f', margin: '0 0 4px' }}>
+              How many Pregnant Cattle are on your farm?
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+              Expectant heifers and cows in gestation. Tap a quick number or use the counter button.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#fffbeb',
+            padding: '6px 14px',
+            borderRadius: '12px',
+            border: `1.5px solid ${ACCENT}30`,
+          }}>
+            <span style={{ fontSize: '0.8rem', color: '#b45309', fontWeight: 700 }}>Total Pregnant:</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: ACCENT }}>{totalCount}</span>
+          </div>
+        </div>
+
+        {/* Quick Count Buttons */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', marginRight: '4px' }}>
+            Quick Select:
+          </span>
+          {[0, 1, 2, 3, 5, 8, 10].map((qty) => {
+            const isSelected = totalCount === qty;
+            return (
+              <button
+                key={qty}
+                type="button"
+                onClick={() => handleSetExactCount(qty)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: `2px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                  background: isSelected ? ACCENT : '#ffffff',
+                  color: isSelected ? '#ffffff' : '#475569',
+                  fontSize: '0.8rem',
+                  fontWeight: isSelected ? 800 : 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? `0 2px 8px ${ACCENT}40` : 'none',
+                }}
+              >
+                {qty === 0 ? '0 Pregnant (None)' : `${qty} Cow${qty > 1 ? 's' : ''}`}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* FIRST-TIME PREGNANT SECTION */}
-      {showFirst && (
+      {/* Tap Counter Component with Cartoon Avatar */}
+      <CattleCounter
+        count={totalCount}
+        onAdd={handleAddOne}
+        onRemove={handleRemoveOne}
+        onClear={handleClearAll}
+        cattleType="pregnant"
+        accentColor={ACCENT}
+        label="Pregnant Cow"
+        description="Expectant heifers and cows in gestation"
+        showCycle={true}
+      />
+
+      {/* Empty State Prompt */}
+      {totalCount === 0 && (
+        <div style={{
+          padding: '18px',
+          borderRadius: '14px',
+          background: '#fffbeb',
+          border: '1.5px dashed #fde68a',
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}>
+          <p style={{ fontSize: '0.9rem', color: '#92400e', fontWeight: 700, margin: '0 0 6px' }}>
+            No pregnant cattle currently on your farm?
+          </p>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+            Click <strong>"Next Step"</strong> below to proceed to Lactating Cows, or tap above to add pregnant cattle.
+          </p>
+        </div>
+      )}
+
+      {/* Unified List of All Pregnant Cattle */}
+      {totalCount > 0 && (
         <div style={{ marginBottom: '28px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '20px',
-            background: '#ffffff',
-            border: '2px solid #16a34a',
-            borderRadius: '14px',
-            padding: '16px 20px',
-            marginBottom: '20px',
-            flexWrap: 'wrap'
+            gap: '10px',
+            marginBottom: '14px',
           }}>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-                {t ? t('step3.first_time_count') : 'Number of First-time Pregnant Cattle'}
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0', fontWeight: 500 }}>
-                {t ? t('step3.first_time_hint') : 'Heifers expecting their first calf'}
-              </p>
-            </div>
-            <input 
-              type="number"
-              min="0"
-              max="200"
-              placeholder="0"
-              value={firstTimeInput}
-              onFocus={(e) => {
-                e.target.select();
-              }}
-              onWheel={(e) => e.target.blur()}
-              onChange={(e) => {
-                const raw = e.target.value;
-                if (raw === '') {
-                  setFirstTimeInput('');
-                  handleFirstTimeCountChange(0);
-                  return;
-                }
-                const num = parseInt(raw, 10);
-                if (!isNaN(num)) {
-                  const clamped = Math.max(0, Math.min(num, 200));
-                  setFirstTimeInput(num === 0 ? '0' : String(clamped));
-                  handleFirstTimeCountChange(clamped);
-                }
-              }}
-              onBlur={() => {
-                if (!firstTimeInput || firstTimeInput === '0') {
-                  setFirstTimeInput('');
-                  handleFirstTimeCountChange(0);
-                }
-              }}
-              style={{ 
-                width: '110px', 
-                fontSize: '1.25rem', 
-                fontWeight: 800, 
-                textAlign: 'center',
-                color: '#16a34a',
-                borderRadius: '10px',
-                border: '2px solid #16a34a',
-                padding: '8px 12px'
-              }}
-            />
+            <div style={{
+              height: '2px',
+              flex: 1,
+              background: 'linear-gradient(90deg, #fde68a, transparent)',
+              borderRadius: '2px',
+            }} />
+            <span style={{
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: ACCENT,
+              whiteSpace: 'nowrap',
+            }}>
+              CONFIGURE EACH PREGNANT ANIMAL ({totalCount})
+            </span>
+            <div style={{
+              height: '2px',
+              flex: 1,
+              background: 'linear-gradient(270deg, #fde68a, transparent)',
+              borderRadius: '2px',
+            }} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {firstTimeCattle.map((cow, idx) => {
-              const stage = getPregStage(cow.inputType === 'days' ? cow.pregDays : cow.pregMonth, cow.inputType);
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))',
+            gap: '16px',
+          }}>
+            {unifiedCattle.map((cow, idx) => {
+              const days = Number(cow.pregDays) || 150;
+              const hasWeight = cow.weight && Number(cow.weight) > 0;
+
               return (
-                <div key={cow.id || idx} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span className="badge-green">{t ? t('step3.cow_num', { num: idx + 1 }) : `Cow ${idx + 1}`}</span>
-                      <span style={{ background: stage.bg, color: stage.color, padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>
-                        {stage.label}
+                <div
+                  key={cow.id || idx}
+                  className="cattle-icon-anim"
+                  style={{
+                    background: '#ffffff',
+                    border: `1.5px solid ${hasWeight ? '#fcd34d' : '#fca5a5'}`,
+                    borderRadius: '16px',
+                    padding: '16px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    animationDelay: `${idx * 0.04}s`,
+                  }}
+                >
+                  {/* Card Header: Number + Category Pill + Delete */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #f1f5f9',
+                    paddingBottom: '10px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: hasWeight ? ACCENT : '#f1f5f9',
+                        color: hasWeight ? '#ffffff' : '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 900,
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
+                        Pregnant Cattle #{idx + 1}
                       </span>
                     </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                    <WeightRangeSelect 
-                      value={cow.weight}
-                      onChange={(val) => {
-                        const updated = [...firstTimeCattle];
-                        updated[idx].weight = val;
-                        setFirstTimeCattle(updated);
-                      }}
-                      ranges={COW_WEIGHT_RANGES}
-                      label={t ? t('step3.individual_weight') : 'Weight Range'}
-                      accentColor="#16a34a"
-                    />
 
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {t ? t('step3.preg_input_mode') : 'Pregnancy Input Mode'}
-                      </label>
-                      <select 
-                        value={cow.inputType}
-                        onChange={(e) => {
-                          const updated = [...firstTimeCattle];
-                          updated[idx].inputType = e.target.value;
-                          setFirstTimeCattle(updated);
-                        }}
-                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#000000', fontWeight: 400 }}
-                      >
-                        <option value="months" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
-                        <option value="days" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {cow.inputType === 'days' ? (t ? t('step3.days_after_insem') : 'Days After Insemination') : (t ? t('step3.preg_month') : 'Pregnancy Month')}
-                      </label>
-                      {cow.inputType === 'days' ? (
-                        <select 
-                          value={cow.pregDays}
-                          onChange={(e) => {
-                            const updated = [...firstTimeCattle];
-                            updated[idx].pregDays = parseInt(e.target.value) || 15;
-                            setFirstTimeCattle(updated);
-                          }}
-                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
-                        >
-                          {PREGNANCY_DAYS_OPTIONS.map((opt, i) => (
-                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <select 
-                          value={cow.pregMonth}
-                          onChange={(e) => {
-                            const updated = [...firstTimeCattle];
-                            updated[idx].pregMonth = parseInt(e.target.value) || 1;
-                            setFirstTimeCattle(updated);
-                          }}
-                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
-                        >
-                          {PREGNANCY_MONTH_OPTIONS.map((opt, i) => (
-                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
-                          ))}
-                        </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {hasWeight && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          background: '#fef3c7',
+                          color: '#b45309',
+                          border: '1px solid #fde68a',
+                          borderRadius: '20px',
+                          padding: '2px 8px',
+                          fontWeight: 800,
+                        }}>
+                          ✓ Ready
+                        </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveIndex(idx)}
+                        title="Remove this animal"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#94a3b8',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
+
+                  {/* Animal Type Toggle (Heifer vs Mature Cow) */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.76rem',
+                      color: '#64748b',
+                      fontWeight: 700,
+                      marginBottom: '6px',
+                    }}>
+                      Pregnancy Type
+                    </label>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '6px',
+                      background: '#f8fafc',
+                      padding: '4px',
+                      borderRadius: '10px',
+                      border: '1px solid #e2e8f0',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateCow(idx, 'category', 'firstTime')}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: cow.category === 'firstTime' ? ACCENT : 'transparent',
+                          color: cow.category === 'firstTime' ? '#ffffff' : '#64748b',
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        1st Time (Heifer)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateCow(idx, 'category', 'repeat')}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: cow.category === 'repeat' ? ACCENT : 'transparent',
+                          color: cow.category === 'repeat' ? '#ffffff' : '#64748b',
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Repeat (Mature Cow)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Body Weight Chips (Numeric Only) */}
+                  <WeightChipSelect
+                    value={cow.weight}
+                    onChange={val => handleUpdateCow(idx, 'weight', val)}
+                    ranges={COW_WEIGHT_RANGES}
+                    label="Body Weight"
+                    accentColor={ACCENT}
+                    required={true}
+                  />
+
+                  {/* Days Pregnant (Numeric Stepper & Chips, NO Early/Mid/Late) */}
+                  <div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}>
+                      <label style={{
+                        fontSize: '0.8rem',
+                        color: '#475569',
+                        fontWeight: 700,
+                      }}>
+                        Days Pregnant *
+                      </label>
+                      <span style={{
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        color: ACCENT,
+                        background: '#fef3c7',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                      }}>
+                        {days} Days
+                      </span>
+                    </div>
+
+                    {/* Numeric Stepper [-] [Days Input] [+] */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => handleStepDays(idx, -10)}
+                        disabled={days <= 1}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: days <= 1 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        −
+                      </button>
+
+                      <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${ACCENT}`,
+                        background: '#ffffff',
+                      }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="283"
+                          value={days}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              handleUpdateCow(idx, 'pregDays', Math.max(1, Math.min(283, val)));
+                            }
+                          }}
+                          onWheel={e => e.target.blur()}
+                          style={{
+                            width: '60px',
+                            textAlign: 'center',
+                            fontSize: '1.05rem',
+                            fontWeight: 800,
+                            color: ACCENT,
+                            border: 'none',
+                            outline: 'none',
+                          }}
+                        />
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+                          days
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStepDays(idx, 10)}
+                        disabled={days >= 283}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                          fontSize: '1.2rem',
+                          cursor: days >= 283 ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Quick-tap Day Number Chips */}
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                    }}>
+                      {PREG_DAY_CHIPS.map(d => {
+                        const isSelected = Math.abs(days - d) <= 5;
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => handleUpdateCow(idx, 'pregDays', d)}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '16px',
+                              border: `1.5px solid ${isSelected ? ACCENT : '#e2e8f0'}`,
+                              background: isSelected ? ACCENT : '#f8fafc',
+                              color: isSelected ? '#ffffff' : '#64748b',
+                              fontSize: '0.72rem',
+                              fontWeight: isSelected ? 800 : 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {d}d
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               );
             })}
@@ -344,182 +616,58 @@ export default function Step3PregnantCows({
         </div>
       )}
 
-      {/* REPEAT PREGNANT SECTION */}
-      {showRepeat && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            background: '#ffffff',
-            border: '2px solid #16a34a',
-            borderRadius: '14px',
-            padding: '16px 20px',
-            marginBottom: '20px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-                {t ? t('step3.repeat_count') : 'Number of Repeat Pregnant Cattle'}
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '2px 0 0', fontWeight: 500 }}>
-                {t ? t('step3.repeat_hint') : 'Mature cows in their second or subsequent pregnancy'}
-              </p>
-            </div>
-            <input 
-              type="number"
-              min="0"
-              max="200"
-              placeholder="0"
-              value={repeatInput}
-              onFocus={(e) => {
-                e.target.select();
-              }}
-              onWheel={(e) => e.target.blur()}
-              onChange={(e) => {
-                const raw = e.target.value;
-                if (raw === '') {
-                  setRepeatInput('');
-                  handleRepeatCountChange(0);
-                  return;
-                }
-                const num = parseInt(raw, 10);
-                if (!isNaN(num)) {
-                  const clamped = Math.max(0, Math.min(num, 200));
-                  setRepeatInput(num === 0 ? '0' : String(clamped));
-                  handleRepeatCountChange(clamped);
-                }
-              }}
-              onBlur={() => {
-                if (!repeatInput || repeatInput === '0') {
-                  setRepeatInput('');
-                  handleRepeatCountChange(0);
-                }
-              }}
-              style={{ 
-                width: '110px', 
-                fontSize: '1.25rem', 
-                fontWeight: 800, 
-                textAlign: 'center',
-                color: '#16a34a',
-                borderRadius: '10px',
-                border: '2px solid #16a34a',
-                padding: '8px 12px'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {repeatCattle.map((cow, idx) => {
-              const stage = getPregStage(cow.inputType === 'days' ? cow.pregDays : cow.pregMonth, cow.inputType);
-              return (
-                <div key={cow.id || idx} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span className="badge-green">{t ? t('step3.cow_num', { num: idx + 1 }) : `Cow ${idx + 1}`}</span>
-                      <span style={{ background: stage.bg, color: stage.color, padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>
-                        {stage.label}
-                      </span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-                    <WeightRangeSelect 
-                      value={cow.weight}
-                      onChange={(val) => {
-                        const updated = [...repeatCattle];
-                        updated[idx].weight = val;
-                        setRepeatCattle(updated);
-                      }}
-                      ranges={COW_WEIGHT_RANGES}
-                      label={t ? t('step3.individual_weight') : 'Weight Range'}
-                      accentColor="#16a34a"
-                    />
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {t ? t('step3.preg_input_mode') : 'Pregnancy Input Mode'}
-                      </label>
-                      <select 
-                        value={cow.inputType}
-                        onChange={(e) => {
-                          const updated = [...repeatCattle];
-                          updated[idx].inputType = e.target.value;
-                          setRepeatCattle(updated);
-                        }}
-                        style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#000000', fontWeight: 400 }}
-                      >
-                        <option value="months" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_months') : 'Pregnancy Month (1-9)'}</option>
-                        <option value="days" style={{ color: '#000000', fontWeight: 400 }}>{t ? t('step3.mode_days') : 'Days after insemination (1-283)'}</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '4px' }}>
-                        {cow.inputType === 'days' ? (t ? t('step3.days_after_insem') : 'Days After Insemination') : (t ? t('step3.preg_month') : 'Pregnancy Month')}
-                      </label>
-                      {cow.inputType === 'days' ? (
-                        <select 
-                          value={cow.pregDays}
-                          onChange={(e) => {
-                            const updated = [...repeatCattle];
-                            updated[idx].pregDays = parseInt(e.target.value) || 15;
-                            setRepeatCattle(updated);
-                          }}
-                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
-                        >
-                          {PREGNANCY_DAYS_OPTIONS.map((opt, i) => (
-                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <select 
-                          value={cow.pregMonth}
-                          onChange={(e) => {
-                            const updated = [...repeatCattle];
-                            updated[idx].pregMonth = parseInt(e.target.value) || 1;
-                            setRepeatCattle(updated);
-                          }}
-                          style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontWeight: 400, color: '#000000', fontSize: '0.85rem' }}
-                        >
-                          {PREGNANCY_MONTH_OPTIONS.map((opt, i) => (
-                            <option key={i} value={opt.value} style={{ color: '#000000', fontWeight: 400 }}>{opt.label}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* Progress & Validation Alert */}
+      {totalCount > 0 && (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: '10px',
+          background: allWeightsFilled ? '#fffbeb' : '#fff1f2',
+          border: `1px solid ${allWeightsFilled ? '#fde68a' : '#fecdd3'}`,
+          marginBottom: '20px',
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          color: allWeightsFilled ? '#b45309' : '#be123c',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <span style={{ fontSize: '1rem' }}>{allWeightsFilled ? '✅' : '⚠️'}</span>
+          {allWeightsFilled
+            ? `All ${totalCount} pregnant cattle configured with weight & days — ready to proceed!`
+            : `${emptyWeightsCount} animal${emptyWeightsCount > 1 ? 's' : ''} still need body weight selected.`
+          }
         </div>
       )}
 
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+      {/* Navigation Buttons */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderTop: '1px solid #e2e8f0',
+        paddingTop: '20px',
+      }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{t ? t('previous') : 'Previous'}</span>
         </button>
 
-        <button 
+        <button
           onClick={() => {
-            const list = pregnantCategory === 'firstTime' ? firstTimeCattle :
-                         pregnantCategory === 'repeat' ? repeatCattle :
-                         [...firstTimeCattle, ...repeatCattle];
-            const hasEmpty = list.length > 0 && list.some(c => !c.weight || Number(c.weight) <= 0);
-            if (hasEmpty) {
-              alert('Please enter weights for all pregnant cows before proceeding.');
+            if (emptyWeightsCount > 0) {
+              alert('Please select body weights for all pregnant cattle before proceeding.');
               return;
             }
             onNext();
-          }} 
+          }}
           className="btn-primary"
+          style={{ background: ACCENT, borderColor: ACCENT }}
         >
           <span>{t ? t('next_step') : 'Next Step'}</span>
           <ChevronRight size={18} />
         </button>
       </div>
+
     </div>
   );
 }

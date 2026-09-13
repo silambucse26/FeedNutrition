@@ -3,15 +3,12 @@ import Navbar from './components/Navbar';
 import StepProgress from './components/StepProgress';
 
 import Step1BreedSelect from './components/Step1BreedSelect';
-import Step2Heifers from './components/Step2Heifers';
-import Step3PregnantCows from './components/Step3PregnantCows';
-import Step4Lactation from './components/Step4Lactation';
-import Step5DryCows from './components/Step5DryCows';
-import Step6Bulls from './components/Step6Bulls';
+import CattleCycleHub from './components/CattleCycleHub';
 import Step7Grazing from './components/Step7Grazing';
 import Step8Water from './components/Step8Water';
 import Step9Feed from './components/Step9Feed';
 import Step10Review from './components/Step10Review';
+import { prewarmBackend } from './services/nutritionApi';
 
 import { CATTLE_BREEDS } from './data/breeds';
 import translations from './data/translations.json';
@@ -70,8 +67,9 @@ export default function App() {
   const [loadingWeather, setLoadingWeather] = useState(false);
   const [weatherError, setWeatherError] = useState(null);
 
-  // App Step (1 to 10)
+  // App Step (1 to 6)
   const [currentStep, setCurrentStep] = useState(1);
+  const [herdActiveStage, setHerdActiveStage] = useState('heifers');
 
   // Step 1: Selected Breed (clean start: null until user selects a breed)
   const [selectedBreed, setSelectedBreed] = useState(null);
@@ -137,6 +135,9 @@ export default function App() {
 
   // Load saved state from LocalStorage on mount (clean purge of legacy mock data)
   useEffect(() => {
+    // Proactively pre-warm backend (Render cloud / local) so it is hot and instant by calculation time
+    prewarmBackend();
+
     try {
       // 1. Permanently remove old legacy mock storage key if present in browser
       localStorage.removeItem('bovina_farm_state');
@@ -463,94 +464,45 @@ export default function App() {
     !isNaN(weather.humidity)
   );
 
-  // Precise Step Status Evaluation:
+  // Precise Step Status Evaluation (Steps 1 to 6):
   // 'complete' (Green) | 'partial' (Yellow) | 'empty' (Red)
   const getStepStatus = (stepNum) => {
     switch (stepNum) {
       case 1:
         return selectedBreed ? 'complete' : 'empty';
 
-      case 2: // Heifers
-        if (!heifersData || heifersData.length === 0) return 'empty';
+      case 2: // Cattle Herd Hub (All 5 Categories)
         {
-          const hasInvalid = heifersData.some(h => !h.weight || Number(h.weight) <= 0);
-          return hasInvalid ? 'partial' : 'complete';
+          const totalCattle = (heifersData?.length || 0) + (firstTimeCattle?.length || 0) + (repeatCattle?.length || 0) + (lactatingData?.length || 0) + (dryCowsData?.length || 0) + (bullsData?.length || 0);
+          if (totalCattle === 0) return acknowledgedSteps[2] ? 'complete' : 'empty';
+          const hasInvalidCattle = 
+            (heifersData && heifersData.some(h => !h.weight || Number(h.weight) <= 0)) ||
+            (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
+            (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
+            (lactatingData && lactatingData.some(l => !l.weight || Number(l.weight) <= 0 || l.milkYield === '' || Number(l.milkYield) <= 0 || l.milkFat === '' || Number(l.milkFat) <= 0)) ||
+            (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0)) ||
+            (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0));
+          return hasInvalidCattle ? 'partial' : 'complete';
         }
 
-      case 3: // Pregnant Cows
-        {
-          const list = pregnantCategory === 'firstTime' ? firstTimeCattle :
-                       pregnantCategory === 'repeat' ? repeatCattle :
-                       [...firstTimeCattle, ...repeatCattle];
-          if (!list || list.length === 0) return 'empty';
-          const hasInvalid = list.some(c => !c.weight || Number(c.weight) <= 0);
-          return hasInvalid ? 'partial' : 'complete';
-        }
+      case 3: // Grazing Management
+        return (grazingSystem || acknowledgedSteps[3]) ? 'complete' : 'empty';
 
-      case 4: // Lactating Cows
-        if (!lactatingData || lactatingData.length === 0) return 'empty';
-        {
-          const hasInvalid = lactatingData.some(l => 
-            !l.weight || Number(l.weight) <= 0 ||
-            l.milkYield === '' || l.milkYield === undefined || Number(l.milkYield) < 0 ||
-            l.milkFat === '' || l.milkFat === undefined || Number(l.milkFat) <= 0
-          );
-          return hasInvalid ? 'partial' : 'complete';
-        }
-
-      case 5: // Dry Cows
-        if (!dryCowsData || dryCowsData.length === 0) return 'empty';
-        {
-          const hasInvalid = dryCowsData.some(d => !d.weight || Number(d.weight) <= 0);
-          return hasInvalid ? 'partial' : 'complete';
-        }
-
-      case 6: // Bulls
-        if (!bullsData || bullsData.length === 0) return 'empty';
-        {
-          const hasInvalid = bullsData.some(b => !b.weight || Number(b.weight) <= 0);
-          return hasInvalid ? 'partial' : 'complete';
-        }
-
-      case 7: // Grazing
-        if (!grazingSystem) return 'empty';
-        if (grazingSystem === 'no_grazing') return 'complete';
-        {
-          const activeCategories = [];
-          if (heifersData && heifersData.length > 0) activeCategories.push('heifers');
-          const pregCount = ((pregnantCategory === 'firstTime' || pregnantCategory === 'both') ? firstTimeCattle.length : 0) + 
-                            ((pregnantCategory === 'repeat' || pregnantCategory === 'both') ? repeatCattle.length : 0);
-          if (pregCount > 0) activeCategories.push('pregnant');
-          if (lactatingData && lactatingData.length > 0) activeCategories.push('lactating');
-          if (dryCowsData && dryCowsData.length > 0) activeCategories.push('dry');
-          if (bullsData && bullsData.length > 0) activeCategories.push('bulls');
-
-          if (activeCategories.length === 0) return 'empty';
-          const allFilled = activeCategories.every(cat => 
-            grazingData[cat]?.hours !== undefined && 
-            grazingData[cat]?.hours !== '' && 
-            Number(grazingData[cat]?.hours) >= 0
-          );
-          return allFilled ? 'complete' : 'partial';
-        }
-
-      case 8: // Water
+      case 4: // Water Availability
         if (Number(waterVolume) > 0 && waterSource) return 'complete';
         if (Number(waterVolume) > 0 || waterSource) return 'partial';
-        return 'empty';
+        return acknowledgedSteps[4] ? 'partial' : 'empty';
 
-      case 9: // Feed
-        if (!selectedFeeds || selectedFeeds.length === 0) return 'empty';
-        {
+      case 5: // Feed & Fodder
+        if (selectedFeeds && selectedFeeds.length > 0) {
           const hasZeroKg = selectedFeeds.some(f => !f.quantityKg || Number(f.quantityKg) <= 0);
           return hasZeroKg ? 'partial' : 'complete';
         }
+        return 'empty';
 
-      case 10: // Review
+      case 6: // Review & Formulation
         {
-          const totalCattle = (heifersData?.length || 0) + 
-            ((pregnantCategory === 'both' ? firstTimeCattle.length + repeatCattle.length : pregnantCategory === 'firstTime' ? firstTimeCattle.length : repeatCattle.length) || 0) +
-            (lactatingData?.length || 0) + (dryCowsData?.length || 0) + (bullsData?.length || 0);
+          const totalCattle = (heifersData?.length || 0) + (firstTimeCattle?.length || 0) + (repeatCattle?.length || 0) + (lactatingData?.length || 0) + (dryCowsData?.length || 0) + (bullsData?.length || 0);
           const hasBreed = Boolean(selectedBreed);
           const hasWater = Number(waterVolume) > 0 && Boolean(waterSource);
           const hasFeed = selectedFeeds && selectedFeeds.length > 0 && selectedFeeds.every(f => Number(f.quantityKg) > 0);
@@ -558,7 +510,7 @@ export default function App() {
             (heifersData && heifersData.some(h => !h.weight || Number(h.weight) <= 0)) ||
             (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
             (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
-            (lactatingData && lactatingData.some(l => !l.weight || Number(l.weight) <= 0 || l.milkYield === '' || Number(l.milkYield) < 0 || l.milkFat === '' || Number(l.milkFat) <= 0)) ||
+            (lactatingData && lactatingData.some(l => !l.weight || Number(l.weight) <= 0 || l.milkYield === '' || Number(l.milkYield) <= 0 || l.milkFat === '' || Number(l.milkFat) <= 0)) ||
             (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0)) ||
             (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0));
 
@@ -601,7 +553,7 @@ export default function App() {
         padding: 'clamp(12px, 3vw, 24px) clamp(10px, 2.5vw, 16px)',
         flex: 1
       }}>
-        {/* Step Progress Bar */}
+        {/* Step Progress Bar (6 steps) */}
         <StepProgress 
           currentStep={currentStep} 
           setStep={(step) => setCurrentStep(step)} 
@@ -611,7 +563,7 @@ export default function App() {
           t={t}
         />
 
-        {/* Step Views */}
+        {/* Step 1: Breed Selection */}
         {currentStep === 1 && (
           <Step1BreedSelect 
             selectedBreed={selectedBreed}
@@ -625,11 +577,25 @@ export default function App() {
           />
         )}
 
+        {/* Step 2: Cattle Herd Hub (All 5 Categories via Interactive Cycle) */}
         {currentStep === 2 && (
-          <Step2Heifers 
+          <CattleCycleHub
             heifersData={heifersData}
             setHeifersData={setHeifersData}
+            firstTimeCattle={firstTimeCattle}
+            setFirstTimeCattle={setFirstTimeCattle}
+            repeatCattle={repeatCattle}
+            setRepeatCattle={setRepeatCattle}
+            pregnantCategory={pregnantCategory}
+            setPregnantCategory={setPregnantCategory}
+            lactatingData={lactatingData}
+            setLactatingData={setLactatingData}
+            dryCowsData={dryCowsData}
+            setDryCowsData={setDryCowsData}
+            bullsData={bullsData}
+            setBullsData={setBullsData}
             defaultBreed={selectedBreed}
+            initialActiveStage={herdActiveStage}
             acknowledgeStep={() => acknowledgeStep(2)}
             onNext={() => {
               acknowledgeStep(2);
@@ -640,15 +606,18 @@ export default function App() {
           />
         )}
 
+        {/* Step 3: Grazing Management */}
         {currentStep === 3 && (
-          <Step3PregnantCows 
-            pregnantCategory={pregnantCategory}
-            setPregnantCategory={setPregnantCategory}
-            firstTimeCattle={firstTimeCattle}
-            setFirstTimeCattle={setFirstTimeCattle}
-            repeatCattle={repeatCattle}
-            setRepeatCattle={setRepeatCattle}
-            defaultBreed={selectedBreed}
+          <Step7Grazing
+            grazingSystem={grazingSystem}
+            setGrazingSystem={setGrazingSystem}
+            grazingData={grazingData}
+            setGrazingData={setGrazingData}
+            heifersCount={heifersData?.length || 0}
+            pregnantCount={(firstTimeCattle?.length || 0) + (repeatCattle?.length || 0)}
+            lactatingCount={lactatingData?.length || 0}
+            dryCount={dryCowsData?.length || 0}
+            bullsCount={bullsData?.length || 0}
             acknowledgeStep={() => acknowledgeStep(3)}
             onNext={() => {
               acknowledgeStep(3);
@@ -659,11 +628,15 @@ export default function App() {
           />
         )}
 
+        {/* Step 4: Water Availability */}
         {currentStep === 4 && (
-          <Step4Lactation 
-            lactatingData={lactatingData}
-            setLactatingData={setLactatingData}
-            defaultBreed={selectedBreed}
+          <Step8Water 
+            waterVolume={waterVolume}
+            setWaterVolume={setWaterVolume}
+            waterSource={waterSource}
+            setWaterSource={setWaterSource}
+            waterQuality={waterQuality}
+            setWaterQuality={setWaterQuality}
             acknowledgeStep={() => acknowledgeStep(4)}
             onNext={() => {
               acknowledgeStep(4);
@@ -674,11 +647,11 @@ export default function App() {
           />
         )}
 
+        {/* Step 5: Feed & Fodder Inventory */}
         {currentStep === 5 && (
-          <Step5DryCows 
-            dryCowsData={dryCowsData}
-            setDryCowsData={setDryCowsData}
-            defaultBreed={selectedBreed}
+          <Step9Feed 
+            selectedFeeds={selectedFeeds}
+            setSelectedFeeds={setSelectedFeeds}
             acknowledgeStep={() => acknowledgeStep(5)}
             onNext={() => {
               acknowledgeStep(5);
@@ -689,75 +662,8 @@ export default function App() {
           />
         )}
 
+        {/* Step 6: Summary & Calculation */}
         {currentStep === 6 && (
-          <Step6Bulls 
-            bullsData={bullsData}
-            setBullsData={setBullsData}
-            defaultBreed={selectedBreed}
-            acknowledgeStep={() => acknowledgeStep(6)}
-            onNext={() => {
-              acknowledgeStep(6);
-              setCurrentStep(7);
-            }}
-            onPrev={() => setCurrentStep(5)}
-            t={t}
-          />
-        )}
-
-        {currentStep === 7 && (
-          <Step7Grazing 
-            grazingSystem={grazingSystem}
-            setGrazingSystem={setGrazingSystem}
-            grazingData={grazingData}
-            setGrazingData={setGrazingData}
-            heifersCount={heifersData.length}
-            pregnantCount={((pregnantCategory === 'firstTime' || pregnantCategory === 'both') ? firstTimeCattle.length : 0) + ((pregnantCategory === 'repeat' || pregnantCategory === 'both') ? repeatCattle.length : 0)}
-            lactatingCount={lactatingData.length}
-            dryCount={dryCowsData.length}
-            bullsCount={bullsData.length}
-            acknowledgeStep={() => acknowledgeStep(7)}
-            onNext={() => {
-              acknowledgeStep(7);
-              setCurrentStep(8);
-            }}
-            onPrev={() => setCurrentStep(6)}
-            t={t}
-          />
-        )}
-
-        {currentStep === 8 && (
-          <Step8Water 
-            waterVolume={waterVolume}
-            setWaterVolume={setWaterVolume}
-            waterSource={waterSource}
-            setWaterSource={setWaterSource}
-            waterQuality={waterQuality}
-            setWaterQuality={setWaterQuality}
-            acknowledgeStep={() => acknowledgeStep(8)}
-            onNext={() => {
-              acknowledgeStep(8);
-              setCurrentStep(9);
-            }}
-            onPrev={() => setCurrentStep(7)}
-            t={t}
-          />
-        )}
-
-        {currentStep === 9 && (
-          <Step9Feed 
-            selectedFeeds={selectedFeeds}
-            setSelectedFeeds={setSelectedFeeds}
-            acknowledgeStep={() => acknowledgeStep(9)}
-            onNext={() => {
-              acknowledgeStep(9);
-              setCurrentStep(10);
-            }}
-            onPrev={() => setCurrentStep(8)}
-            t={t}
-          />
-        )}
-
-        {currentStep === 10 && (
           <Step10Review 
             weather={weather}
             setWeather={setWeather}
@@ -779,7 +685,18 @@ export default function App() {
             waterSource={waterSource}
             waterQuality={waterQuality}
             selectedFeeds={selectedFeeds}
-            onEditStep={(step) => setCurrentStep(step)}
+            onEditStep={(step) => {
+              if (step === 1) setCurrentStep(1);
+              else if (step === 2) { setHerdActiveStage('heifers'); setCurrentStep(2); }
+              else if (step === 3) { setHerdActiveStage('pregnant'); setCurrentStep(2); }
+              else if (step === 4) { setHerdActiveStage('lactating'); setCurrentStep(2); }
+              else if (step === 5) { setHerdActiveStage('dry'); setCurrentStep(2); }
+              else if (step === 6) { setHerdActiveStage('bulls'); setCurrentStep(2); }
+              else if (step === 7) setCurrentStep(3); // Grazing
+              else if (step === 8) setCurrentStep(4); // Water
+              else if (step === 9) setCurrentStep(5); // Feed
+              else setCurrentStep(6); // Review
+            }}
             onResetAllData={handleResetAllData}
             t={t}
           />
