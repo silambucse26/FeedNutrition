@@ -236,13 +236,16 @@ export default function Step9Feed({
       </div>
 
       {/* Category Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        overflowX: 'auto',
-        paddingBottom: '8px',
-        marginBottom: '16px',
-      }}>
+      <div 
+        className="horizontal-scroll"
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '8px',
+          marginBottom: '16px',
+        }}
+      >
         {categories.map(cat => {
           const isSel = activeTab === cat;
           const displayLabel = cat === 'All' 
@@ -625,7 +628,7 @@ export default function Step9Feed({
       )}
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '20px' }}>
+      <div className="responsive-nav-actions" style={{ borderTop: '1.5px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{currentLang === 'ta' ? 'முந்தையது (தண்ணீர்)' : 'Previous'}</span>

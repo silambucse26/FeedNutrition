@@ -69,7 +69,7 @@ export default function Step4Summary({
       {/* Practical Farmer Feed Cards Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
         gap: '16px',
         marginBottom: '32px'
       }}>
@@ -129,7 +129,7 @@ export default function Step4Summary({
       </div>
 
       {/* Herd Breakdown & Station Data */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '20px', marginBottom: '28px' }}>
         
         {/* Selected Breed Card */}
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '20px' }}>
@@ -182,7 +182,7 @@ export default function Step4Summary({
         <h3 style={{ fontSize: '1.05rem', color: '#0f172a', marginBottom: '12px', fontWeight: 800 }}>
           Herd Count Inventory Summary
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '12px' }}>
           <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
             <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Heifer Cattle:</div>
             <strong style={{ fontSize: '1.1rem', color: '#16a34a' }}>{heiferCount} head</strong> (~{heiferWeights[0] || 350} kg avg)

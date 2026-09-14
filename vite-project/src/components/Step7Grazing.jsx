@@ -239,7 +239,7 @@ export default function Step7Grazing({
                 </div>
 
                 {/* Input Fields Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: isOutside ? 'repeat(auto-fit, minmax(200px, 1fr))' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isOutside ? 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))' : 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px' }}>
                   
                   {/* Field 1: Inside / Outside / Stall-Fed Selection */}
                   <div>
@@ -398,7 +398,7 @@ export default function Step7Grazing({
       </div>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+      <div className="responsive-nav-actions" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{currentLang === 'ta' ? 'முந்தையது (மாடுகள் சுழற்சி)' : (t ? t('previous') : 'Previous')}</span>

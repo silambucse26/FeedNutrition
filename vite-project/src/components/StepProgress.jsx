@@ -125,7 +125,7 @@ export default function StepProgress({
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '6px',
-                minWidth: '62px',
+                minWidth: '72px',
                 flexShrink: 0,
                 padding: '2px 4px',
                 transition: 'all 0.2s ease',
@@ -156,11 +156,15 @@ export default function StepProgress({
 
               {/* Title Text (Color matched, no overlap) */}
               <span style={{
-                fontSize: '0.74rem',
+                fontSize: '0.72rem',
                 fontWeight: isActive ? 900 : 700,
                 color: labelColor,
                 whiteSpace: 'nowrap',
-                lineHeight: 1.2
+                lineHeight: 1.35,
+                textAlign: 'center',
+                maxWidth: '85px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}>
                 {title}
               </span>

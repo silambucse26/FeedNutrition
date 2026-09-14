@@ -552,11 +552,11 @@ export default function Step10Review({
             {t ? t('step10.subtitle') : 'Verify all your recorded farm data below, then generate your precision nutrition calculation.'}
           </p>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
             <button 
               onClick={handlePrint}
               className="btn-secondary"
-              style={{ background: '#ffffff', padding: '6px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ background: '#ffffff', padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Printer size={14} />
               <span>{t ? t('print_page') : 'Print Summary'}</span>
@@ -585,7 +585,7 @@ export default function Step10Review({
                   totalCattleCount
                 })}
                 className="btn-secondary"
-                style={{ background: '#ffffff', border: '1.5px solid #0284c7', color: '#0369a1', padding: '6px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+                style={{ background: '#ffffff', border: '1.5px solid #0284c7', color: '#0369a1', padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
                 title="Download recorded farm inputs in colorful PDF format"
               >
                 <FileText size={14} color="#0284c7" />
@@ -605,7 +605,7 @@ export default function Step10Review({
                   waterVolume,
                   selectedFeeds
                 })}
-                style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#ffffff', border: 'none', padding: '6px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)' }}
+                style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#ffffff', border: 'none', padding: '7px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)' }}
                 title="Download generated feeding report in colorful PDF format"
               >
                 <Download size={14} />
@@ -617,7 +617,7 @@ export default function Step10Review({
               <button 
                 onClick={generateCSV}
                 className="btn-primary"
-                style={{ padding: '6px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <Download size={14} />
                 <span>{t ? t('step10.download_csv') : 'Download CSV Report'}</span>
@@ -636,7 +636,7 @@ export default function Step10Review({
       {/* Overview Quick Stats Bar */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 22vw, 200px), 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
         gap: '12px',
         marginBottom: '28px'
       }}>
@@ -686,7 +686,7 @@ export default function Step10Review({
       </h3>
 
       {/* Top Two Summary Cards: Climate & Breed */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px', marginBottom: '24px' }}>
         
         {/* 1. Farm Location & Climate */}
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
@@ -1002,7 +1002,7 @@ export default function Step10Review({
       </div>
 
       {/* 4. Bottom Grid: Grazing, Water, Feed & Fodder */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px', marginBottom: '32px' }}>
         
         {/* 4. Grazing Management */}
         <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
@@ -1137,18 +1137,6 @@ export default function Step10Review({
                 <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
                   Scientific Precision Nutrition & Formulation Engine
                 </h3>
-                {checkingBackend ? (
-                  <span style={{ fontSize: '0.75rem', background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>Checking status...</span>
-                ) : backendOnline ? (
-                  <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', padding: '3px 10px', borderRadius: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
-                    Live Connected (FastAPI)
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.75rem', background: '#fee2e2', color: '#b91c1c', padding: '3px 10px', borderRadius: '12px', fontWeight: 700 }}>
-                    Offline (Start backend server)
-                  </span>
-                )}
               </div>
               <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '3px 0 0' }}>
                 ICAR & NRC precision equations for THI stress, DMI requirements, RUP/RDP protein, and mineral homeostasis.
@@ -1391,14 +1379,18 @@ export default function Step10Review({
               disabled={calcLoading}
               className="btn-primary"
               style={{
-                padding: '12px 32px',
-                fontSize: '1rem',
+                padding: '12px 20px',
+                fontSize: 'clamp(0.88rem, 2.5vw, 1.05rem)',
                 fontWeight: 800,
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '10px',
                 boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                maxWidth: '100%',
+                width: 'min(100%, 440px)',
+                lineHeight: 1.35
               }}
             >
               <RefreshCw size={18} className={calcLoading ? 'animate-spin' : ''} />
@@ -1464,7 +1456,7 @@ export default function Step10Review({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
             
             {/* 1. MY FARM FEEDING REPORT HEADER CARD */}
-            <div style={{
+            <div className="review-section-card" style={{
               background: '#ffffff',
               border: '2px solid #86efac',
               borderRadius: '16px',
@@ -1597,7 +1589,7 @@ export default function Step10Review({
                                calcResult.nutritionAnalysis?.dmiRequiredKg ?? 
                                (totalHerdWeightKg > 0 ? (totalHerdWeightKg * 0.026).toFixed(1) : '0');
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', fontSize: '0.88rem', color: '#1e293b' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '14px', fontSize: '0.88rem', color: '#1e293b' }}>
                     <div><strong>{currentLang === 'ta' ? 'இனம்:' : 'Breed:'}</strong> <span style={{ color: '#16a34a', fontWeight: 800 }}>{calcResult.breed?.name || selectedBreed?.name}</span></div>
                     <div><strong>{currentLang === 'ta' ? 'மொத்த மாடுகள்:' : 'Total cattle:'}</strong> <span style={{ fontWeight: 800 }}>{totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : 'Head'}</span></div>
                     <div><strong>{currentLang === 'ta' ? 'மந்தையின் மொத்த எடை:' : 'Total herd weight:'}</strong> <span style={{ fontWeight: 800 }}>{totalHerdWeightKg.toLocaleString()} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</span></div>
@@ -1621,7 +1613,7 @@ export default function Step10Review({
             </div>
 
             {/* 2. TODAY'S FEED RECOMMENDATION TABLE */}
-            <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginBottom: '28px' }}>
+            <div className="review-section-card" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginBottom: '28px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Wheat size={22} color="#15803d" />
@@ -1631,7 +1623,7 @@ export default function Step10Review({
               <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0 0 10px', fontWeight: 600 }}>
                 {currentLang === 'ta' ? 'தேர்வு செய்யப்பட்ட பண்ணை தீவன இருப்பு:' : 'Selected farm feeds inventory:'}
               </p>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <div className="selected-feeds-inventory" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '18px' }}>
                 {selectedFeeds.map((f, i) => (
                   <span key={i} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <Leaf size={14} color="#16a34a" />
@@ -1666,7 +1658,7 @@ export default function Step10Review({
                 const isAllOk = shortages.length === 0;
 
                 return (
-                  <div style={{
+                  <div className="today-advice-wrapper" style={{
                     background: isAllOk ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
                     border: `2px solid ${isAllOk ? '#86efac' : '#fcd34d'}`,
                     borderRadius: '16px',
@@ -1674,7 +1666,7 @@ export default function Step10Review({
                     marginBottom: '22px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <div className="today-advice-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '1.75rem' }}>{isAllOk ? <CheckCircle2 size={24} color="#16a34a" /> : <AlertTriangle size={24} color="#d97706" />}</span>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: isAllOk ? '#166534' : '#92400e' }}>
@@ -1690,14 +1682,14 @@ export default function Step10Review({
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="today-advice-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {/* Shortages: Feed more */}
                       {shortages.map((r, i) => {
                         const userKg = r.userProvidedKg !== undefined ? Number(r.userProvidedKg) : (Number(selectedFeeds?.find(f => f.name?.toLowerCase() === r.name?.toLowerCase())?.quantityKg) || 0);
                         const neededKg = Number(r.recommendedKg) || 0;
                         const diffKg = r.differenceKg !== undefined ? Number(r.differenceKg) : Math.round((neededKg - userKg) * 10) / 10;
                         return (
-                          <div key={`short-${i}`} style={{
+                          <div key={`short-${i}`} className="today-advice-item shortage-item" style={{
                             background: '#ffffff',
                             border: '1.5px solid #f87171',
                             borderRadius: '10px',
@@ -1707,10 +1699,10 @@ export default function Step10Review({
                             gap: '12px',
                             flexWrap: 'wrap'
                           }}>
-                            <span style={{ background: '#fee2e2', color: '#dc2626', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                            <span className="today-advice-badge shortage-badge" style={{ background: '#fee2e2', color: '#dc2626', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
                               {currentLang === 'ta' ? 'இன்று கூடுதலாக அளிக்க வேண்டும்' : 'FEED MORE TODAY'}
                             </span>
-                            <span style={{ fontSize: '0.9rem', color: '#0f172a' }}>
+                            <span className="today-advice-text" style={{ fontSize: '0.9rem', color: '#0f172a' }}>
                               {currentLang === 'ta' ? (
                                 <>இன்று நீங்கள் <strong>+{diffKg.toFixed(1)} கிலோ கூடுதலாக {translateFeed(r.name, currentLang)}</strong> தீவனம் அளிக்க வேண்டும் (மொத்தம் <strong>{neededKg.toFixed(1)} கிலோ தேவை</strong>, தற்போது {userKg.toFixed(1)} கிலோ உள்ளது).</>
                               ) : (
@@ -1727,7 +1719,7 @@ export default function Step10Review({
                         const neededKg = Number(r.recommendedKg) || 0;
                         const diffKg = r.differenceKg !== undefined ? Number(r.differenceKg) : Math.round((neededKg - userKg) * 10) / 10;
                         return (
-                          <div key={`surp-${i}`} style={{
+                          <div key={`surp-${i}`} className="today-advice-item surplus-item" style={{
                             background: '#ffffff',
                             border: '1.5px solid #93c5fd',
                             borderRadius: '10px',
@@ -1737,10 +1729,10 @@ export default function Step10Review({
                             gap: '12px',
                             flexWrap: 'wrap'
                           }}>
-                            <span style={{ background: '#dbeafe', color: '#1d4ed8', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                            <span className="today-advice-badge surplus-badge" style={{ background: '#dbeafe', color: '#1d4ed8', fontWeight: 900, padding: '4px 10px', borderRadius: '8px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
                               {currentLang === 'ta' ? 'அளவைக் குறைக்கலாம்' : 'DECREASE THIS'}
                             </span>
-                            <span style={{ fontSize: '0.9rem', color: '#0f172a' }}>
+                            <span className="today-advice-text" style={{ fontSize: '0.9rem', color: '#0f172a' }}>
                               {currentLang === 'ta' ? (
                                 <>இன்று நீங்கள் <strong>{translateFeed(r.name, currentLang)}</strong> தீவனத்தை <strong>{Math.abs(diffKg).toFixed(1)} கிலோ குறைக்கலாம்</strong> (மொத்தம் <strong>{neededKg.toFixed(1)} கிலோ போதுமானது</strong>, தற்போது {userKg.toFixed(1)} கிலோ அளிக்கிறீர்கள்).</>
                               ) : (
@@ -1755,7 +1747,7 @@ export default function Step10Review({
                       {covered.map((r, i) => {
                         const userKg = r.userProvidedKg !== undefined ? Number(r.userProvidedKg) : (Number(selectedFeeds?.find(f => f.name?.toLowerCase() === r.name?.toLowerCase())?.quantityKg) || 0);
                         return (
-                          <div key={`cov-${i}`} style={{
+                          <div key={`cov-${i}`} className="today-advice-item covered-item" style={{
                             background: '#ffffff',
                             border: '1.5px solid #86efac',
                             borderRadius: '10px',
@@ -1765,10 +1757,10 @@ export default function Step10Review({
                             gap: '12px',
                             flexWrap: 'wrap'
                           }}>
-                            <span style={{ background: '#dcfce7', color: '#15803d', fontWeight: 900, padding: '3px 8px', borderRadius: '6px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                            <span className="today-advice-badge covered-badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 900, padding: '3px 8px', borderRadius: '6px', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
                               {currentLang === 'ta' ? 'சரியான அளவு' : 'ALL OKAY'}
                             </span>
-                            <span style={{ fontSize: '0.875rem', color: '#334155' }}>
+                            <span className="today-advice-text" style={{ fontSize: '0.875rem', color: '#334155' }}>
                               {currentLang === 'ta' ? (
                                 <><strong>{translateFeed(r.name, currentLang)}</strong> சரியான அளவில் உள்ளது ({userKg.toFixed(1)} கிலோ). இதே அளவைத் தொடரவும்.</>
                               ) : (
@@ -1780,7 +1772,7 @@ export default function Step10Review({
                       })}
 
                       {/* Water and minerals note in simple language */}
-                      <div style={{
+                      <div className="today-advice-item today-advice-water" style={{
                         background: '#ffffff',
                         border: '1px solid #cbd5e1',
                         borderRadius: '10px',
@@ -2346,7 +2338,7 @@ export default function Step10Review({
                           <span style={{ fontSize: '0.78rem', fontWeight: 800, color: textColor, display: 'block', marginBottom: '6px' }}>
                             {currentLang === 'ta' ? 'அறிக்கைக்கு முந்தைய பாதுகாப்பு சரிபார்ப்பு:' : 'PRE-REPORT SAFETY GATE VERIFICATION:'}
                           </span>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '8px' }}>
                             {safetyGate.checks.map((chk, cIdx) => (
                               <div key={cIdx} style={{
                                 background: chk.passed ? '#ffffff' : '#fff7ed',
@@ -2386,17 +2378,18 @@ export default function Step10Review({
               
               {/* 3.1 MILKING COW */}
               {totalLactating > 0 && (
-                <div style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)' }}>
+                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Category Header with Reference Image */}
-                  <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #e0f2fe', flexWrap: 'wrap' }}>
+                  <div className="category-card-header">
                     <img 
                       src="/cattle_art/lactating.jpg" 
                       alt="Milking Cows" 
                       onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      style={{ width: '100px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1.5px solid #bae6fd', flexShrink: 0 }}
+                      className="category-card-header-img"
+                      style={{ border: '1.5px solid #bae6fd' }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="category-card-header-content">
+                      <div className="category-card-title-row">
                         <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Milk size={22} color="#0284c7" />
                           <span>{currentLang === 'ta' ? `கறவை மாடுகள் (${totalLactating} மாடுகள்)` : `Milking Cows (${totalLactating} Head)`}</span>
@@ -2405,18 +2398,18 @@ export default function Step10Review({
                           {currentLang === 'ta' ? `மொத்த பால்: ${totalDailyMilkL} லிட்டர்/நாள் • சராசரி எடை: ${Math.round(wtLactating / Math.max(1, totalLactating))} கிலோ` : `Total Milk: ${totalDailyMilkL} Litres/day • Avg Weight: ${Math.round(wtLactating / Math.max(1, totalLactating))} kg`}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
+                      <p className="cattle-reference-text" style={{ color: '#475569' }}>
                         <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'அதிக பால் தரும் கறவை மாடுகளுக்கு அவற்றின் உடல் எடை குறையாமல் சீரான பால் உற்பத்தியைத் தக்கவைக்க ஆற்றல் மற்றும் புறப்புரதம் நிறைந்த சரிவிகிதத் தீவனம் முன்னுரிமையாகத் தேவைப்படுகிறது.' : 'High-producing dairy cows require prioritized feed energy and bypass protein to sustain peak milk yield without losing body condition.'}
                       </p>
                     </div>
                   </div>
 
                   {/* Simple Daily Guidelines */}
-                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
+                  <div className="cattle-educational-note" style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
                     <div style={{ fontWeight: 800, color: '#0369a1', fontSize: '0.9rem', marginBottom: '6px' }}>
                       {currentLang === 'ta' ? 'கறவை மாடுகளுக்கான தீவன வழிகாட்டி (தினசரி எளிய விதிகள்):' : 'Milking Cow Feeding Rules (Simple Daily Guide):'}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px', fontSize: '0.84rem', color: '#1e293b' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '8px', fontSize: '0.84rem', color: '#1e293b' }}>
                       <div>• <strong>{currentLang === 'ta' ? 'அடர்தீவன விதி:' : 'Concentrate Rule:'}</strong> {currentLang === 'ta' ? 'ஒவ்வொரு 2 முதல் 2.5 லிட்டர் பால் உற்பத்திக்கும் 1 கிலோ அடர்தீவனம் அளிக்க வேண்டும்.' : 'Feed 1 kg cattle feed for every 2 to 2.5 Litres of milk produced daily.'}</div>
                       <div>• <strong>{currentLang === 'ta' ? 'பசுந்தீவனம்:' : 'Green Fodder:'}</strong> {currentLang === 'ta' ? 'வைட்டமின்கள் மற்றும் தடையற்ற பால் சுரப்புக்கு தினமும் 20–25 கிலோ பசுந்தீவனம் அளிக்க வேண்டும்.' : 'Give 20–25 kg fresh green fodder daily for vitamins and milk flow.'}</div>
                       <div>• <strong>{currentLang === 'ta' ? 'உலர் தீவனம்:' : 'Dry Straw / Hay:'}</strong> {currentLang === 'ta' ? 'அசைபோடுதலுக்கும் பாலின் கொழுப்புச் சத்துக்கும் (Fat) 3–5 கிலோ உலர் தீவனம் அளிக்க வேண்டும்.' : 'Feed 3–5 kg dry straw daily to support rumination and butterfat.'}</div>
@@ -2427,11 +2420,11 @@ export default function Step10Review({
 
                   {/* Individual Animal Table */}
                   {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals?.length > 0 && (
-                    <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#0369a1', display: 'block', marginBottom: '8px' }}>
                         {currentLang === 'ta' ? 'ஒவ்வொரு கறவை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Individual Milking Cow:'}
                       </strong>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '10px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f0f9ff', borderBottom: '2px solid #bae6fd', textAlign: 'left', color: '#0369a1' }}>
                             <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Cattle'}</th>
@@ -2538,7 +2531,7 @@ export default function Step10Review({
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
@@ -2567,17 +2560,18 @@ export default function Step10Review({
 
               {/* 3.2 PREGNANT CATTLE */}
               {totalPregnant > 0 && (
-                <div style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(194, 65, 12, 0.04)' }}>
+                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(194, 65, 12, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Category Header with Reference Image */}
-                  <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #ffedd5', flexWrap: 'wrap' }}>
+                  <div className="category-card-header">
                     <img 
                       src="/cattle_art/pregnant.jpg" 
                       alt="Pregnant Cattle" 
                       onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      style={{ width: '100px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1.5px solid #fed7aa', flexShrink: 0 }}
+                      className="category-card-header-img"
+                      style={{ border: '1.5px solid #fed7aa' }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="category-card-header-content">
+                      <div className="category-card-title-row">
                         <h4 style={{ fontSize: '1.25rem', color: '#c2410c', fontWeight: 900, margin: 0 }}>
                           {currentLang === 'ta' ? `சினை மாடுகள் (${totalPregnant} மாடுகள்: ${totalFirstTime} முதல் சினை, ${totalRepeat} மறு சினை)` : `Pregnant Cattle (${totalPregnant} Animals: ${totalFirstTime} First Pregnancy, ${totalRepeat} Repeat)`}
                         </h4>
@@ -2585,7 +2579,7 @@ export default function Step10Review({
                           {currentLang === 'ta' ? 'சினைப் பருவம்: 1–9 மாதங்கள்' : 'Gestation Stages: Months 1–9'}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#7c2d12' }}>
+                      <p className="cattle-reference-text" style={{ color: '#7c2d12' }}>
                         <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'கடைசி சினைப் பருவத்தில் (7-9 மாதங்கள்) கன்றின் வளர்ச்சி மற்றும் சீம்பால் உற்பத்திக்காக கூடுதல் சத்துணவு (Steaming up) அளிக்க வேண்டும். 1-6 மாதங்களில் பராமரிப்புத் தீவனம் போதுமானது.' : 'Late gestation (months 7–9) requires steaming up with energy concentrates to build calf birthweight and colostrum. Months 1–6 need maintenance-level forage.'}
                       </p>
                     </div>
@@ -2593,11 +2587,11 @@ export default function Step10Review({
 
                   {/* Individual Pregnant Animal Table */}
                   {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals?.length > 0 && (
-                    <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#c2410c', display: 'block', marginBottom: '8px' }}>
                         {currentLang === 'ta' ? 'ஒவ்வொரு சினை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Pregnant Animal:'}
                       </strong>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '10px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#fffaf5', borderBottom: '2px solid #fed7aa', textAlign: 'left', color: '#c2410c' }}>
                             <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Animal'}</th>
@@ -2676,7 +2670,7 @@ export default function Step10Review({
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
                     <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Animal:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
@@ -2688,7 +2682,7 @@ export default function Step10Review({
                       </div>
                     </div>
 
-                    <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
+                    <div className="cattle-educational-note" style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '6px' }}>{currentLang === 'ta' ? 'சினைப் பருவம் ஏன் முக்கியம்?' : 'Why Pregnancy Stage Matters:'}</strong>
                       <p style={{ fontSize: '0.8rem', color: '#7c2d12', margin: 0, lineHeight: 1.4 }}>
                         {currentLang === 'ta' ? '5 மாத சினை மாடுகளுக்கு நார்ச்சத்தும் பசுந்தீவனமும் போதுமானது. ஆனால் 9-வது மாதத்தில் கன்றின் அதிவேக வளர்ச்சி காரணமாக வயிற்றின் கொள்ளளவு குறைகிறது, எனவே செறிவூட்டப்பட்ட அடர்தீவனம் அளிக்க வேண்டும்.' : 'A cow that is 5 months pregnant has lower fetal requirements and needs mostly fiber/green fodder. A cow in month 9 has rapid calf growth and needs higher concentrate density (steaming up) because rumen capacity decreases.'}
@@ -2700,17 +2694,18 @@ export default function Step10Review({
 
               {/* 3.3 GROWING HEIFER */}
               {totalHeifers > 0 && (
-                <div style={{ background: '#ffffff', border: '1.5px solid #bbf7d0', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(21, 128, 61, 0.04)' }}>
+                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bbf7d0', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(21, 128, 61, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Category Header with Reference Image */}
-                  <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #dcfce7', flexWrap: 'wrap' }}>
+                  <div className="category-card-header">
                     <img 
                       src="/cattle_art/heifers.jpg" 
                       alt="Growing Heifers" 
                       onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      style={{ width: '100px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1.5px solid #bbf7d0', flexShrink: 0 }}
+                      className="category-card-header-img"
+                      style={{ border: '1.5px solid #bbf7d0' }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="category-card-header-content">
+                      <div className="category-card-title-row">
                         <h4 style={{ fontSize: '1.25rem', color: '#15803d', fontWeight: 900, margin: 0 }}>
                           {currentLang === 'ta' ? `வளரும் கிடாரிகள் (${totalHeifers} மாடுகள்)` : `Growing Heifers (${totalHeifers} Head)`}
                         </h4>
@@ -2718,7 +2713,7 @@ export default function Step10Review({
                           {currentLang === 'ta' ? 'இலக்கு எடை அதிகரிப்பு: 500–600 கி/நாள்' : 'Target Gain: 500–600 g/day'}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#166534' }}>
+                      <p className="cattle-reference-text" style={{ color: '#166534' }}>
                         <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'வளரும் கிடாரிகளுக்கு அதிக கொழுப்பு படியாமல் எலும்பு மற்றும் உடல் கட்டமைப்பு வளர்ச்சிக்கு சரிவிகித புரதமும் தாதுக்களும் தேவைப்படுகின்றன.' : 'Growing replacement heifers require balanced protein and minerals for skeletal frame growth without excess body fat deposition.'}
                       </p>
                     </div>
@@ -2726,11 +2721,11 @@ export default function Step10Review({
 
                   {/* Individual Heifer Table */}
                   {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.length > 0 && (
-                    <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#15803d', display: 'block', marginBottom: '8px' }}>
                         {currentLang === 'ta' ? 'ஒவ்வொரு கிடாரிக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Heifer:'}
                       </strong>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '10px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f0fdf4', borderBottom: '2px solid #bbf7d0', textAlign: 'left', color: '#15803d' }}>
                             <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'கிடாரி' : 'Heifer'}</th>
@@ -2787,7 +2782,7 @@ export default function Step10Review({
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு கிடாரிக்கு:' : 'Average per Heifer:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
@@ -2799,7 +2794,7 @@ export default function Step10Review({
                       </div>
                     </div>
 
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'பராமரிப்பு வழிகாட்டுதல்:' : 'Result & Care:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
                         <div>• {currentLang === 'ta' ? 'சீராக தினமும் உடல் எடை வளர்ச்சியைப் பராமரிக்கவும்' : 'Maintain steady daily growth'}</div>
@@ -2813,17 +2808,18 @@ export default function Step10Review({
 
               {/* 3.4 DRY COW */}
               {totalDry > 0 && (
-                <div style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(71, 85, 105, 0.04)' }}>
+                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(71, 85, 105, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Category Header with Reference Image */}
-                  <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+                  <div className="category-card-header">
                     <img 
                       src="/cattle_art/dry_cows.jpg" 
                       alt="Dry Cows" 
                       onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      style={{ width: '100px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1.5px solid #cbd5e1', flexShrink: 0 }}
+                      className="category-card-header-img"
+                      style={{ border: '1.5px solid #cbd5e1' }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="category-card-header-content">
+                      <div className="category-card-title-row">
                         <h4 style={{ fontSize: '1.25rem', color: '#334155', fontWeight: 900, margin: 0 }}>
                           {currentLang === 'ta' ? `வறண்ட மாடுகள் (${totalDry} மாடுகள்)` : `Dry Cows (${totalDry} Head)`}
                         </h4>
@@ -2831,7 +2827,7 @@ export default function Step10Review({
                           {currentLang === 'ta' ? 'வறண்ட காலம்: 45–60 நாட்கள்' : 'Dry Period: 45–60 Days'}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
+                      <p className="cattle-reference-text" style={{ color: '#475569' }}>
                         <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'மடி திசுக்களின் புத்துணர்ச்சி மற்றும் அடுத்த ஈத்துக்கு வயிற்றின் ஓய்வு காலம். அதிக நார்ச்சத்துள்ள தீவனம் அளித்து அடர்தீவன அளவைக் குறைக்க வேண்டும்.' : 'Mammary gland involution and rumen rest period before next calving. Feed mostly high fiber forage and restrict heavy concentrates.'}
                       </p>
                     </div>
@@ -2839,11 +2835,11 @@ export default function Step10Review({
 
                   {/* Individual Dry Cow Table */}
                   {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals?.length > 0 && (
-                    <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#475569', display: 'block', marginBottom: '8px' }}>
                         {currentLang === 'ta' ? 'ஒவ்வொரு வறண்ட மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Dry Cow:'}
                       </strong>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1', textAlign: 'left', color: '#475569' }}>
                             <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட மாடு' : 'Dry Cow'}</th>
@@ -2919,7 +2915,7 @@ export default function Step10Review({
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
                     <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
@@ -2931,7 +2927,7 @@ export default function Step10Review({
                       </div>
                     </div>
 
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                       <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'நிலைமை:' : 'Status:'}</strong>
                       <p style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700, margin: '0 0 6px' }}>
                         {currentLang === 'ta' ? 'பராமரிப்புத் தீவனம் தேவை' : 'Maintenance feeding required'}
@@ -2946,17 +2942,18 @@ export default function Step10Review({
 
               {/* 3.5 BREEDING BULL */}
               {totalBulls > 0 && (
-                <div style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(185, 28, 28, 0.04)' }}>
+                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(185, 28, 28, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
                   {/* Category Header with Reference Image */}
-                  <div style={{ display: 'flex', gap: '18px', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #fee2e2', flexWrap: 'wrap' }}>
+                  <div className="category-card-header">
                     <img 
                       src="/cattle_art/bulls.jpg" 
                       alt="Breeding Bulls" 
                       onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      style={{ width: '100px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1.5px solid #fca5a5', flexShrink: 0 }}
+                      className="category-card-header-img"
+                      style={{ border: '1.5px solid #fca5a5' }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="category-card-header-content">
+                      <div className="category-card-title-row">
                         <h4 style={{ fontSize: '1.25rem', color: '#b91c1c', fontWeight: 900, margin: 0 }}>
                           {currentLang === 'ta' ? `காளைகள் & உழவு மாடுகள் (${totalBulls} மாடுகள்)` : `Breeding Bulls & Draught Cattle (${totalBulls} Head)`}
                         </h4>
@@ -2964,7 +2961,7 @@ export default function Step10Review({
                           {currentLang === 'ta' ? 'அடிப்படை வளர்சிதை மாற்றம்: +10%' : 'Basal Metabolism: +10%'}
                         </span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#7f1d1d' }}>
+                      <p className="cattle-reference-text" style={{ color: '#7f1d1d' }}>
                         <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'இனப்பெருக்க காளைகள் மற்றும் வேலை செய்யும் மாடுகளுக்கு அதிக வளர்சிதை மாற்ற விகிதம் உள்ளது. இனப்பெருக்க சுறுசுறுப்பிற்காக சரிவிகித பசுந்தீவனத்துடன் மிதமான அடர்தீவனம் அளிக்க வேண்டும்.' : 'Breeding bulls and working oxen have higher basal metabolic rates. Feed balanced green roughage with moderate energy concentrate for reproductive vigor.'}
                       </p>
                     </div>
@@ -2972,11 +2969,11 @@ export default function Step10Review({
 
                   {/* Individual Bull Table */}
                   {calcResult.practicalFeedingReport?.perCategory?.bull?.animals?.length > 0 && (
-                    <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
                       <strong style={{ fontSize: '0.88rem', color: '#b91c1c', display: 'block', marginBottom: '8px' }}>
                         {currentLang === 'ta' ? 'ஒவ்வொரு காளைக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Bull:'}
                       </strong>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '10px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
                           <tr style={{ background: '#fef2f2', borderBottom: '2px solid #fca5a5', textAlign: 'left', color: '#b91c1c' }}>
                             <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'காளை' : 'Bull'}</th>
@@ -3042,7 +3039,7 @@ export default function Step10Review({
                       <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.mineralMixtureG ?? 50} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
                       <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.waterLiters ?? 65} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
                     </div>
-                    <p style={{ fontSize: '0.78rem', color: '#b91c1c', margin: '8px 0 0', fontWeight: 600 }}>
+                    <p className="cattle-educational-note" style={{ fontSize: '0.78rem', color: '#b91c1c', margin: '8px 0 0', fontWeight: 600 }}>
                       {currentLang === 'ta' ? '* கறவை மாடுகளுக்கு கொடுக்கும் அதிக அடர்தீவன அளவை காளைகளுக்கு அளிக்கக் கூடாது.' : '* The bull should not receive the same high-energy concentrate level as the lactating cow.'}
                     </p>
                   </div>
@@ -3052,7 +3049,7 @@ export default function Step10Review({
             </div>
 
             {/* 4. WATER STATUS */}
-            <div style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)' }}>
+            <div className="review-section-card" style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)' }}>
               <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Droplets size={22} color="#0284c7" />
                 <span>{currentLang === 'ta' ? 'குடிநீர் இருப்பு & நீரேற்ற நிலை' : 'Water Status & Hydration'}</span>
@@ -3090,7 +3087,7 @@ export default function Step10Review({
             </div>
 
             {/* 5. WEATHER ADVISORY */}
-            <div style={{ background: '#ffffff', border: '1.5px solid #fde047', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(234, 179, 8, 0.04)' }}>
+            <div className="review-section-card" style={{ background: '#ffffff', border: '1.5px solid #fde047', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(234, 179, 8, 0.04)' }}>
               <h4 style={{ fontSize: '1.15rem', color: '#854d0e', fontWeight: 900, margin: '0 0 6px' }}>
                 {calcResult.practicalFeedingReport?.weatherAdvisory?.title || (currentLang === 'ta' ? 'இன்றைய வெப்பநிலை எச்சரிக்கை' : 'Warm Weather Today')}
               </h4>
@@ -3107,12 +3104,12 @@ export default function Step10Review({
             </div>
 
             {/* 6. PRACTICAL FEED BALANCE (SIMPLE FARMER LANGUAGE) */}
-            <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)' }}>
+            <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', marginBottom: '28px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
               <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 900, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Scale size={20} color="#15803d" />
                 <span>{currentLang === 'ta' ? 'தீவன ஊட்டச்சத்து சமநிலை (இந்த தீவனங்கள் போதுமானதா?)' : 'Feed Balance (Are These Feeds Enough?)'}</span>
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '10px' }}>
                 {calcResult.practicalFeedingReport?.feedBalanceSimple?.map((item, i) => (
                   <div key={i} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
@@ -3261,8 +3258,8 @@ export default function Step10Review({
                           Wet Fodder (%DM &lt; 45) | Dry Fodder (%DM &gt; 45) | Concentrates | Unconventional Feeds
                         </span>
                       </div>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
+                      <div className="responsive-table-container horizontal-scroll">
+                        <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
                           <thead>
                             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
                               <th style={{ padding: '8px 10px', fontWeight: 800, color: '#1e293b' }}>Ingredient</th>
@@ -3363,8 +3360,8 @@ export default function Step10Review({
                         <strong style={{ fontSize: '0.8rem', color: '#854d0e', display: 'block', marginBottom: '6px' }}>
                           1. Macro Minerals (Daily Intake in Grams):
                         </strong>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                        <div className="responsive-table-container horizontal-scroll">
+                          <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
                             <thead>
                               <tr style={{ background: '#fef3c7', borderBottom: '2px solid #fde047' }}>
                                 <th style={{ padding: '7px 10px', textAlign: 'left', color: '#92400e', fontWeight: 800 }}>Ingredient</th>
@@ -3413,8 +3410,8 @@ export default function Step10Review({
                         <strong style={{ fontSize: '0.8rem', color: '#6b21a8', display: 'block', marginBottom: '6px' }}>
                           2. Trace Minerals (Daily Intake in Milligrams - ppm Basis):
                         </strong>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                        <div className="responsive-table-container horizontal-scroll">
+                          <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
                             <thead>
                               <tr style={{ background: '#f3e8ff', borderBottom: '2px solid #d8b4fe' }}>
                                 <th style={{ padding: '7px 10px', textAlign: 'left', color: '#6b21a8', fontWeight: 800 }}>Ingredient</th>
@@ -3462,7 +3459,7 @@ export default function Step10Review({
 
                   {ktTab === 'energy' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
                         {/* Feed Net Energy Box */}
                         <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '14px' }}>
                           <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>Diet Net Energy (NEL) Supply</span>
@@ -3620,7 +3617,7 @@ export default function Step10Review({
                         <h5 style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 800, margin: '0 0 8px' }}>
                           Body Weight Targets &amp; Required Feed (Moisture-Derived vs 4.5% Baseline)
                         </h5>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', fontSize: '0.8rem', marginBottom: '14px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '12px', fontSize: '0.8rem', marginBottom: '14px' }}>
                           <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                             <strong style={{ color: '#059669' }}>Primiparous Target Weight:</strong>
                             <div style={{ fontSize: '1.1rem', fontWeight: 800, margin: '4px 0' }}>
@@ -3649,7 +3646,7 @@ export default function Step10Review({
                         <h5 style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 800, margin: '10px 0 6px' }}>
                           {currentLang === 'ta' ? 'NRC உலர் பொருள் உட்கொள்ளல் (DMI) அளவுகோல்கள்:' : 'NRC DMI Equations Benchmarks:'}
                         </h5>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', fontSize: '0.775rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '10px', fontSize: '0.775rem' }}>
                           <div style={{ background: '#ffffff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                             <strong>{currentLang === 'ta' ? 'கிடேரி இலக்கு DMI (Eq 20-10):' : 'Heifer Target DMI (Eq 20-10):'}</strong>
                             <div style={{ fontSize: '1rem', fontWeight: 800, color: '#047857' }}>{kt.dmiFormulations?.primiparousFarOffTargetDmiKg} kg DM/{currentLang === 'ta' ? 'நாள்' : 'day'}</div>
@@ -3767,7 +3764,7 @@ export default function Step10Review({
                     {rfh.advisory}
                   </p>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '10px' }}>
                     <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>{currentLang === 'ta' ? 'தீவன நார்ச்சத்து (fNDF)' : 'Forage NDF (fNDF)'}</div>
                       <div style={{ fontSize: '1.1rem', fontWeight: 900, color: rfh.forageNdfPct >= 19 ? '#15803d' : '#dc2626' }}>
@@ -3853,7 +3850,7 @@ export default function Step10Review({
                   )}
 
                   {/* Top Regional Feeds Columns */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
                     {/* Greens */}
                     <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                       <div style={{ fontSize: '0.825rem', fontWeight: 800, color: '#166534', marginBottom: '6px' }}>

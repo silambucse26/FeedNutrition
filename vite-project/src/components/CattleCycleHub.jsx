@@ -778,13 +778,13 @@ export default function CattleCycleHub({
 
               {/* Center Hub */}
               <circle cx={cx} cy={cy} r={60} fill="#ffffff" stroke="#e2e8f0" strokeWidth="2.5" />
-              <text x={cx} y={cy - 16} textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing="1.2">
+              <text x={cx} y={cy - 16} textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' ? '0' : '1.2'}>
                 {currentLang === 'ta' ? `கேள்வி ${activeStage.questionNum} / 5` : `QUESTION ${activeStage.questionNum} OF 5`}
               </text>
               <text x={cx} y={cy + 14} textAnchor="middle" fill="#0f172a" fontSize="30" fontWeight="900">
                 {totalCattleCount}
               </text>
-              <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="800" letterSpacing="1">
+              <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' ? '0' : '1'}>
                 {currentLang === 'ta' ? 'மொத்த மந்தை' : 'TOTAL HERD'}
               </text>
 
@@ -885,28 +885,39 @@ export default function CattleCycleHub({
                     )}
 
                     {/* Stage Name Capsule */}
-                    <rect
-                      x={nx - 42}
-                      y={s.key === 'dry' ? ny - 64 : ny + 48}
-                      width="84"
-                      height="22"
-                      rx="11"
-                      fill={isSelected ? s.color : '#ffffff'}
-                      stroke={isSelected ? s.color : '#cbd5e1'}
-                      strokeWidth={isSelected ? '2' : '1.5'}
-                      style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))' }}
-                    />
-                    <text
-                      x={nx}
-                      y={s.key === 'dry' ? ny - 49 : ny + 63}
-                      textAnchor="middle"
-                      fill={isSelected ? '#ffffff' : '#1e293b'}
-                      fontSize="11"
-                      fontWeight="800"
-                      letterSpacing="0.2"
-                    >
-                      {s.shortLabel}
-                    </text>
+                    {(() => {
+                      const capsuleW = currentLang === 'ta' ? 98 : 84;
+                      const capsuleH = 22;
+                      const capsuleX = nx - capsuleW / 2;
+                      const capsuleY = s.key === 'dry' ? ny - 64 : ny + 48;
+                      const textY = s.key === 'dry' ? ny - 49 : ny + 63;
+                      return (
+                        <>
+                          <rect
+                            x={capsuleX}
+                            y={capsuleY}
+                            width={capsuleW}
+                            height={capsuleH}
+                            rx="11"
+                            fill={isSelected ? s.color : '#ffffff'}
+                            stroke={isSelected ? s.color : '#cbd5e1'}
+                            strokeWidth={isSelected ? '2' : '1.5'}
+                            style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))' }}
+                          />
+                          <text
+                            x={nx}
+                            y={textY}
+                            textAnchor="middle"
+                            fill={isSelected ? '#ffffff' : '#1e293b'}
+                            fontSize={currentLang === 'ta' ? '10' : '11'}
+                            fontWeight="800"
+                            letterSpacing={currentLang === 'ta' ? '0' : '0.2'}
+                          >
+                            {s.shortLabel}
+                          </text>
+                        </>
+                      );
+                    })()}
                   </g>
                 );
               })}
@@ -914,13 +925,16 @@ export default function CattleCycleHub({
           </div>
 
           {/* Quick Stage Pills / Buttons below Cycle */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '8px',
-            width: '100%',
-            marginTop: '4px',
-          }}>
+          <div 
+            className="cattle-stage-pills-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '8px',
+              width: '100%',
+              marginTop: '4px',
+            }}
+          >
             {localizedStages.map((s, idx) => {
               const isSelected = activeKey === s.key;
               const count = counts[s.key] || 0;
@@ -947,25 +961,33 @@ export default function CattleCycleHub({
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                     boxShadow: isSelected ? `0 2px 8px ${s.color}30` : 'none',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
+                    gap: '6px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
                     <div style={{
                       width: '10px',
                       height: '10px',
                       borderRadius: '50%',
                       background: isSelected ? s.color : isDone ? '#16a34a' : '#cbd5e1',
+                      flexShrink: 0,
                     }} />
                     <span style={{
                       fontSize: '0.82rem',
                       fontWeight: isSelected ? 800 : 600,
                       color: isSelected ? s.color : '#334155',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}>
                       Q{s.questionNum}: {s.shortLabel}
                     </span>
                   </div>
 
                   <span style={{
+                    flexShrink: 0,
                     fontSize: '0.78rem',
                     fontWeight: 800,
                     padding: '2px 8px',
@@ -985,18 +1007,23 @@ export default function CattleCycleHub({
         <div style={{ padding: 'clamp(14px, 2.5vw, 24px)', background: '#ffffff', overflowY: 'auto' }} className="cattle-cycle-right-col">
 
           {/* Question Stepper Bar (Questions 1 to 5) */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '6px',
-            marginBottom: '16px',
-            padding: '8px 10px',
-            background: '#f8fafc',
-            borderRadius: '14px',
-            border: '1.5px solid #e2e8f0',
-            overflowX: 'auto',
-          }}>
+          <div 
+            className="horizontal-scroll cattle-question-stepper-bar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              gap: '6px',
+              marginBottom: '16px',
+              padding: '8px 10px',
+              background: '#f8fafc',
+              borderRadius: '14px',
+              border: '1.5px solid #e2e8f0',
+              overflowX: 'auto',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
             {localizedStages.map(s => {
               const isCur = activeKey === s.key;
               const isDone = visitedStages[s.key] || counts[s.key] > 0;
@@ -1010,6 +1037,7 @@ export default function CattleCycleHub({
                     setFeedbackMessage('');
                   }}
                   style={{
+                    flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '5px',
@@ -1117,7 +1145,7 @@ export default function CattleCycleHub({
                 Select whether they are first-time pregnant heifers, repeat pregnant cows, or both:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1240,7 +1268,7 @@ export default function CattleCycleHub({
                 Select whether your cows are in their 1st lactation (1st calvers), 2nd+ lactation (multiparous), or both:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1667,7 +1695,7 @@ export default function CattleCycleHub({
 
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
                 gap: '14px',
               }}>
                 {/* 1. HEIFERS CARDS */}
@@ -2557,22 +2585,26 @@ export default function CattleCycleHub({
 
       {/* ── Bottom Step Navigation ── */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 24px',
+        padding: '16px 20px',
         borderTop: '1.5px solid #e2e8f0',
         background: '#ffffff',
-        flexWrap: 'wrap',
-        gap: '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
       }}>
-        <button onClick={onPrev} className="btn-secondary">
-          <ChevronLeft size={18} />
-          <span>{currentLang === 'ta' ? 'முந்தையது (இனம்)' : 'Previous (Breed)'}</span>
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
+        {/* Herd questions status chips bar */}
+        <div 
+          className="horizontal-scroll"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            overflowX: 'auto',
+            paddingBottom: '4px',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>
             {currentLang === 'ta' ? 'மந்தைக் கேள்விகள்:' : 'Herd Questions:'}
           </span>
           {localizedStages.map(s => {
@@ -2625,7 +2657,9 @@ export default function CattleCycleHub({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
+                  whiteSpace: 'nowrap',
                   transition: 'all 0.15s ease',
+                  flexShrink: 0
                 }}
                 title={`Question ${s.questionNum}: ${s.shortLabel} (${counts[s.key]} head)`}
               >
@@ -2635,14 +2669,22 @@ export default function CattleCycleHub({
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={handleAttemptNext}
-          className="btn-primary"
-        >
-          <span>{currentLang === 'ta' ? 'அடுத்த படி (மேய்ச்சல் மேலாண்மை)' : 'Next Step (Grazing Management)'}</span>
-          <ChevronRight size={18} />
-        </button>
+        {/* Buttons Row */}
+        <div className="responsive-nav-actions">
+          <button onClick={onPrev} className="btn-secondary">
+            <ChevronLeft size={18} />
+            <span>{currentLang === 'ta' ? 'முந்தையது (இனம்)' : 'Previous (Breed)'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAttemptNext}
+            className="btn-primary"
+          >
+            <span>{currentLang === 'ta' ? 'அடுத்த படி (மேய்ச்சல் மேலாண்மை)' : 'Next Step (Grazing Management)'}</span>
+            <ChevronRight size={18} />
+          </button>
+        </div>
 
       </div>
 

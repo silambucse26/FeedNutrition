@@ -193,7 +193,17 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
             </div>
           </div>
 
-          <button onClick={onNext} className="btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
+          <button 
+            onClick={onNext} 
+            className="btn-primary" 
+            style={{ 
+              padding: '10px 18px', 
+              fontSize: '0.88rem',
+              flex: '1 1 auto',
+              minWidth: 'min(100%, 220px)',
+              justifyContent: 'center'
+            }}
+          >
             <span>{currentLang === 'ta' ? 'படி 2-க்குச் செல்லவும் (மாடுகள் மந்தை)' : 'Proceed to Step 2 (Cattle Herd)'}</span>
             <ChevronRight size={16} />
           </button>
@@ -203,8 +213,8 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       {/* BREED CARDS GRID */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 170px), 1fr))',
-        gap: '14px',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 140px), 1fr))',
+        gap: '12px',
         marginBottom: '28px'
       }}>
         {filteredBreeds.map(breed => {
@@ -226,7 +236,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
                 transition: 'transform 0.15s ease, box-shadow 0.15s ease'
               }}
             >
-              <div style={{ position: 'relative', height: 'clamp(100px, 22vw, 135px)', overflow: 'hidden', background: '#f8fafc' }}>
+              <div style={{ position: 'relative', height: 'clamp(95px, 20vw, 130px)', overflow: 'hidden', background: '#f8fafc' }}>
                 <img 
                   src={breed.image} 
                   alt={getBreedName(breed, t)}
@@ -248,20 +258,20 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
                     background: '#16a34a',
                     color: '#ffffff',
                     borderRadius: '50%',
-                    width: '26px',
-                    height: '26px',
+                    width: '24px',
+                    height: '24px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 2px 6px rgba(22,163,74,0.4)'
                   }}>
-                    <Check size={16} strokeWidth={3} />
+                    <Check size={14} strokeWidth={3} />
                   </div>
                 )}
               </div>
 
-              <div style={{ padding: '10px 8px' }}>
-                <h3 style={{ fontSize: '0.95rem', color: isSelected ? '#15803d' : '#0f172a', margin: 0, fontWeight: 800 }}>
+              <div style={{ padding: '8px 6px' }}>
+                <h3 style={{ fontSize: '0.88rem', color: isSelected ? '#15803d' : '#0f172a', margin: 0, fontWeight: 800, lineHeight: 1.25 }}>
                   {getBreedName(breed, t)}
                 </h3>
               </div>
@@ -271,7 +281,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       </div>
 
       {/* Bottom Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
+      <div className="responsive-nav-actions" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px', justifyContent: 'flex-end' }}>
         <button 
           onClick={onNext} 
           className="btn-primary" 

@@ -30,10 +30,15 @@ export default function App() {
     setCurrentLang(langCode);
     try {
       localStorage.setItem('feednutrition_lang', langCode);
+      document.documentElement.lang = langCode;
     } catch (e) {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    document.documentElement.lang = currentLang;
+  }, [currentLang]);
 
   // Translation lookup helper
   const t = (path, vars = {}) => {
@@ -594,7 +599,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
+    <div data-lang={currentLang} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
       {/* Top Navbar with Language Selector */}
       <Navbar 
         weather={weather}
@@ -616,7 +621,7 @@ export default function App() {
         maxWidth: '1200px',
         width: '100%',
         margin: '0 auto',
-        padding: 'clamp(12px, 3vw, 24px) clamp(10px, 2.5vw, 16px)',
+        padding: 'clamp(8px, 2.5vw, 20px) clamp(8px, 2vw, 16px)',
         flex: 1
       }}>
         {/* Step Progress Bar (6 steps) */}

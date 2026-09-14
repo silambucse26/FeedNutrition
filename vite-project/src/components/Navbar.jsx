@@ -140,7 +140,7 @@ export default function Navbar({
 
   const hasLocation = weather && weather.city;
   const currentLangObj = languages.find(l => l.code === currentLang) || languages[0];
-  const locationText = hasLocation ? weather.city : (t ? t('no_location') : 'No location detected');
+  const locationText = hasLocation ? weather.city : (currentLang === 'ta' ? 'இருப்பிடம் இல்லை' : (t ? t('no_location') : 'No location detected'));
 
   return (
     <header style={{
@@ -178,7 +178,7 @@ export default function Navbar({
             color: '#64748b', 
             fontWeight: 600, 
             margin: '2px 0 0',
-            whiteSpace: 'nowrap'
+            lineHeight: 1.25
           }}>
             {t ? t('brand_tagline') : 'Cattle Nutrition & Advisory'}
           </p>
@@ -279,7 +279,7 @@ export default function Navbar({
                 style={{ width: '13px', height: '13px', objectFit: 'contain', borderRadius: '2px' }} 
               />
             )}
-            <span>{loadingWeather ? (t ? t('locating') : 'Locating...') : (t ? t('detect_location') : 'Detect')}</span>
+            <span>{loadingWeather ? (t ? t('locating') : 'Locating...') : (currentLang === 'ta' ? 'கண்டறி' : (t ? t('detect_location') : 'Detect'))}</span>
           </button>
 
           {/* LANGUAGE SELECTOR DROPDOWN (6 Languages) */}

@@ -75,7 +75,7 @@ export default function Step8Water({
           {currentLang === 'ta' ? 'தினசரி கிடைக்கும் குடிநீர் அளவு (லிட்டர் / நாள்)' : (t ? t('step8.daily_volume_label') : 'Daily Available Drinking Water (Litres / day)')}
         </label>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <input 
             type="number"
             min="10" 
@@ -99,7 +99,7 @@ export default function Step8Water({
                 setWaterVolume(num === 0 ? '' : num);
               }
             }}
-            style={{ width: '180px', fontSize: '1.4rem', fontWeight: '900', color: '#0284c7', borderColor: '#0284c7', borderRadius: '10px' }}
+            style={{ width: 'min(100%, 180px)', fontSize: '1.4rem', fontWeight: '900', color: '#0284c7', borderColor: '#0284c7', borderRadius: '10px' }}
           />
           <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>
             {currentLang === 'ta' ? 'லிட்டர் / நாள்' : (t ? t('step8.litres_per_day') : 'Litres / day')}
@@ -123,8 +123,8 @@ export default function Step8Water({
                 onClick={() => setWaterSource(src.id)}
                 className={`chip-btn ${isSel ? 'chip-btn-active' : ''}`}
                 style={{
-                  padding: '10px 20px',
-                  fontSize: '0.9rem',
+                  padding: '8px 16px',
+                  fontSize: '0.85rem',
                   borderRadius: '24px'
                 }}
               >
@@ -141,7 +141,7 @@ export default function Step8Water({
           {currentLang === 'ta' ? 'குடிநீரின் தரம்' : (t ? t('step8.water_quality') : 'Water Quality Rating')}
         </label>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
           {qualities.map(q => {
             const isSel = waterQuality === q.id;
             return (
@@ -152,15 +152,15 @@ export default function Step8Water({
                   background: isSel ? q.bg : '#ffffff',
                   border: isSel ? `2.5px solid ${q.color}` : '1.5px solid #cbd5e1',
                   borderRadius: '12px',
-                  padding: '16px',
+                  padding: '14px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px'
                 }}
               >
-                <Droplets size={20} color={isSel ? q.color : '#94a3b8'} />
-                <span style={{ fontSize: '0.925rem', fontWeight: 800, color: isSel ? q.color : '#0f172a' }}>
+                <Droplets size={20} color={isSel ? q.color : '#94a3b8'} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '0.88rem', fontWeight: 800, color: isSel ? q.color : '#0f172a', lineHeight: 1.3 }}>
                   {q.label}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export default function Step8Water({
       </div>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+      <div className="responsive-nav-actions" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
           <span>{currentLang === 'ta' ? 'முந்தையது (மேய்ச்சல்)' : (t ? t('previous') : 'Previous')}</span>
