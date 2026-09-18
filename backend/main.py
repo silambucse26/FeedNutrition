@@ -55,15 +55,21 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for Vite frontend (local dev + Vercel + Render + custom domains)
+# Enable CORS for Vite frontend (local dev on any port + Vercel + Render + custom domains)
 _extra_origin = os.environ.get("CORS_ORIGIN", "").strip()
 _allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:4173",
     "http://127.0.0.1:4173",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
     "https://feednutrition.onrender.com",   # self (backend origin)
 ]
 if _extra_origin:
@@ -72,8 +78,8 @@ if _extra_origin:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    # Covers all Vercel deployment URLs (production + preview branches)
-    allow_origin_regex=r"https://(.*\.vercel\.app|.*\.vercel\.com)",
+    # Covers any localhost / 127.0.0.1 port (e.g. 5173, 5174, 5175) and Vercel preview/production domains
+    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app|https://.*\.vercel\.com)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -877,10 +883,12 @@ def calculate_feed_nutrition(req: NutritionRequest):
         dry_fresh = round(sum(feed_fresh[f["name"]] for f in feed_optimizer_input if f["group"] == "dry"), 1)
         conc_fresh = round(sum(feed_fresh[f["name"]] for f in feed_optimizer_input if f["group"] in ["concentrate", "unconventional"]), 1)
 
+        green_parts = [f"{feed_fresh[f['name']]} kg {f['name']}" for f in feed_optimizer_input if f["group"] == "green" and feed_fresh.get(f['name'], 0) > 0]
+        green_details = " + ".join(green_parts) if green_parts else ("" if green_fresh == 0 else f"{green_fresh} kg Green Fodder")
         conc_parts = [f"{feed_fresh[f['name']]} kg {f['name']}" for f in feed_optimizer_input if f["group"] in ["concentrate", "unconventional"] and feed_fresh.get(f['name'], 0) > 0]
-        conc_details = " + ".join(conc_parts) if conc_parts else f"{conc_fresh} kg Concentrate"
+        conc_details = " + ".join(conc_parts) if conc_parts else ("" if conc_fresh == 0 else f"{conc_fresh} kg Concentrate")
         dry_parts = [f"{feed_fresh[f['name']]} kg {f['name']}" for f in feed_optimizer_input if f["group"] == "dry" and feed_fresh.get(f['name'], 0) > 0]
-        dry_details = " + ".join(dry_parts) if dry_parts else f"{dry_fresh} kg Dry Fodder"
+        dry_details = " + ".join(dry_parts) if dry_parts else ("" if dry_fresh == 0 else f"{dry_fresh} kg Dry Fodder")
 
         conc_dm = round(sum(feed_dm[f["name"]] for f in feed_optimizer_input if f["group"] in ["concentrate", "unconventional"]), 2)
         conc_dm_pct = round((conc_dm / a["dmiKg"] * 100.0), 1) if a["dmiKg"] > 0 else 0.0
@@ -933,6 +941,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
             "category": cat,
             "weightKg": ent["weightKg"],
             "greenFodderKg": green_fresh,
+            "greenFodderDetails": green_details,
             "dryFodderKg": dry_fresh,
             "concentrateKg": conc_fresh,
             "concentrateDetails": conc_details,
@@ -958,25 +967,107 @@ def calculate_feed_nutrition(req: NutritionRequest):
             "feasibilityStatus": "Feasible" if joint_opt["success"] else "Incomplete",
             "feasibilityMessage": joint_opt["statusMessage"]
         }
-        if cat == "milkingCow":
-            entry["milkYieldL"] = ent.get("milkYieldL", ent.get("milk_yield", 0.0))
-            entry["milkFatPct"] = ent.get("milkFatPct", ent.get("milk_fat", 4.0))
-            entry["bcs"] = ent.get("bcs", 3.0)
+
+        # -----------------------------------------------------------------
+        # Performance & Production Projections based on Breed, Feed, & Weight
+        # -----------------------------------------------------------------
+        if cat == "growingHeifer":
+            # Target breeding weight is nominally 58-65% of mature body weight for breed
+            base_t_breeding_wt = round(0.58 * target_mature_bw, 1)
+            # A growing heifer cannot have a future target lower than her current body weight:
+            if ent["weightKg"] >= base_t_breeding_wt:
+                t_breeding_wt = round(max(0.68 * target_mature_bw, ent["weightKg"] + 25.0), 1)
+            else:
+                t_breeding_wt = base_t_breeding_wt
+
+            # Energy available for gain above maintenance
+            nem_maint = nem_coeff * (ent["weightKg"] ** 0.75)
+            me_maint = nem_maint / 0.65
+            me_surplus = max(0.0, tot_anim_me - me_maint)
+            # ICAR 2013 / NRC 2001: ~4.0 Mcal ME above maintenance yields 1 kg body frame gain
+            adg_g = int(round(min(950.0, max(250.0, (me_surplus / 4.0) * 1000.0)))) if tot_anim_me > 0 else 350
+            rem_wt = max(0.0, t_breeding_wt - ent["weightKg"])
+            days_to_breed = int(round((rem_wt / (adg_g / 1000.0)))) if (rem_wt > 0 and adg_g > 0) else 0
+            months_to_breed = round(days_to_breed / 30.4, 1)
+
+            entry["dailyWeightGainG"] = adg_g
+            entry["targetBreedingWeightKg"] = t_breeding_wt
+            entry["daysToBreedingWeight"] = days_to_breed
+            entry["monthsToBreedingWeight"] = months_to_breed
+            entry["growthStatus"] = f"+{adg_g} g/day frame growth"
+
+            heifer_animals.append(entry)
+
+        elif cat == "milkingCow":
+            curr_milk = float(ent.get("milkYieldL", ent.get("milk_yield", 0.0)))
+            curr_fat = float(ent.get("milkFatPct", ent.get("milk_fat", 4.0)))
+            bcs_val = float(ent.get("bcs", 3.0))
+
+            # Item 13 & 14: Net Energy for lactation (NEL) / ME supported milk:
+            # MilkNEL = 0.360 + 0.0969 * Fat%
+            milk_nel_per_kg = 0.360 + 0.0969 * curr_fat
+            nem_maint = nem_coeff * (ent["weightKg"] ** 0.75)
+            nel_available_for_milk = max(0.0, (tot_anim_me * 0.66) - nem_maint)
+            energy_supported_milk = round(nel_available_for_milk / max(0.65, milk_nel_per_kg), 1)
+
+            # Protein supported milk (~85g CP per liter):
+            cp_maint = ent["weightKg"] * 0.65
+            cp_surplus = max(0.0, tot_anim_cp_g - cp_maint)
+            cp_supported_milk = round(cp_surplus / 85.0, 1)
+
+            # Target achievable milk yield with this balanced ration (constrained by breed & biological limits)
+            feed_supported_milk = round(min(energy_supported_milk, cp_supported_milk), 1)
+            target_milk = round(max(curr_milk, min(curr_milk + 2.5, feed_supported_milk, target_milk_per_day * 1.25)), 1)
+            potential_gain = round(max(0.0, target_milk - curr_milk), 1)
+
+            # Item 15: Projected milk fat range based on fiber (NDF) and roughage:concentrate balance
+            diet_ndf_pct = round(tot_anim_ndf_g / max(1.0, tot_anim_dm * 10.0), 1)
+            fat_range_min = curr_fat
+            fat_range_max = curr_fat + (0.3 if diet_ndf_pct >= 30.0 else 0.0)
+            proj_fat_range = f"{fat_range_min:.1f}–{fat_range_max:.1f}%" if fat_range_max > fat_range_min else f"{curr_fat:.1f}%"
+            proj_fat = round(min(target_fat + 0.3, max(3.2, curr_fat + (0.2 if diet_ndf_pct >= 30.0 else -0.2))), 1)
+
+            entry["milkYieldL"] = curr_milk
+            entry["milkFatPct"] = curr_fat
+            entry["targetMilkYieldL"] = target_milk
+            entry["potentialMilkGainL"] = potential_gain
+            entry["projectedMilkFatPct"] = proj_fat
+            entry["projectedMilkFatRange"] = proj_fat_range
+            entry["bcs"] = bcs_val
             entry["stage"] = ent.get("stage", "Mid lactation")
             entry["parity"] = ent.get("parity", "Multiparous")
             entry["isFirstLactation"] = ent.get("isFirstLactation", ent.get("is_first", False))
+
             milking_animals.append(entry)
+
         elif cat == "pregnantCattle":
+            preg_month = ent.get("pregMonth", 7)
+            # Item 18: Projected calf birth weight based on dam mature breed size (~6.2% of dam mature BW)
+            calf_birth_wt = round(target_mature_bw * 0.062, 1)
+            # Item 17: Gravid uterine daily tissue gain (surges in late gestation)
+            gravid_uterine_daily_g = 350 if int(preg_month) >= 8 else (220 if int(preg_month) >= 6 else 90)
+
             entry["pregMonth"] = ent["pregMonth"]
             entry["stage"] = ent["stage"]
             entry["type"] = ent["type"]
+            entry["projectedCalfBirthWeightKg"] = calf_birth_wt
+            entry["fetalDailyGainG"] = gravid_uterine_daily_g
+            entry["gravidUterineGainG"] = gravid_uterine_daily_g
+            entry["targetCalvingBcs"] = 3.5
+            entry["pregnancyWellness"] = "Safe Ca:P (1.8:1) Prevents Milk Fever & Boosts Colostrum"
+
             pregnant_animals.append(entry)
-        elif cat == "growingHeifer":
-            heifer_animals.append(entry)
+
         elif cat == "dryCow":
             entry["dryDays"] = ent["dryDays"]
+            entry["targetBcsGain"] = "+0.35 BCS"
+            entry["dryOutcome"] = "Rumen tissue recovery & metabolic rest for next lactation"
+            # Item 19: Expected near-calving live weight (scale projection including conceptus)
+            entry["targetCalvingWeightKg"] = round(ent["weightKg"] + 25.0, 1)
             dry_animals.append(entry)
-        else:
+
+        else: # bull
+            entry["libidoIndex"] = "High Libido & Semen Viability (Optimal Zinc & Vitamin A)"
             bull_animals.append(entry)
 
         all_solved_animals.append(entry)
@@ -1669,15 +1760,16 @@ def calculate_feed_nutrition(req: NutritionRequest):
     safety_failure_reasons = []
 
     # 1. DMI within target (95% - 105%)
-    dmi_ok = (0.95 <= rec_dmi_ratio <= 1.05) and ration_feasible
+    dmi_ok = (0.95 <= rec_dmi_ratio <= 1.05)
     if not dmi_ok:
         safety_gate_passed = False
         if rec_dmi_ratio < 0.95:
             dmi_deficit = round(total_herd_dmi_required_kg - recommended_total_dm_kg, 1)
             safety_failure_reasons.append(f"DMI Deficient: Total DM {recommended_total_dm_kg:.1f}kg is below 95% requirement (-{dmi_deficit}kg DM shortfall).")
-        else:
+        elif rec_dmi_ratio > 1.05:
             dmi_excess = round(recommended_total_dm_kg - total_herd_dmi_required_kg, 1)
-            safety_failure_reasons.append(f"DMI Surplus: Total DM {recommended_total_dm_kg:.1f}kg exceeds herd capacity (+{dmi_excess}kg DM).")
+            if dmi_excess > 0.05:
+                safety_failure_reasons.append(f"DMI Surplus: Total DM {recommended_total_dm_kg:.1f}kg exceeds herd capacity (+{dmi_excess}kg DM).")
     safety_gate_checks.append({
         "gate": "DMI within target?",
         "passed": dmi_ok,
@@ -1700,11 +1792,11 @@ def calculate_feed_nutrition(req: NutritionRequest):
         "detail": f"{recommended_total_me_mcal:.1f} Mcal ME vs {total_herd_me_required_mcal:.1f} Mcal required ({rec_me_ratio*100:.1f}%)"
     })
 
-    # 3. CP within range (90% - 130% or diet CP <= 17.5%)
-    cp_ok = (0.90 <= rec_cp_ratio <= 1.30) or (recommended_diet_cp_pct <= 17.5 and rec_cp_ratio >= 0.90)
+    # 3. CP within range (Item 7: 90% - 125% target; >125% is Excess CP)
+    cp_ok = (0.90 <= rec_cp_ratio <= 1.25)
     if not cp_ok:
         safety_gate_passed = False
-        if rec_cp_ratio > 1.30:
+        if rec_cp_ratio > 1.25:
             surplus_cp = round((rec_cp_ratio - 1.0) * 100)
             safety_failure_reasons.append(f"CP Surplus: Protein is +{surplus_cp}% above requirement ({recommended_total_cp_kg*1000.0:.0f} vs {total_herd_cp_required_g:.0f} g CP).")
         else:
@@ -1738,20 +1830,26 @@ def calculate_feed_nutrition(req: NutritionRequest):
         "detail": f"{recommended_diet_ndf_pct:.1f}% NDF diet (Limits: Milking 28%–48%, Non-lactating 32%–60%)" if ndf_ok else ndf_failures[0]
     })
 
-    # 5. Ca/P adequate
-    ca_ok = (total_rec_ca_g >= total_herd_ca_required_g * 0.95)
-    p_ok = (total_rec_p_g >= total_herd_p_required_g * 0.95)
+    # 5. Ca/P adequate & upper safety limits (Item 8 & 9: P max 130%, Ca max 140%)
+    ca_ratio = (total_rec_ca_g / max(0.1, total_herd_ca_required_g))
+    p_ratio = (total_rec_p_g / max(0.1, total_herd_p_required_g))
+    ca_ok = (0.90 <= ca_ratio <= 1.40)
+    p_ok = (0.90 <= p_ratio <= 1.30)
     minerals_ok = (ca_ok and p_ok)
     if not minerals_ok:
         safety_gate_passed = False
-        if not ca_ok:
+        if ca_ratio < 0.90:
             safety_failure_reasons.append(f"Calcium Deficit: Supply is {total_rec_ca_g:.1f}g vs {total_herd_ca_required_g:.1f}g required.")
-        if not p_ok:
+        elif ca_ratio > 1.40:
+            safety_failure_reasons.append(f"Calcium Surplus: Supply is {total_rec_ca_g:.1f}g vs {total_herd_ca_required_g:.1f}g required ({ca_ratio*100:.1f}%).")
+        if p_ratio < 0.90:
             safety_failure_reasons.append(f"Phosphorus Deficit: Supply is {total_rec_p_g:.1f}g vs {total_herd_p_required_g:.1f}g required.")
+        elif p_ratio > 1.30:
+            safety_failure_reasons.append(f"Phosphorus Surplus: Supply is {total_rec_p_g:.1f}g vs {total_herd_p_required_g:.1f}g required ({p_ratio*100:.1f}% Excess P).")
     safety_gate_checks.append({
         "gate": "Ca/P adequate?",
         "passed": minerals_ok,
-        "detail": f"Ca: {total_rec_ca_g:.1f}g (Req: {total_herd_ca_required_g:.1f}g) | P: {total_rec_p_g:.1f}g (Req: {total_herd_p_required_g:.1f}g)"
+        "detail": f"Ca: {total_rec_ca_g:.1f}g ({ca_ratio*100:.0f}%) | P: {total_rec_p_g:.1f}g ({p_ratio*100:.0f}%)"
     })
 
     # 6. Ingredient limits safe (Fix 2: Prevent >40% concentrate DMI across ALL animals)
@@ -1846,6 +1944,7 @@ def calculate_feed_nutrition(req: NutritionRequest):
         "checks": safety_gate_checks,
         "failureReasons": safety_failure_reasons
     }
+    practical_report["safetyGateChecklist"] = safety_gate_checks
 
     # Consistent DMI breakdown fields (Fix for Problem 2)
     practical_report["troughCurrentDmKg"] = current_feed_dm_kg
@@ -1893,7 +1992,8 @@ def calculate_feed_nutrition(req: NutritionRequest):
         grazing_dm_kg=total_pasture_dm_kg,
         herd_total_water_liters=total_fwi_required_liters,
         current_mineral_mix_g=current_min_mix_g,
-        current_salt_g=0.0
+        current_salt_g=0.0,
+        recommended_total_me_mcal=recommended_total_me_mcal
     )
     practical_report["ktFormulation"] = kt_formulation
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Check, Trash2, Copy, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Trash2, Copy, Sparkles, ArrowRight, AlertCircle, X } from 'lucide-react';
 import WeightChipSelect from './WeightChipSelect';
 import {
   COW_WEIGHT_RANGES,
@@ -151,22 +151,40 @@ export default function CattleCycleHub({
   const [activeKey, setActiveKey] = useState(initialActiveStage);
   const [tapBounce, setTapBounce] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [missingModal, setMissingModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    stageKey: null,
+    isZeroCount: false,
+    nextStageKey: null,
+    missingElementId: null,
+  });
 
-  // Localized stages based on active language
+  // Localized stages based on active language (ta, hi, en)
   const localizedStages = STAGES.map(s => {
     const tr = ANIMAL_STAGE_TRANSLATIONS[s.key];
-    if (tr && currentLang === 'ta') {
+    const rawTitle = (tr && (currentLang === 'ta' || currentLang === 'hi'))
+      ? (tr.questionTitle?.[currentLang] || s.questionTitle)
+      : s.questionTitle;
+    const cleanTitle = String(rawTitle).replace(/^(Question|கேள்வி|प्रश्न)\s*\d+:\s*/i, '');
+
+    if (tr && (currentLang === 'ta' || currentLang === 'hi')) {
+      const l = currentLang;
       return {
         ...s,
-        label: tr.label?.ta || s.label,
-        shortLabel: tr.shortLabel?.ta || s.shortLabel,
-        questionTitle: tr.questionTitle?.ta || s.questionTitle,
-        questionSub: tr.questionSub?.ta || s.questionSub,
-        tagline: tr.tagline?.ta || s.tagline,
-        nextLabel: tr.nextLabel?.ta || s.nextLabel,
+        label: tr.label?.[l] || s.label,
+        shortLabel: tr.shortLabel?.[l] || s.shortLabel,
+        questionTitle: cleanTitle,
+        questionSub: tr.questionSub?.[l] || s.questionSub,
+        tagline: tr.tagline?.[l] || s.tagline,
+        nextLabel: tr.nextLabel?.[l] || s.nextLabel,
       };
     }
-    return s;
+    return {
+      ...s,
+      questionTitle: cleanTitle,
+    };
   });
 
   // Track which stages the user has reviewed / answered (even if 0)
@@ -210,18 +228,24 @@ export default function CattleCycleHub({
     if (acknowledgeStep) acknowledgeStep();
     const first = newList
       .filter(c => c.category === 'firstTime')
-      .map(({ category, ...rest }) => ({
-        ...rest,
-        pregDays: Number(rest.pregDays) || 150,
-        pregMonth: Math.max(1, Math.min(9, Math.round((Number(rest.pregDays) || 150) / 30.4))),
-      }));
+      .map(({ category, ...rest }) => {
+        const pDays = rest.pregDays !== '' && rest.pregDays !== undefined ? Number(rest.pregDays) : '';
+        return {
+          ...rest,
+          pregDays: pDays,
+          pregMonth: pDays !== '' ? Math.max(1, Math.min(9, Math.round(pDays / 30.4))) : '',
+        };
+      });
     const rep = newList
       .filter(c => c.category === 'repeat')
-      .map(({ category, ...rest }) => ({
-        ...rest,
-        pregDays: Number(rest.pregDays) || 210,
-        pregMonth: Math.max(1, Math.min(9, Math.round((Number(rest.pregDays) || 210) / 30.4))),
-      }));
+      .map(({ category, ...rest }) => {
+        const pDays = rest.pregDays !== '' && rest.pregDays !== undefined ? Number(rest.pregDays) : '';
+        return {
+          ...rest,
+          pregDays: pDays,
+          pregMonth: pDays !== '' ? Math.max(1, Math.min(9, Math.round(pDays / 30.4))) : '',
+        };
+      });
     setFirstTimeCattle(first);
     setRepeatCattle(rep);
     if (first.length > 0 && rep.length > 0) setPregnantCategory('both');
@@ -262,6 +286,9 @@ export default function CattleCycleHub({
         if (!p.weight || Number(p.weight) <= 0) {
           return { valid: false, stageKey, index: i, missingField: 'Body Weight', label: `Pregnant Cow #${i + 1}` };
         }
+        if (!p.pregDays || Number(p.pregDays) <= 0) {
+          return { valid: false, stageKey, index: i, missingField: 'Days Pregnant', label: `Pregnant Cow #${i + 1}` };
+        }
       }
     } else if (stageKey === 'lactating') {
       for (let i = 0; i < lactatingData.length; i++) {
@@ -270,7 +297,7 @@ export default function CattleCycleHub({
           return { valid: false, stageKey, index: i, missingField: 'Body Weight', label: `Milking Cow #${i + 1}` };
         }
         if (l.milkYield === '' || l.milkYield === undefined || Number(l.milkYield) <= 0) {
-          return { valid: false, stageKey, index: i, missingField: 'Daily Milk Yield', label: `Milking Cow #${i + 1}` };
+          return { valid: false, stageKey, index: i, missingField: 'Daily Milk Yield (L/day)', label: `Milking Cow #${i + 1}` };
         }
         if (l.milkFat === '' || l.milkFat === undefined || Number(l.milkFat) <= 0) {
           return { valid: false, stageKey, index: i, missingField: 'Milk Fat %', label: `Milking Cow #${i + 1}` };
@@ -282,12 +309,18 @@ export default function CattleCycleHub({
         if (!d.weight || Number(d.weight) <= 0) {
           return { valid: false, stageKey, index: i, missingField: 'Body Weight', label: `Dry Cow #${i + 1}` };
         }
+        if (!d.dryDays || Number(d.dryDays) <= 0) {
+          return { valid: false, stageKey, index: i, missingField: 'Dry Period Days', label: `Dry Cow #${i + 1}` };
+        }
       }
     } else if (stageKey === 'bulls') {
       for (let i = 0; i < bullsData.length; i++) {
         const b = bullsData[i];
         if (!b.weight || Number(b.weight) <= 0) {
           return { valid: false, stageKey, index: i, missingField: 'Body Weight', label: `Bull #${i + 1}` };
+        }
+        if (!b.purpose) {
+          return { valid: false, stageKey, index: i, missingField: 'Bull Purpose / Activity', label: `Bull #${i + 1}` };
         }
       }
     }
@@ -306,29 +339,27 @@ export default function CattleCycleHub({
 
     if (activeKey === 'heifers') {
       if (heifersData.length >= 200) return;
-      setHeifersData([...heifersData, { id: Date.now() + Math.random(), weight: '', ageMonths: 18 }]);
+      setHeifersData([...heifersData, { id: Date.now() + Math.random(), weight: '', ageMonths: '' }]);
       setVisitedStages(v => ({ ...v, heifers: true }));
     } else if (activeKey === 'pregnant') {
       if (unifiedPregnant.length >= 200) return;
       const targetCat = pregnancyTypeChoice === 'firstTime' ? 'firstTime' : 'repeat';
-      const defaultDays = targetCat === 'firstTime' ? 150 : 210;
-      const newCow = { id: Date.now() + Math.random(), weight: '', pregDays: defaultDays, category: targetCat };
+      const newCow = { id: Date.now() + Math.random(), weight: '', pregDays: '', category: targetCat };
       commitPregnant([...unifiedPregnant, newCow]);
       setVisitedStages(v => ({ ...v, pregnant: true }));
     } else if (activeKey === 'lactating') {
       if (lactatingData.length >= 200) return;
-      const defaultMilk = defaultBreed?.avgDailyMilk || 10;
       const isFirst = lactationTypeChoice === 'first_lactation';
       setLactatingData([
         ...lactatingData,
         {
           id: Date.now() + Math.random(),
           weight: '',
-          milkYield: defaultMilk,
-          milkFat: 4.2,
-          bcs: 3.0,
-          stage: 'mid',
-          dim: 150,
+          milkYield: '',
+          milkFat: '',
+          bcs: '',
+          stage: '',
+          dim: '',
           isFirstLactation: isFirst,
           lactationType: isFirst ? 'first_lactation' : 'second_plus',
           parity: isFirst ? 1 : 2,
@@ -342,15 +373,15 @@ export default function CattleCycleHub({
         {
           id: Date.now() + Math.random(),
           weight: '',
-          dryDays: 60,
-          daysToCalving: 21,
-          bcs: 3.5,
+          dryDays: '',
+          daysToCalving: '',
+          bcs: '',
         },
       ]);
       setVisitedStages(v => ({ ...v, dry: true }));
     } else if (activeKey === 'bulls') {
       if (bullsData.length >= 200) return;
-      setBullsData([...bullsData, { id: Date.now() + Math.random(), weight: '', purpose: 'Breeding Bull' }]);
+      setBullsData([...bullsData, { id: Date.now() + Math.random(), weight: '', purpose: '' }]);
       setVisitedStages(v => ({ ...v, bulls: true }));
     }
   };
@@ -361,15 +392,14 @@ export default function CattleCycleHub({
     setTapBounce(true);
     setFeedbackMessage('');
     setTimeout(() => setTapBounce(false), 220);
-    const defaultMilk = defaultBreed?.avgDailyMilk || 10;
     const newCow = {
       id: Date.now() + Math.random(),
       weight: '',
-      milkYield: defaultMilk,
-      milkFat: 4.2,
-      bcs: 3.0,
-      stage: 'mid',
-      dim: 150,
+      milkYield: '',
+      milkFat: '',
+      bcs: '',
+      stage: '',
+      dim: '',
       isFirstLactation: isFirst,
       lactationType: isFirst ? 'first_lactation' : 'second_plus',
       parity: isFirst ? 1 : 2,
@@ -384,8 +414,7 @@ export default function CattleCycleHub({
     setTapBounce(true);
     setFeedbackMessage('');
     setTimeout(() => setTapBounce(false), 220);
-    const defaultDays = catType === 'firstTime' ? 150 : 210;
-    const newCow = { id: Date.now() + Math.random(), weight: '', pregDays: defaultDays, category: catType };
+    const newCow = { id: Date.now() + Math.random(), weight: '', pregDays: '', category: catType };
     commitPregnant([...unifiedPregnant, newCow]);
     setVisitedStages(v => ({ ...v, pregnant: true }));
   };
@@ -435,8 +464,8 @@ export default function CattleCycleHub({
       if (cur.length < target) {
         const added = Array.from({ length: target - cur.length }).map((_, i) => ({
           id: Date.now() + i + Math.random(),
-          weight: cur[0]?.weight || '',
-          ageMonths: cur[0]?.ageMonths || 18,
+          weight: '',
+          ageMonths: '',
         }));
         setHeifersData([...cur, ...added]);
       } else {
@@ -446,12 +475,11 @@ export default function CattleCycleHub({
       const cur = [...unifiedPregnant];
       if (cur.length === target) return;
       const targetCat = pregnancyTypeChoice === 'firstTime' ? 'firstTime' : 'repeat';
-      const targetDays = targetCat === 'firstTime' ? 150 : 210;
       if (cur.length < target) {
         const added = Array.from({ length: target - cur.length }).map((_, i) => ({
           id: Date.now() + i + Math.random(),
-          weight: cur[0]?.weight || '',
-          pregDays: cur[0]?.pregDays || targetDays,
+          weight: '',
+          pregDays: '',
           category: targetCat,
         }));
         commitPregnant([...cur, ...added]);
@@ -466,12 +494,12 @@ export default function CattleCycleHub({
         const isFirst = lactationTypeChoice === 'first_lactation' ? true : (typeof base.isFirstLactation === 'boolean' ? base.isFirstLactation : false);
         const added = Array.from({ length: target - cur.length }).map((_, i) => ({
           id: Date.now() + i + Math.random(),
-          weight: base.weight || '',
-          milkYield: base.milkYield || 10,
-          milkFat: base.milkFat || 4.2,
-          bcs: base.bcs || 3.0,
-          stage: base.stage || 'mid',
-          dim: base.dim || 150,
+          weight: '',
+          milkYield: '',
+          milkFat: '',
+          bcs: '',
+          stage: '',
+          dim: '',
           isFirstLactation: isFirst,
           lactationType: isFirst ? 'first_lactation' : 'second_plus',
           parity: isFirst ? 1 : 2,
@@ -484,13 +512,12 @@ export default function CattleCycleHub({
       const cur = [...dryCowsData];
       if (cur.length === target) return;
       if (cur.length < target) {
-        const base = cur[0] || {};
         const added = Array.from({ length: target - cur.length }).map((_, i) => ({
           id: Date.now() + i + Math.random(),
-          weight: base.weight || '',
-          dryDays: base.dryDays || 60,
-          daysToCalving: base.daysToCalving || 21,
-          bcs: base.bcs || 3.5,
+          weight: '',
+          dryDays: '',
+          daysToCalving: '',
+          bcs: '',
         }));
         setDryCowsData([...cur, ...added]);
       } else {
@@ -502,8 +529,8 @@ export default function CattleCycleHub({
       if (cur.length < target) {
         const added = Array.from({ length: target - cur.length }).map((_, i) => ({
           id: Date.now() + i + Math.random(),
-          weight: cur[0]?.weight || '',
-          purpose: cur[0]?.purpose || 'Breeding Bull',
+          weight: '',
+          purpose: '',
         }));
         setBullsData([...cur, ...added]);
       } else {
@@ -582,6 +609,41 @@ export default function CattleCycleHub({
     setVisitedStages(v => ({ ...v, bulls: true }));
   };
 
+  // Determine sequential stage relationships
+  const currentStageIndex = STAGES.findIndex(s => s.key === activeKey);
+  const nextStage = currentStageIndex < STAGES.length - 1 ? STAGES[currentStageIndex + 1] : null;
+  const prevStage = currentStageIndex > 0 ? STAGES[currentStageIndex - 1] : null;
+  const localizedNextStage = nextStage ? localizedStages.find(s => s.key === nextStage.key) : null;
+  const localizedPrevStage = prevStage ? localizedStages.find(s => s.key === prevStage.key) : null;
+
+  // Handle Switching Cattle Stages (Gated with Modal Popup & Auto-Scroll)
+  const handleSwitchStage = (targetKey) => {
+    if (targetKey === activeKey) return;
+    const check = checkStageValidity(activeKey);
+    if (!check.valid) {
+      const curStageObj = localizedStages.find(s => s.key === activeKey) || activeStage;
+      setMissingModal({
+        isOpen: true,
+        title: currentLang === 'ta' ? 'விவரங்கள் பூர்த்தி செய்யப்படவில்லை' : currentLang === 'hi' ? 'अधूरा विवरण' : 'Incomplete Cattle Details',
+        message: currentLang === 'ta'
+          ? `${curStageObj.shortLabel} (${check.label}) - ${check.missingField} தேர்ந்தெடுக்கப்படவில்லை. தயவுசெய்து விவரங்களை நிரப்பவும்.`
+          : currentLang === 'hi'
+            ? `${curStageObj.shortLabel} (${check.label}) के लिए ${check.missingField} दर्ज करें।`
+            : `Please select ${check.missingField} for ${check.label} in ${curStageObj.shortLabel}.`,
+        stageKey: activeKey,
+        isZeroCount: false,
+        nextStageKey: null,
+        missingElementId: `cattle-card-${activeKey}-${check.index}`
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setVisitedStages(v => ({ ...v, [activeKey]: true }));
+    setActiveKey(targetKey);
+    setFeedbackMessage('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Copy to all in active category
   const handleCopyFirstToAll = () => {
     if (acknowledgeStep) acknowledgeStep();
@@ -619,40 +681,122 @@ export default function CattleCycleHub({
     }
   };
 
-  // ── Gated Navigation to Step 3: Verify All 5 Categories Answered & Valid ──
-  const handleAttemptNext = () => {
+  // ── Sequential Next Cattle Button Handler ──
+  const handleNextStage = () => {
     if (acknowledgeStep) acknowledgeStep();
 
-    // Check total herd count across all stages
-    if (totalCattleCount === 0) {
-      setFeedbackMessage('⚠️ Please record at least 1 cattle in your herd across the 5 categories (or tap to add count).');
+    const curStageObj = localizedStages.find(s => s.key === activeKey) || activeStage;
+    const check = checkStageValidity(activeKey);
+
+    // 1. Check if cattle details have missing required fields
+    if (!check.valid) {
+      setMissingModal({
+        isOpen: true,
+        title: currentLang === 'ta' ? 'விவரங்கள் பூர்த்தி செய்யப்படவில்லை' : currentLang === 'hi' ? 'अधूरा विवरण' : 'Incomplete Cattle Details',
+        message: currentLang === 'ta'
+          ? `${curStageObj.shortLabel} (${check.label}) - ${check.missingField} தேர்ந்தெடுக்கப்படவில்லை. தயவுசெய்து நிரப்பவும்.`
+          : currentLang === 'hi'
+            ? `${curStageObj.shortLabel} (${check.label}) के लिए ${check.missingField} दर्ज करें।`
+            : `Please select ${check.missingField} for ${check.label} in ${curStageObj.shortLabel}.`,
+        stageKey: activeKey,
+        isZeroCount: false,
+        nextStageKey: null,
+        missingElementId: `cattle-card-${activeKey}-${check.index}`
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // Check all 5 stages in order to verify all required data is filled
+    // 2. Check if current stage has 0 cattle entered and user hasn't explicitly answered/confirmed it yet
+    if (counts[activeKey] === 0 && !visitedStages[activeKey]) {
+      setMissingModal({
+        isOpen: true,
+        title: currentLang === 'ta' ? `${curStageObj.shortLabel} விவரங்கள் தேவை` : currentLang === 'hi' ? `${curStageObj.shortLabel} विवरण आवश्यक` : `${curStageObj.shortLabel} Count Needed`,
+        message: currentLang === 'ta'
+          ? `நீங்கள் ${curStageObj.shortLabel} எண்ணிக்கையை உள்ளிடவில்லை. உங்களிடம் இந்த மாடுகள் இருந்தால் எண்ணிக்கையை உள்ளிடவும்; அல்லது '0 மாடுகள் - தொடரவும்' என்பதைத் தொடவும்.`
+          : currentLang === 'hi'
+            ? `आपने ${curStageObj.shortLabel} की संख्या दर्ज नहीं की है। यदि यह पशु हैं तो संख्या भरें, अन्यथा '0 पशु - आगे बढ़ें' चुनें।`
+            : `You have not entered counts for ${curStageObj.shortLabel}. If you have this cattle, enter count and weight; otherwise tap 'Confirm 0 & Continue'.`,
+        stageKey: activeKey,
+        isZeroCount: true,
+        nextStageKey: nextStage ? nextStage.key : null,
+        missingElementId: null
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Mark current stage confirmed/visited
+    setVisitedStages(prev => ({ ...prev, [activeKey]: true }));
+
+    // Advance to next cattle category if available
+    if (nextStage) {
+      setActiveKey(nextStage.key);
+      setFeedbackMessage('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // On Bulls (last stage) -> check total herd and proceed to Grazing
+      handleProceedToGrazing();
+    }
+  };
+
+  // ── Verification to Proceed to Step 3 (Grazing Management) ──
+  const handleProceedToGrazing = () => {
+    if (totalCattleCount === 0) {
+      setMissingModal({
+        isOpen: true,
+        title: currentLang === 'ta' ? 'மந்தையில் மாடுகள் இல்லை' : currentLang === 'hi' ? 'झुंड में कोई मवेशी नहीं' : 'No Cattle in Herd',
+        message: currentLang === 'ta'
+          ? 'மேய்ச்சல் மேலாண்மைக்குச் செல்ல, உங்கள் மந்தையில் குறைந்தது 1 மாட்டையாவது பதிவு செய்ய வேண்டும் (5 பிரிவுகளில் ஏதேனும் ஒன்றில்).'
+          : currentLang === 'hi'
+            ? 'चराई प्रबंधन पर जाने के लिए कम से कम 1 मवेशी दर्ज करना आवश्यक है।'
+            : 'Please enter at least 1 cattle in your herd across the 5 categories before proceeding to Grazing Management.',
+        stageKey: 'heifers',
+        isZeroCount: false,
+        nextStageKey: null,
+        missingElementId: null
+      });
+      setActiveKey('heifers');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Check all 5 stages for validity
     for (const stage of STAGES) {
       const check = checkStageValidity(stage.key);
       if (!check.valid) {
+        const stageObj = localizedStages.find(s => s.key === stage.key) || stage;
         setActiveKey(stage.key);
-        setFeedbackMessage(`⚠️ Incomplete details in Question ${stage.questionNum} (${stage.shortLabel}): Please select ${check.missingField} for ${check.label}.`);
-        setTimeout(() => {
-          const el = document.getElementById(`cattle-card-${stage.key}-${check.index}`);
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 120);
+        setMissingModal({
+          isOpen: true,
+          title: currentLang === 'ta' ? 'விவரங்கள் பூர்த்தி செய்யப்படவில்லை' : 'Incomplete Cattle Details',
+          message: currentLang === 'ta'
+            ? `${stageObj.shortLabel} (${check.label}) - ${check.missingField} தேர்ந்தெடுக்கப்படவில்லை.`
+            : `Please enter ${check.missingField} for ${check.label} in ${stageObj.shortLabel}.`,
+          stageKey: stage.key,
+          isZeroCount: false,
+          nextStageKey: null,
+          missingElementId: `cattle-card-${stage.key}-${check.index}`
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
     }
 
-    // Check if any stage was never answered/visited
-    const missing = STAGES.find(s => !visitedStages[s.key] && counts[s.key] === 0);
-    if (missing) {
-      setFeedbackMessage(`Please answer Question ${missing.questionNum}: ${missing.label} before proceeding to Grazing.`);
-      setActiveKey(missing.key);
-      return;
-    }
-
     setFeedbackMessage('');
     onNext();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ── Previous Button Handler ──
+  const handlePrevStage = () => {
+    if (prevStage) {
+      setActiveKey(prevStage.key);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      onPrev();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // SVG Geometry for Big Cycle
@@ -663,8 +807,22 @@ export default function CattleCycleHub({
   return (
     <div className="wg-card animate-fade-in" style={{ padding: '0', overflow: 'hidden' }}>
 
-      {/* ── Top Header Banner ── */}
-      <div style={{
+      {/* ── MOBILE HEADER (<= 640px) ── */}
+      <div className="mobile-cattle-hub-header">
+        <div className="mobile-hub-title-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h2 style={{ fontSize: '1.05rem', color: '#0f172a', fontWeight: 900, margin: 0 }}>
+              {currentLang === 'ta' ? 'கால்நடை மந்தை மேலாண்மை' : 'Cattle Herd Setup'}
+            </h2>
+          </div>
+          <span className="mobile-hub-count-chip">
+            {totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : 'Head'}
+          </span>
+        </div>
+      </div>
+
+      {/* ── DESKTOP HEADER (> 640px) ── */}
+      <div className="desktop-cattle-hub-header" style={{
         background: 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fef3c7 100%)',
         borderBottom: '1.5px solid #cbd5e1',
         padding: '18px 24px',
@@ -676,20 +834,19 @@ export default function CattleCycleHub({
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span style={{ background: '#0f172a', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              {currentLang === 'ta' ? 'படி 2 / 6' : 'STEP 2 OF 6'}
-            </span>
-            <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>
-              {currentLang === 'ta' ? 'மாடுகள் மந்தை & உற்பத்தி சுழற்சி' : 'CATTLE HERD & PRODUCTION CYCLE'}
+            <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {currentLang === 'ta' ? 'மாடுகள் மந்தை & உற்பத்தி சுழற்சி' : currentLang === 'hi' ? 'मवेशी झुंड एवं उत्पादन चक्र' : 'CATTLE HERD & PRODUCTION CYCLE'}
             </span>
           </div>
           <h2 style={{ fontSize: '1.4rem', color: '#0f172a', fontWeight: 900, margin: '0 0 4px' }}>
-            {currentLang === 'ta' ? 'மாடுகள் மந்தை மேலாண்மை' : 'Cattle Herd Management'}
+            {currentLang === 'ta' ? 'மாடுகள் மந்தை மேலாண்மை' : currentLang === 'hi' ? 'मवेशी झुंड प्रबंधन' : 'Cattle Herd Management'}
           </h2>
           <p style={{ fontSize: '0.825rem', color: '#475569', margin: 0 }}>
             {currentLang === 'ta' 
               ? 'கீழே உள்ள சுழற்சியில் ஒவ்வொரு பருவத்தையும் தொட்டு, மாடுகளின் எண்ணிக்கையை உள்ளிட்டு, உடல் எடை மற்றும் விவரங்களை அமைக்கவும்.' 
-              : 'Tap each cattle stage in the cycle below, enter counts, and configure body weight & details on the right.'}
+              : currentLang === 'hi'
+                ? 'नीचे दिए गए चक्र में प्रत्येक अवस्था पर क्लिक करें, संख्या दर्ज करें और शरीर का वजन व विवरण सेट करें।'
+                : 'Tap each cattle stage in the cycle below, enter counts, and configure body weight & details on the right.'}
           </p>
         </div>
 
@@ -706,10 +863,10 @@ export default function CattleCycleHub({
         }}>
           <div>
             <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, display: 'block' }}>
-              {currentLang === 'ta' ? 'மொத்த மந்தை' : 'TOTAL HERD'}
+              {currentLang === 'ta' ? 'மொத்த மந்தை' : currentLang === 'hi' ? 'कुल झुंड' : 'TOTAL HERD'}
             </span>
             <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a' }}>
-              {totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : 'animals'}
+              {totalCattleCount} {currentLang === 'ta' ? 'மாடுகள்' : currentLang === 'hi' ? 'पशु' : 'animals'}
             </span>
           </div>
         </div>
@@ -741,10 +898,14 @@ export default function CattleCycleHub({
               color: '#475569',
               textTransform: 'uppercase',
             }}>
-              {currentLang === 'ta' ? 'மாடுகள் உற்பத்தி சுழற்சி' : 'Cattle Production Cycle'}
+              {currentLang === 'ta' ? 'மாடுகள் உற்பத்தி சுழற்சி' : currentLang === 'hi' ? 'मवेशी उत्पादन चक्र' : 'Cattle Production Cycle'}
             </span>
             <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '3px 0 0' }}>
-              {currentLang === 'ta' ? 'அமைக்க கீழே உள்ள ஏதேனும் ஒரு பருவத்தைத் தொடுங்கள்' : 'Click any stage in the cycle below to configure'}
+              {currentLang === 'ta' 
+                ? 'அமைக்க கீழே உள்ள ஏதேனும் ஒரு பருவத்தைத் தொடுங்கள்' 
+                : currentLang === 'hi'
+                  ? 'विवरण दर्ज करने के लिए चक्र में किसी भी अवस्था पर क्लिक करें'
+                  : 'Click any stage in the cycle below to configure'}
             </p>
           </div>
 
@@ -778,14 +939,18 @@ export default function CattleCycleHub({
 
               {/* Center Hub */}
               <circle cx={cx} cy={cy} r={60} fill="#ffffff" stroke="#e2e8f0" strokeWidth="2.5" />
-              <text x={cx} y={cy - 16} textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' ? '0' : '1.2'}>
-                {currentLang === 'ta' ? `கேள்வி ${activeStage.questionNum} / 5` : `QUESTION ${activeStage.questionNum} OF 5`}
+              <text x={cx} y={cy - 16} textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' || currentLang === 'hi' ? '0' : '1.2'}>
+                {currentLang === 'ta' 
+                  ? `கேள்வி ${activeStage.questionNum} / 5` 
+                  : currentLang === 'hi' 
+                    ? `प्रश्न ${activeStage.questionNum} / 5` 
+                    : `QUESTION ${activeStage.questionNum} OF 5`}
               </text>
               <text x={cx} y={cy + 14} textAnchor="middle" fill="#0f172a" fontSize="30" fontWeight="900">
                 {totalCattleCount}
               </text>
-              <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' ? '0' : '1'}>
-                {currentLang === 'ta' ? 'மொத்த மந்தை' : 'TOTAL HERD'}
+              <text x={cx} y={cy + 30} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="800" letterSpacing={currentLang === 'ta' || currentLang === 'hi' ? '0' : '1'}>
+                {currentLang === 'ta' ? 'மொத்த மந்தை' : currentLang === 'hi' ? 'कुल झुंड' : 'TOTAL HERD'}
               </text>
 
               {/* Stage Nodes orbiting on the circle */}
@@ -801,11 +966,7 @@ export default function CattleCycleHub({
                 return (
                   <g
                     key={s.key}
-                    onClick={() => {
-                      setVisitedStages(v => ({ ...v, [activeKey]: true }));
-                      setActiveKey(s.key);
-                      setFeedbackMessage('');
-                    }}
+                    onClick={() => handleSwitchStage(s.key)}
                     style={{ cursor: 'pointer' }}
                   >
                     {/* Pulsing ring if selected */}
@@ -944,11 +1105,7 @@ export default function CattleCycleHub({
                 <button
                   key={s.key}
                   type="button"
-                  onClick={() => {
-                    setVisitedStages(v => ({ ...v, [activeKey]: true }));
-                    setActiveKey(s.key);
-                    setFeedbackMessage('');
-                  }}
+                  onClick={() => handleSwitchStage(s.key)}
                   style={{
                     gridColumn: isLast ? 'span 2' : 'span 1',
                     display: 'flex',
@@ -995,7 +1152,15 @@ export default function CattleCycleHub({
                     background: count > 0 ? `${s.color}20` : isDone ? '#dcfce7' : '#f1f5f9',
                     color: count > 0 ? s.color : isDone ? '#15803d' : '#94a3b8',
                   }}>
-                    {count > 0 ? `${count} head` : isDone ? '✓ 0' : 'Pending'}
+                    {count > 0 
+                      ? `${count} ${currentLang === 'ta' ? 'மாடு' : currentLang === 'hi' ? 'पशु' : 'head'}` 
+                      : isDone 
+                        ? '✓ 0' 
+                        : currentLang === 'ta' 
+                          ? 'நிலுவை' 
+                          : currentLang === 'hi' 
+                            ? 'बाकी' 
+                            : 'Pending'}
                   </span>
                 </button>
               );
@@ -1004,58 +1169,69 @@ export default function CattleCycleHub({
         </div>
 
         {/* ── RIGHT COLUMN: Question-by-Question Active Cattle Flow ── */}
-        <div style={{ padding: 'clamp(14px, 2.5vw, 24px)', background: '#ffffff', overflowY: 'auto' }} className="cattle-cycle-right-col">
+        <div style={{ padding: 'clamp(14px, 2.5vw, 24px)', background: '#ffffff' }} className="cattle-cycle-right-col">
 
-          {/* Question Stepper Bar (Questions 1 to 5) */}
+          {/* Modern App Segmented Stage Switcher Bar */}
           <div 
-            className="horizontal-scroll cattle-question-stepper-bar"
+            className="cattle-question-stepper-bar"
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-start',
               gap: '6px',
-              marginBottom: '16px',
-              padding: '8px 10px',
-              background: '#f8fafc',
-              borderRadius: '14px',
-              border: '1.5px solid #e2e8f0',
+              marginBottom: '14px',
+              padding: '6px 6px',
+              background: '#f1f5f9',
+              borderRadius: '16px',
               overflowX: 'auto',
               maxWidth: '100%',
               boxSizing: 'border-box',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
             {localizedStages.map(s => {
               const isCur = activeKey === s.key;
-              const isDone = visitedStages[s.key] || counts[s.key] > 0;
+              const count = counts[s.key] || 0;
+              const isDone = visitedStages[s.key] || count > 0;
+
               return (
                 <button
                   key={s.key}
                   type="button"
-                  onClick={() => {
-                    setVisitedStages(v => ({ ...v, [activeKey]: true }));
-                    setActiveKey(s.key);
-                    setFeedbackMessage('');
-                  }}
+                  onClick={() => handleSwitchStage(s.key)}
+                  className={`cattle-stage-tab-btn ${isCur ? 'active-stage-tab' : ''}`}
                   style={{
-                    flexShrink: 0,
-                    display: 'flex',
+                    flex: '1 0 auto',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '5px',
-                    padding: '6px 10px',
-                    borderRadius: '10px',
-                    border: `1.5px solid ${isCur ? s.color : isDone ? '#86efac' : '#e2e8f0'}`,
-                    background: isCur ? s.color : isDone ? '#f0fdf4' : '#ffffff',
-                    color: isCur ? '#ffffff' : isDone ? '#15803d' : '#64748b',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: isCur ? s.color : isDone ? '#ffffff' : 'transparent',
+                    color: isCur ? '#ffffff' : isDone ? '#0f172a' : '#64748b',
+                    fontSize: '0.8rem',
+                    fontWeight: isCur ? 900 : 700,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.15s ease',
+                    transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: isCur ? `0 3px 10px ${s.color}40` : isDone ? '0 1px 3px rgba(0,0,0,0.04)' : 'none',
                   }}
                 >
-                  <span>Q{s.questionNum}: {s.shortLabel}</span>
-                  {isDone && !isCur && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '13px', height: '13px', borderRadius: '50%', background: '#16a34a', color: '#fff', fontSize: '9px' }}>✓</span>
+                  <span>{s.shortLabel}</span>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    padding: '1px 5px',
+                    borderRadius: '8px',
+                    background: isCur ? 'rgba(255,255,255,0.28)' : count > 0 ? '#dcfce7' : '#e2e8f0',
+                    color: isCur ? '#ffffff' : count > 0 ? '#15803d' : '#64748b',
+                    lineHeight: 1.2
+                  }}>
+                    {count}
+                  </span>
+                  {isDone && !isCur && count === 0 && (
+                    <span style={{ color: '#16a34a', fontSize: '10px', fontWeight: 900 }}>✓</span>
                   )}
                 </button>
               );
@@ -1094,28 +1270,36 @@ export default function CattleCycleHub({
               <span style={{
                 background: activeStage.color,
                 color: '#ffffff',
-                padding: '2px 10px',
+                padding: '3px 10px',
                 borderRadius: '20px',
                 fontSize: '0.72rem',
                 fontWeight: 900,
                 letterSpacing: '0.04em',
+                textTransform: 'uppercase',
               }}>
-                QUESTION {activeStage.questionNum} OF 5
+                {activeStage.label}
               </span>
-              <span style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                color: activeCount > 0 ? activeStage.color : '#94a3b8',
-                background: '#ffffff',
-                padding: '3px 10px',
-                borderRadius: '10px',
-                border: `1px solid ${activeStage.borderLight}`,
-              }}>
-                {activeCount} {activeStage.shortLabel} Recorded
-              </span>
+
+              {/* Stage Counter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155' }}>
+                  {activeStage.label}:
+                </span>
+                <span style={{
+                  fontSize: '1rem',
+                  fontWeight: 900,
+                  color: activeStage.color,
+                  background: '#ffffff',
+                  padding: '2px 10px',
+                  borderRadius: '12px',
+                  border: `1.5px solid ${activeStage.borderLight}`,
+                }}>
+                  {activeCount} {currentLang === 'ta' ? 'மாடுகள்' : currentLang === 'hi' ? 'पशु' : 'head'}
+                </span>
+              </div>
             </div>
 
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px' }}>
+            <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 900, margin: '0 0 4px' }}>
               {activeStage.questionTitle}
             </h3>
             <p style={{ fontSize: '0.825rem', color: '#475569', margin: 0 }}>
@@ -1123,29 +1307,19 @@ export default function CattleCycleHub({
             </p>
           </div>
 
-          {/* Special Pregnancy Question Type Selector (Question 2) */}
+          {/* Pregnancy Category Choice (First-Time vs Repeat vs Both vs None) */}
           {activeKey === 'pregnant' && (
             <div style={{
-              background: '#ffffff',
+              background: '#fffbeb',
               border: '1.5px solid #fde68a',
-              borderRadius: '16px',
+              borderRadius: '14px',
               padding: '14px 16px',
-              marginBottom: '18px',
-              boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
+              marginBottom: '16px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.84rem', fontWeight: 900, color: '#92400e' }}>
-                  What type of pregnant cattle do you have?
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#b45309', fontWeight: 800, background: '#fef3c7', padding: '2px 8px', borderRadius: '8px' }}>
-                  Click to choose
-                </span>
-              </div>
-              <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 10px' }}>
-                Select whether they are first-time pregnant heifers, repeat pregnant cows, or both:
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#92400e', marginBottom: '8px' }}>
+                {currentLang === 'ta' ? 'சினை வகை தேர்வு:' : currentLang === 'hi' ? 'गर्भावस्था श्रेणी चयन:' : 'Choose Pregnancy Category:'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1163,10 +1337,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: pregnancyTypeChoice === 'firstTime' ? '#92400e' : '#1e293b' }}>
-                    First-Time
+                    {currentLang === 'ta' ? '1-ம் சினை' : currentLang === 'hi' ? 'प्रथम गर्भ (बछिया)' : '1st Pregnancy'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    Heifers pregnant 1st time
+                    {currentLang === 'ta' ? 'முதல் முறை சினை கிடாரிகள்' : currentLang === 'hi' ? 'पहली बार गर्भवती हीफर' : 'Heifers pregnant for 1st time'}
                   </div>
                 </button>
 
@@ -1187,10 +1361,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: pregnancyTypeChoice === 'repeat' ? '#92400e' : '#1e293b' }}>
-                    Repeat Pregnant
+                    {currentLang === 'ta' ? 'மறு சினை' : currentLang === 'hi' ? 'पुनः गर्भ (अनुभवी गायें)' : 'Repeat Pregnancy'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    Cows with prior calvings
+                    {currentLang === 'ta' ? 'முன்பே ஈன்ற முதிர்ந்த மாடுகள்' : currentLang === 'hi' ? 'पहले ब्याई परिपक्व गायें' : 'Cows already calved before'}
                   </div>
                 </button>
 
@@ -1211,10 +1385,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: pregnancyTypeChoice === 'both' ? '#92400e' : '#1e293b' }}>
-                    Both Types
+                    {currentLang === 'ta' ? 'இரண்டும் (கலவை)' : currentLang === 'hi' ? 'दोनों (मिश्रित)' : 'Mixed (Both)'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    Both in farm herd
+                    {currentLang === 'ta' ? '1-ம் மற்றும் மறு சினை இரண்டும்' : currentLang === 'hi' ? 'पहली बार और पुनः दोनों' : 'Both 1st & repeat pregnant'}
                   </div>
                 </button>
 
@@ -1236,39 +1410,29 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: pregnancyTypeChoice === 'none' && unifiedPregnant.length === 0 ? '#15803d' : '#1e293b' }}>
-                    No Pregnant (0)
+                    {currentLang === 'ta' ? 'சினை மாடுகள் இல்லை (0)' : currentLang === 'hi' ? 'कोई गर्भवती नहीं (0)' : 'No Pregnant (0)'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    No pregnant cattle
+                    {currentLang === 'ta' ? 'பண்ணையில் சினை மாடுகள் இல்லை' : currentLang === 'hi' ? 'फार्म पर कोई गर्भवती पशु नहीं' : 'No pregnant cattle on farm'}
                   </div>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Special Lactation Question Type Selector (Question 3) */}
+          {/* Lactating Parity Choice (1st vs 2nd+ vs Both vs None) */}
           {activeKey === 'lactating' && (
             <div style={{
-              background: '#ffffff',
-              border: '1.5px solid #bbf7d0',
-              borderRadius: '16px',
+              background: '#ecfdf5',
+              border: '1.5px solid #a7f3d0',
+              borderRadius: '14px',
               padding: '14px 16px',
-              marginBottom: '18px',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.08)',
+              marginBottom: '16px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.84rem', fontWeight: 900, color: '#065f46' }}>
-                  What type of milking / lactating cattle do you have?
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#047857', fontWeight: 800, background: '#d1fae5', padding: '2px 8px', borderRadius: '8px' }}>
-                  Click to choose
-                </span>
-              </div>
-              <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '0 0 10px' }}>
-                Select whether your cows are in their 1st lactation (1st calvers), 2nd+ lactation (multiparous), or both:
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: '8px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#047857', marginBottom: '8px' }}>
+                {currentLang === 'ta' ? 'கறவை வகை தேர்வு (ஈத்து):' : currentLang === 'hi' ? 'ब्यात / दुग्धपान प्रकार चुनें:' : 'Choose Lactation / Parity Type:'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1286,10 +1450,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: lactationTypeChoice === 'first_lactation' ? '#047857' : '#1e293b' }}>
-                    🌱 1st Lactation
+                    {currentLang === 'ta' ? '1-ம் ஈத்து' : currentLang === 'hi' ? 'प्रथम ब्यात (1st Calver)' : '1st Lactation'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    1st calvers / primiparous
+                    {currentLang === 'ta' ? 'முதல் ஈத்து மாடுகள்' : currentLang === 'hi' ? 'पहली बार ब्याई गायें' : '1st calvers / primiparous'}
                   </div>
                 </button>
 
@@ -1310,10 +1474,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: lactationTypeChoice === 'second_plus' ? '#047857' : '#1e293b' }}>
-                    🥛 2nd+ Lactation
+                    {currentLang === 'ta' ? '2+ ஈத்துகள்' : currentLang === 'hi' ? '2+ ब्यात (2nd+ Calver)' : '2nd+ Lactation'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    2+ calvers / multiparous
+                    {currentLang === 'ta' ? '2 அல்லது அதற்கு மேற்பட்ட ஈத்துகள்' : currentLang === 'hi' ? 'दो या अधिक बार ब्याई गायें' : '2+ calvers / multiparous'}
                   </div>
                 </button>
 
@@ -1334,10 +1498,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: lactationTypeChoice === 'both' ? '#047857' : '#1e293b' }}>
-                    Mixed (Both)
+                    {currentLang === 'ta' ? 'இரண்டும் (கலவை)' : currentLang === 'hi' ? 'दोनों (मिश्रित झुंड)' : 'Mixed (Both)'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    Both 1st & 2nd+ in herd
+                    {currentLang === 'ta' ? '1-ம் மற்றும் 2+ ஈத்துகள் இரண்டும்' : currentLang === 'hi' ? 'प्रथम और 2+ ब्यात दोनों' : 'Both 1st & 2nd+ in herd'}
                   </div>
                 </button>
 
@@ -1359,10 +1523,10 @@ export default function CattleCycleHub({
                   }}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 900, color: lactationTypeChoice === 'none' && lactatingData.length === 0 ? '#15803d' : '#1e293b' }}>
-                    No Milking (0)
+                    {currentLang === 'ta' ? 'கறவை மாடுகள் இல்லை (0)' : currentLang === 'hi' ? 'कोई दुधारू नहीं (0)' : 'No Milking (0)'}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                    No milking cows
+                    {currentLang === 'ta' ? 'பண்ணையில் கறவை மாடுகள் இல்லை' : currentLang === 'hi' ? 'फार्म पर कोई दुधारू गाय नहीं' : 'No milking cows'}
                   </div>
                 </button>
               </div>
@@ -1411,7 +1575,11 @@ export default function CattleCycleHub({
             </button>
 
             <span style={{ fontSize: '0.78rem', fontWeight: 800, color: activeStage.color, marginBottom: '12px' }}>
-              👆 Tap image to add 1 {activeStage.shortLabel}
+              {currentLang === 'ta' 
+                ? `1 ${activeStage.shortLabel} சேர்க்க படத்தை அழுத்தவும்` 
+                : currentLang === 'hi' 
+                  ? `1 ${activeStage.shortLabel} जोड़ने के लिए चित्र पर क्लिक करें` 
+                  : `Tap image to add 1 ${activeStage.shortLabel}`}
             </span>
 
             {/* Special Sub-Buttons when Both pregnancy types chosen */}
@@ -1431,7 +1599,7 @@ export default function CattleCycleHub({
                     cursor: 'pointer',
                   }}
                 >
-                  + Add 1st-Time ({firstTimeCattle.length})
+                  {currentLang === 'ta' ? '+ 1-ம் சினை சேர்க்க' : currentLang === 'hi' ? '+ प्रथम गर्भ जोड़ें' : '+ Add 1st-Time'} ({firstTimeCattle.length})
                 </button>
                 <button
                   type="button"
@@ -1447,7 +1615,7 @@ export default function CattleCycleHub({
                     cursor: 'pointer',
                   }}
                 >
-                  + Add Repeat ({repeatCattle.length})
+                  {currentLang === 'ta' ? '+ மறு சினை சேர்க்க' : currentLang === 'hi' ? '+ पुनः गर्भ जोड़ें' : '+ Add Repeat'} ({repeatCattle.length})
                 </button>
               </div>
             )}
@@ -1469,7 +1637,7 @@ export default function CattleCycleHub({
                     cursor: 'pointer',
                   }}
                 >
-                  + Add 1st Lactation ({lactatingData.filter(l => l.isFirstLactation || l.lactationType === 'first_lactation' || l.parity === 1).length})
+                  {currentLang === 'ta' ? '+ 1-ம் ஈத்து சேர்க்க' : currentLang === 'hi' ? '+ प्रथम ब्यात जोड़ें' : '+ Add 1st Lactation'} ({lactatingData.filter(l => l.isFirstLactation || l.lactationType === 'first_lactation' || l.parity === 1).length})
                 </button>
                 <button
                   type="button"
@@ -1485,7 +1653,7 @@ export default function CattleCycleHub({
                     cursor: 'pointer',
                   }}
                 >
-                  + Add 2nd+ Lactation ({lactatingData.filter(l => !(l.isFirstLactation || l.lactationType === 'first_lactation' || l.parity === 1)).length})
+                  {currentLang === 'ta' ? '+ 2+ ஈத்துகள் சேர்க்க' : currentLang === 'hi' ? '+ 2+ ब्यात जोड़ें' : '+ Add 2nd+ Lactation'} ({lactatingData.filter(l => !(l.isFirstLactation || l.lactationType === 'first_lactation' || l.parity === 1)).length})
                 </button>
               </div>
             )}
@@ -1559,7 +1727,7 @@ export default function CattleCycleHub({
             {/* Quick Count Select Buttons */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
               <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748b', marginRight: '4px' }}>
-                Quick:
+                {currentLang === 'ta' ? 'விரைவு:' : currentLang === 'hi' ? 'त्वरित:' : 'Quick:'}
               </span>
               {QUICK_COUNTS.map(qty => {
                 const isSelected = activeCount === qty;
@@ -1580,7 +1748,9 @@ export default function CattleCycleHub({
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {qty === 0 ? '0 (None)' : qty}
+                    {qty === 0 
+                      ? (currentLang === 'ta' ? '0 (இல்லை)' : currentLang === 'hi' ? '0 (कोई नहीं)' : '0 (None)') 
+                      : qty}
                   </button>
                 );
               })}
@@ -1600,7 +1770,7 @@ export default function CattleCycleHub({
                     marginLeft: '8px',
                   }}
                 >
-                  Clear all
+                  {currentLang === 'ta' ? 'அனைத்தையும் நீக்கு' : currentLang === 'hi' ? 'सभी हटाएं' : 'Clear all'}
                 </button>
               )}
             </div>
@@ -1619,10 +1789,18 @@ export default function CattleCycleHub({
               marginBottom: '20px',
             }}>
               <p style={{ fontSize: '0.88rem', color: '#475569', fontWeight: 700, margin: '0 0 8px' }}>
-                No {activeStage.label} on your farm?
+                {currentLang === 'ta' 
+                  ? `${activeStage.label} உங்கள் பண்ணையில் இல்லையா?` 
+                  : currentLang === 'hi'
+                    ? `क्या आपके फार्म पर कोई ${activeStage.label} नहीं है?`
+                    : `No ${activeStage.label} on your farm?`}
               </p>
               <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: '0 0 14px' }}>
-                That's completely fine! You can proceed to the next cattle stage in the cycle, or tap the cartoon avatar above to add.
+                {currentLang === 'ta'
+                  ? 'பரவாயில்லை! நீங்கள் சுழற்சியில் அடுத்த மாட்டு நிலைக்குச் செல்லலாம், அல்லது சேர்க்க மேலே உள்ள படத்தைத் தட்டலாம்.'
+                  : currentLang === 'hi'
+                    ? 'कोई बात नहीं! आप चक्र में अगले मवेशी चरण पर आगे बढ़ सकते हैं, या जोड़ने के लिए ऊपर दिए गए चित्र पर टैप कर सकते हैं।'
+                    : "That's completely fine! You can proceed to the next cattle stage in the cycle, or tap the cartoon avatar above to add."}
               </p>
               {activeStage.nextKey ? (
                 <button
@@ -1635,7 +1813,13 @@ export default function CattleCycleHub({
                   className="btn-secondary"
                   style={{ padding: '8px 16px', fontSize: '0.825rem', display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 800 }}
                 >
-                  <span>Confirm 0 & Go to Question {activeStage.questionNum + 1}: {activeStage.nextLabel}</span>
+                  <span>
+                    {currentLang === 'ta'
+                      ? `0 என உறுதிசெய்து கேள்வி ${activeStage.questionNum + 1}-க்குச் செல்க: ${activeStage.nextLabel}`
+                      : currentLang === 'hi'
+                        ? `0 की पुष्टि करें और प्रश्न ${activeStage.questionNum + 1} पर जाएं: ${activeStage.nextLabel}`
+                        : `Confirm 0 & Go to Question ${activeStage.questionNum + 1}: ${activeStage.nextLabel}`}
+                  </span>
                   <ArrowRight size={14} />
                 </button>
               ) : (
@@ -1644,12 +1828,18 @@ export default function CattleCycleHub({
                   onClick={() => {
                     setVisitedStages(v => ({ ...v, [activeKey]: true }));
                     setFeedbackMessage('');
-                    handleAttemptNext();
+                    handleProceedToGrazing();
                   }}
                   className="btn-primary"
                   style={{ padding: '8px 16px', fontSize: '0.825rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <span>Confirm 0 & Finish Herd Setup</span>
+                  <span>
+                    {currentLang === 'ta'
+                      ? '0 என உறுதிசெய்து மந்தை அமைப்பை முடிக்கவும்'
+                      : currentLang === 'hi'
+                        ? '0 की पुष्टि करें और मवेशी सेटअप पूरा करें'
+                        : 'Confirm 0 & Finish Herd Setup'}
+                  </span>
                   <ArrowRight size={14} />
                 </button>
               )}
@@ -1668,7 +1858,11 @@ export default function CattleCycleHub({
                 gap: '8px',
               }}>
                 <span style={{ fontSize: '0.82rem', fontWeight: 900, color: activeStage.color }}>
-                  ENTER DATA FOR EACH {activeStage.shortLabel.toUpperCase()} ({activeCount})
+                  {currentLang === 'ta'
+                    ? `ஒவ்வொரு ${activeStage.shortLabel}-க்கும் விவரங்களை உள்ளிடவும் (${activeCount})`
+                    : currentLang === 'hi'
+                      ? `प्रत्येक ${activeStage.shortLabel} के लिए विवरण दर्ज करें (${activeCount})`
+                      : `ENTER DATA FOR EACH ${activeStage.shortLabel.toUpperCase()} (${activeCount})`}
                 </span>
 
                 {activeCount > 1 && (
@@ -1685,10 +1879,14 @@ export default function CattleCycleHub({
                       color: activeStage.color,
                       borderColor: activeStage.borderLight,
                     }}
-                    title="Copy details from #1 to all"
+                    title={currentLang === 'ta' ? '#1 விவரங்களை அனைவருக்கும் நகலெடு' : currentLang === 'hi' ? '#1 का विवरण सभी में कॉपी करें' : 'Copy details from #1 to all'}
                   >
                     <Copy size={12} />
-                    Copy #1 to all {activeStage.shortLabel}s
+                    {currentLang === 'ta'
+                      ? `#1-ன் விவரங்களை அனைவருக்கும் நகலெடு (${activeStage.shortLabel})`
+                      : currentLang === 'hi'
+                        ? `#1 का विवरण सभी ${activeStage.shortLabel} में कॉपी करें`
+                        : `Copy #1 to all ${activeStage.shortLabel}s`}
                   </button>
                 )}
               </div>
@@ -1752,20 +1950,22 @@ export default function CattleCycleHub({
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
-                                Heifer #{i + 1}
+                                {currentLang === 'ta' ? `கிடாரி #${i + 1}` : currentLang === 'hi' ? `बछिया #${i + 1}` : `Heifer #${i + 1}`}
                               </span>
                               {hasWeight ? (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ✓ Ready
+                                  {currentLang === 'ta' ? 'தயார்' : currentLang === 'hi' ? 'तैयार' : 'Ready'}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ⚠️ Select Weight
+                                  {currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select Weight'}
                                 </span>
                               )}
                             </div>
                             <span style={{ fontSize: '0.70rem', color: hasWeight ? '#64748b' : '#dc2626', fontWeight: 600 }}>
-                              {hasWeight ? `${h.weight} kg • ${h.ageMonths || 18} months` : 'Body weight required'}
+                              {hasWeight 
+                                ? `${h.weight} kg${h.ageMonths ? ` • ${h.ageMonths} ${currentLang === 'ta' ? 'மாதங்கள்' : currentLang === 'hi' ? 'माह' : 'months'}` : ''}` 
+                                : (currentLang === 'ta' ? 'உடல் எடை தேவை' : currentLang === 'hi' ? 'शारीरिक वजन आवश्यक' : 'Body weight required')}
                             </span>
                           </div>
                         </div>
@@ -1778,7 +1978,7 @@ export default function CattleCycleHub({
                             setHeifersData(updated);
                           }}
                           style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
-                          title="Remove Heifer"
+                          title={currentLang === 'ta' ? 'கிடாரியை நீக்கு' : currentLang === 'hi' ? 'बछिया हटाएं' : 'Remove Heifer'}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -1788,23 +1988,24 @@ export default function CattleCycleHub({
                         value={h.weight}
                         onChange={val => updateHeifer(i, 'weight', val)}
                         ranges={HEIFER_WEIGHT_RANGES}
-                        label="Body Weight"
+                        label={currentLang === 'ta' ? 'உடல் எடை' : currentLang === 'hi' ? 'शारीरिक वजन' : 'Body Weight'}
                         accentColor={activeStage.color}
+                        currentLang={currentLang}
                       />
 
                       {/* Age in Months Chips */}
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Age (12+ Months)
+                            {currentLang === 'ta' ? 'வயது (12+ மாதங்கள்):' : currentLang === 'hi' ? 'उम्र (12+ माह):' : 'Age (12+ Months):'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {h.ageMonths || 18} months
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: h.ageMonths ? activeStage.color : '#dc2626' }}>
+                            {h.ageMonths ? `${h.ageMonths} ${currentLang === 'ta' ? 'மாதங்கள்' : currentLang === 'hi' ? 'माह' : 'months'}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'उम्र चुनें' : 'Select Age')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {HEIFER_AGE_CHIPS.map(age => {
-                            const isSel = Number(h.ageMonths || 18) === age;
+                            const isSel = h.ageMonths !== '' && h.ageMonths !== undefined && Number(h.ageMonths) === age;
                             return (
                               <button
                                 key={age}
@@ -1831,6 +2032,8 @@ export default function CattleCycleHub({
                 {/* 2. PREGNANT CARDS */}
                 {activeKey === 'pregnant' && unifiedPregnant.map((p, i) => {
                   const hasWeight = Boolean(p.weight && Number(p.weight) > 0);
+                  const hasPregDays = Boolean(p.pregDays !== '' && p.pregDays !== undefined && Number(p.pregDays) > 0);
+                  const isValid = hasWeight && hasPregDays;
                   const isRepeat = p.category === 'repeat';
                   return (
                     <div
@@ -1839,10 +2042,10 @@ export default function CattleCycleHub({
                       className="cattle-icon-anim"
                       style={{
                         background: '#ffffff',
-                        border: `1.5px solid ${hasWeight ? activeStage.borderLight : '#f87171'}`,
+                        border: `1.5px solid ${isValid ? activeStage.borderLight : '#f87171'}`,
                         borderRadius: '14px',
                         padding: '12px 14px',
-                        boxShadow: hasWeight ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
+                        boxShadow: isValid ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1854,7 +2057,7 @@ export default function CattleCycleHub({
                             height: '46px',
                             borderRadius: '10px',
                             overflow: 'hidden',
-                            border: `2px solid ${hasWeight ? activeStage.color : '#ef4444'}`,
+                            border: `2px solid ${isValid ? activeStage.color : '#ef4444'}`,
                             flexShrink: 0,
                             background: '#f8fafc',
                           }}>
@@ -1868,7 +2071,7 @@ export default function CattleCycleHub({
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              background: hasWeight ? activeStage.color : '#ef4444',
+                              background: isValid ? activeStage.color : '#ef4444',
                               color: '#ffffff',
                               fontSize: '0.62rem',
                               fontWeight: 900,
@@ -1883,20 +2086,30 @@ export default function CattleCycleHub({
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
-                                {isRepeat ? 'Repeat Cow' : '1st Time Heifer'} #{i + 1}
+                                {isRepeat 
+                                  ? (currentLang === 'ta' ? `மறு சினை மாடு #${i + 1}` : currentLang === 'hi' ? `पुनः गर्भवती गाय #${i + 1}` : `Repeat Cow #${i + 1}`) 
+                                  : (currentLang === 'ta' ? `1-ம் சினை கிடாரி #${i + 1}` : currentLang === 'hi' ? `पहली बार गर्भवती बछिया #${i + 1}` : `1st Time Heifer #${i + 1}`)}
                               </span>
-                              {hasWeight ? (
+                              {isValid ? (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ✓ Ready
+                                  {currentLang === 'ta' ? 'தயார்' : currentLang === 'hi' ? 'तैयार' : 'Ready'}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ⚠️ Select Weight
+                                  {!hasWeight 
+                                    ? (currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select Weight') 
+                                    : (currentLang === 'ta' ? 'நாட்கள் தேர்வு செய்க' : currentLang === 'hi' ? 'दिन चुनें' : 'Select Days')}
                                 </span>
                               )}
                             </div>
-                            <span style={{ fontSize: '0.70rem', color: hasWeight ? '#64748b' : '#dc2626', fontWeight: 600 }}>
-                              {hasWeight ? `${p.weight} kg • ${p.pregDays || 150} days pregnant` : 'Body weight required'}
+                            <span style={{ fontSize: '0.70rem', color: isValid ? '#64748b' : '#dc2626', fontWeight: 600 }}>
+                              {isValid 
+                                ? `${p.weight} kg • ${p.pregDays} ${currentLang === 'ta' ? 'நாட்கள் சினை' : currentLang === 'hi' ? 'दिन का गर्भ' : 'days pregnant'}` 
+                                : (hasWeight 
+                                  ? `${p.weight} kg • ${currentLang === 'ta' ? 'சினை நாட்களைத் தேர்வு செய்க' : currentLang === 'hi' ? 'गर्भ के दिन चुनें' : 'Select pregnant days'}` 
+                                  : (hasPregDays 
+                                    ? `${p.pregDays} ${currentLang === 'ta' ? 'நாட்கள் சினை • எடை தேர்வு செய்க' : currentLang === 'hi' ? 'दिन का गर्भ • वजन चुनें' : 'days pregnant • Select weight'}` 
+                                    : (currentLang === 'ta' ? 'எடை மற்றும் சினை நாட்கள் தேவை' : currentLang === 'hi' ? 'वजन और गर्भ के दिन आवश्यक' : 'Body weight & days required')))}
                             </span>
                           </div>
                         </div>
@@ -1909,7 +2122,7 @@ export default function CattleCycleHub({
                             commitPregnant(updated);
                           }}
                           style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
-                          title="Remove Pregnant Cattle"
+                          title={currentLang === 'ta' ? 'சினை மாட்டை நீக்கு' : currentLang === 'hi' ? 'गर्भवती पशु हटाएं' : 'Remove Pregnant Cattle'}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -1928,7 +2141,7 @@ export default function CattleCycleHub({
                             fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
                           }}
                         >
-                          Repeat Pregnant
+                          {currentLang === 'ta' ? 'மறு சினை' : currentLang === 'hi' ? 'पुनः गर्भ' : 'Repeat Pregnant'}
                         </button>
                         <button
                           type="button"
@@ -1941,7 +2154,7 @@ export default function CattleCycleHub({
                             fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
                           }}
                         >
-                          1st Time (Heifer)
+                          {currentLang === 'ta' ? '1-ம் சினை (கிடாரி)' : currentLang === 'hi' ? 'पहली बार (बछिया)' : '1st Time (Heifer)'}
                         </button>
                       </div>
 
@@ -1949,23 +2162,24 @@ export default function CattleCycleHub({
                         value={p.weight}
                         onChange={val => updatePregnant(i, 'weight', val)}
                         ranges={COW_WEIGHT_RANGES}
-                        label="Body Weight"
+                        label={currentLang === 'ta' ? 'உடல் எடை' : currentLang === 'hi' ? 'शारीरिक वजन' : 'Body Weight'}
                         accentColor={activeStage.color}
+                        currentLang={currentLang}
                       />
 
                       {/* Days Pregnant Chips */}
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Days Pregnant
+                            {currentLang === 'ta' ? 'சினை நாட்கள்:' : currentLang === 'hi' ? 'गर्भ के दिन:' : 'Days Pregnant:'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {p.pregDays || 150} days
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: p.pregDays ? activeStage.color : '#dc2626' }}>
+                            {p.pregDays ? `${p.pregDays} ${currentLang === 'ta' ? 'நாட்கள்' : currentLang === 'hi' ? 'दिन' : 'days'}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'दिन चुनें' : 'Select Days')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {PREG_DAYS_CHIPS.map(days => {
-                            const isSel = Number(p.pregDays || 150) === days;
+                            const isSel = p.pregDays !== '' && p.pregDays !== undefined && Number(p.pregDays) === days;
                             return (
                               <button
                                 key={days}
@@ -1992,9 +2206,8 @@ export default function CattleCycleHub({
                 {/* 3. LACTATING CARDS */}
                 {activeKey === 'lactating' && lactatingData.map((l, i) => {
                   const isFirstLact = l.isFirstLactation === true || l.lactationType === 'first_lactation' || l.parity === 1;
-                  const curBcs = l.bcs !== undefined && l.bcs !== '' ? Number(l.bcs) : 3.0;
-                  const rawStage = String(l.stage || 'mid').toLowerCase();
-                  const curStage = rawStage.includes('early') ? 'early' : rawStage.includes('late') ? 'late' : 'mid';
+                  const curBcs = l.bcs !== undefined && l.bcs !== '' ? Number(l.bcs) : '';
+                  const curStage = l.stage ? String(l.stage).toLowerCase() : '';
 
                   const hasWeight = Boolean(l.weight && Number(l.weight) > 0);
                   const hasMilkYield = Boolean(l.milkYield !== '' && l.milkYield !== undefined && Number(l.milkYield) > 0);
@@ -2052,20 +2265,24 @@ export default function CattleCycleHub({
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
-                                Milking Cow #{i + 1}
+                                {currentLang === 'ta' ? `கறவை மாடு #${i + 1}` : currentLang === 'hi' ? `दुधारू गाय #${i + 1}` : `Milking Cow #${i + 1}`}
                               </span>
                               {isValid ? (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ✓ Ready
+                                  {currentLang === 'ta' ? 'தயார்' : currentLang === 'hi' ? 'तैयार' : 'Ready'}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ⚠️ {!hasWeight ? 'Weight' : !hasMilkYield ? 'Milk Yield' : 'Milk Fat'}
+                                  {!hasWeight 
+                                    ? (currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select Weight') 
+                                    : !hasMilkYield 
+                                      ? (currentLang === 'ta' ? 'பால் அளவு தேர்வு செய்க' : currentLang === 'hi' ? 'दूध मात्रा चुनें' : 'Select Milk Yield') 
+                                      : (currentLang === 'ta' ? 'கொழுப்பு % தேர்வு செய்க' : currentLang === 'hi' ? 'फैट % चुनें' : 'Select Milk Fat')}
                                 </span>
                               )}
                             </div>
                             <span style={{ fontSize: '0.70rem', color: isValid ? '#64748b' : '#dc2626', fontWeight: 600 }}>
-                              {hasWeight ? `${l.weight} kg` : 'Weight required'} • {l.milkYield || 10} L/d • {l.milkFat || 4.2}% Fat
+                              {hasWeight ? `${l.weight} kg` : (currentLang === 'ta' ? 'எடை தேவை' : currentLang === 'hi' ? 'वजन आवश्यक' : 'Weight required')} • {hasMilkYield ? `${l.milkYield} ${currentLang === 'ta' ? 'லி/நாள்' : currentLang === 'hi' ? 'ली/दिन' : 'L/d'}` : (currentLang === 'ta' ? 'பால் அளவு தேவை' : currentLang === 'hi' ? 'दूध मात्रा आवश्यक' : 'Milk yield required')} • {hasMilkFat ? `${l.milkFat}% ${currentLang === 'ta' ? 'கொழுப்பு' : currentLang === 'hi' ? 'फैट' : 'Fat'}` : (currentLang === 'ta' ? 'கொழுப்பு % தேவை' : currentLang === 'hi' ? 'फैट % आवश्यक' : 'Fat % required')}
                             </span>
                           </div>
                         </div>
@@ -2078,7 +2295,7 @@ export default function CattleCycleHub({
                             setLactatingData(updated);
                           }}
                           style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
-                          title="Remove Milking Cow"
+                          title={currentLang === 'ta' ? 'கறவை மாட்டை நீக்கு' : currentLang === 'hi' ? 'दुधारू गाय हटाएं' : 'Remove Milking Cow'}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -2087,7 +2304,7 @@ export default function CattleCycleHub({
                       {/* 1st Lactation vs 2nd+ Lactation Toggle */}
                       <div style={{ marginBottom: '7px' }}>
                         <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: '3px' }}>
-                          Lactation Number / Calver
+                          {currentLang === 'ta' ? 'கறவை ஈத்து வகை:' : currentLang === 'hi' ? 'ब्यात प्रकार:' : 'Lactation Number / Calver:'}
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button
@@ -2102,8 +2319,8 @@ export default function CattleCycleHub({
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                             }}
                           >
-                            <span>🌱 1st Lactation</span>
-                            <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>(1st Calver)</span>
+                            <span>{currentLang === 'ta' ? '1-ம் ஈத்து' : currentLang === 'hi' ? 'प्रथम ब्यात' : '1st Lactation'}</span>
+                            <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>({currentLang === 'ta' ? 'முதல் ஈத்து' : currentLang === 'hi' ? 'प्रथम ब्यात' : '1st Calver'})</span>
                           </button>
                           <button
                             type="button"
@@ -2117,8 +2334,8 @@ export default function CattleCycleHub({
                               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                             }}
                           >
-                            <span>🥛 2nd+ Lactation</span>
-                            <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>(2+ Calver)</span>
+                            <span>{currentLang === 'ta' ? '2+ ஈத்துகள்' : currentLang === 'hi' ? '2+ ब्यात' : '2nd+ Lactation'}</span>
+                            <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>({currentLang === 'ta' ? 'மறு ஈத்து' : currentLang === 'hi' ? 'पुनः ब्यात' : '2+ Calver'})</span>
                           </button>
                         </div>
                       </div>
@@ -2127,23 +2344,24 @@ export default function CattleCycleHub({
                         value={l.weight}
                         onChange={val => updateLactating(i, 'weight', val)}
                         ranges={COW_WEIGHT_RANGES}
-                        label="Body Weight"
+                        label={currentLang === 'ta' ? 'உடல் எடை' : currentLang === 'hi' ? 'शारीरिक वजन' : 'Body Weight'}
                         accentColor={activeStage.color}
+                        currentLang={currentLang}
                       />
 
                       {/* Daily Milk Yield */}
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Daily Milk Yield (L/day)
+                            {currentLang === 'ta' ? 'தினசரி பால் அளவு (லி/நாள்):' : currentLang === 'hi' ? 'दैनिक दूध उत्पादन (लीटर/दिन):' : 'Daily Milk Yield (L/day):'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {l.milkYield || 10} Litres/day
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: hasMilkYield ? activeStage.color : '#dc2626' }}>
+                            {hasMilkYield ? `${l.milkYield} ${currentLang === 'ta' ? 'லிட்டர்/நாள்' : currentLang === 'hi' ? 'लीटर/दिन' : 'Litres/day'}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'दूध चुनें' : 'Select Milk Yield')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {MILK_YIELD_CHIPS.map(yieldVal => {
-                            const isSel = Number(l.milkYield) === yieldVal;
+                            const isSel = l.milkYield !== '' && l.milkYield !== undefined && Number(l.milkYield) === yieldVal;
                             return (
                               <button
                                 key={yieldVal}
@@ -2157,7 +2375,7 @@ export default function CattleCycleHub({
                                   fontSize: '0.72rem', fontWeight: isSel ? 800 : 600, cursor: 'pointer',
                                 }}
                               >
-                                {yieldVal} L
+                                {yieldVal} L/d
                               </button>
                             );
                           })}
@@ -2168,20 +2386,20 @@ export default function CattleCycleHub({
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Milk Fat %
+                            {currentLang === 'ta' ? 'பால் கொழுப்பு சதவீதம் (%):' : currentLang === 'hi' ? 'दूध फैट प्रतिशत (%):' : 'Milk Fat Percentage (%):'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {l.milkFat || 4.2}%
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: hasMilkFat ? activeStage.color : '#dc2626' }}>
+                            {hasMilkFat ? `${l.milkFat}% ${currentLang === 'ta' ? 'கொழுப்பு' : currentLang === 'hi' ? 'फैट' : 'Fat'}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'फैट चुनें' : 'Select Fat %')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {MILK_FAT_CHIPS.map(fat => {
-                            const isSel = Number(l.milkFat) === fat;
+                          {MILK_FAT_CHIPS.map(fatVal => {
+                            const isSel = l.milkFat !== '' && l.milkFat !== undefined && Number(l.milkFat) === fatVal;
                             return (
                               <button
-                                key={fat}
+                                key={fatVal}
                                 type="button"
-                                onClick={() => updateLactating(i, 'milkFat', fat)}
+                                onClick={() => updateLactating(i, 'milkFat', fatVal)}
                                 style={{
                                   padding: '3px 8px', borderRadius: '10px',
                                   border: `1.5px solid ${isSel ? activeStage.color : '#e2e8f0'}`,
@@ -2190,7 +2408,7 @@ export default function CattleCycleHub({
                                   fontSize: '0.72rem', fontWeight: isSel ? 800 : 600, cursor: 'pointer',
                                 }}
                               >
-                                {fat}%
+                                {fatVal}%
                               </button>
                             );
                           })}
@@ -2203,13 +2421,13 @@ export default function CattleCycleHub({
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
                             Body Condition Score (BCS)
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            BCS {curBcs}
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: curBcs !== '' ? activeStage.color : '#dc2626' }}>
+                            {curBcs !== '' ? `BCS ${curBcs}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'BCS चुनें' : 'Select BCS')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {BCS_OPTIONS.map(opt => {
-                            const isSel = Math.abs(curBcs - opt.val) < 0.1;
+                            const isSel = curBcs !== '' && Math.abs(Number(curBcs) - opt.val) < 0.1;
                             return (
                               <button
                                 key={opt.val}
@@ -2236,13 +2454,13 @@ export default function CattleCycleHub({
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
                             Lactation Stage / DIM
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {curStage === 'early' ? 'Early (<100d)' : curStage === 'late' ? 'Late (>200d)' : 'Mid (100–200d)'}
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: curStage ? activeStage.color : '#dc2626' }}>
+                            {curStage ? (curStage === 'early' ? 'Early (<100d)' : curStage === 'late' ? 'Late (>200d)' : 'Mid (100–200d)') : (currentLang === 'ta' ? 'தேர்வு செய்க' : 'Select Stage')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {LACTATION_STAGE_CHIPS.map(chip => {
-                            const isSel = curStage === chip.val;
+                            const isSel = Boolean(curStage && curStage === chip.val);
                             return (
                               <button
                                 key={chip.val}
@@ -2271,6 +2489,9 @@ export default function CattleCycleHub({
                 {/* 4. DRY COWS CARDS */}
                 {activeKey === 'dry' && dryCowsData.map((d, i) => {
                   const hasWeight = Boolean(d.weight && Number(d.weight) > 0);
+                  const hasDryDays = Boolean(d.dryDays !== '' && d.dryDays !== undefined && Number(d.dryDays) > 0);
+                  const isValid = hasWeight && hasDryDays;
+
                   return (
                     <div
                       key={d.id || i}
@@ -2278,10 +2499,10 @@ export default function CattleCycleHub({
                       className="cattle-icon-anim"
                       style={{
                         background: '#ffffff',
-                        border: `1.5px solid ${hasWeight ? activeStage.borderLight : '#f87171'}`,
+                        border: `1.5px solid ${isValid ? activeStage.borderLight : '#f87171'}`,
                         borderRadius: '14px',
                         padding: '12px 14px',
-                        boxShadow: hasWeight ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
+                        boxShadow: isValid ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -2293,7 +2514,7 @@ export default function CattleCycleHub({
                             height: '46px',
                             borderRadius: '10px',
                             overflow: 'hidden',
-                            border: `2px solid ${hasWeight ? activeStage.color : '#ef4444'}`,
+                            border: `2px solid ${isValid ? activeStage.color : '#ef4444'}`,
                             flexShrink: 0,
                             background: '#f8fafc',
                           }}>
@@ -2307,7 +2528,7 @@ export default function CattleCycleHub({
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              background: hasWeight ? activeStage.color : '#ef4444',
+                              background: isValid ? activeStage.color : '#ef4444',
                               color: '#ffffff',
                               fontSize: '0.62rem',
                               fontWeight: 900,
@@ -2322,20 +2543,28 @@ export default function CattleCycleHub({
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
-                                Dry Cow #{i + 1}
+                                {currentLang === 'ta' ? `வற்றிய மாடு #${i + 1}` : currentLang === 'hi' ? `सूखी गाय #${i + 1}` : `Dry Cow #${i + 1}`}
                               </span>
-                              {hasWeight ? (
+                              {isValid ? (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ✓ Ready
+                                  {currentLang === 'ta' ? 'தயார்' : currentLang === 'hi' ? 'तैयार' : 'Ready'}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ⚠️ Select Weight
+                                  {!hasWeight 
+                                    ? (currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select Weight') 
+                                    : (currentLang === 'ta' ? 'நாட்கள் தேர்வு செய்க' : currentLang === 'hi' ? 'दिन चुनें' : 'Select Days')}
                                 </span>
                               )}
                             </div>
-                            <span style={{ fontSize: '0.70rem', color: hasWeight ? '#64748b' : '#dc2626', fontWeight: 600 }}>
-                              {hasWeight ? `${d.weight} kg • ${d.dryDays || 60} days dry` : 'Body weight required'}
+                            <span style={{ fontSize: '0.70rem', color: isValid ? '#64748b' : '#dc2626', fontWeight: 600 }}>
+                              {isValid 
+                                ? `${d.weight} kg • ${d.dryDays} ${currentLang === 'ta' ? 'நாட்கள் வற்றியது' : currentLang === 'hi' ? 'दिन सूखी' : 'days dry'}` 
+                                : (hasWeight 
+                                  ? `${d.weight} kg • ${currentLang === 'ta' ? 'வற்றிய நாட்களைத் தேர்வு செய்க' : currentLang === 'hi' ? 'सूखे दिन चुनें' : 'Select dry days'}` 
+                                  : (hasDryDays 
+                                    ? `${d.dryDays} ${currentLang === 'ta' ? 'நாட்கள் வற்றியது • எடை தேர்வு செய்க' : currentLang === 'hi' ? 'दिन सूखी • वजन चुनें' : 'days dry • Select weight'}` 
+                                    : (currentLang === 'ta' ? 'எடை மற்றும் வற்றிய நாட்கள் தேவை' : currentLang === 'hi' ? 'वजन और सूखे दिन आवश्यक' : 'Body weight & days required')))}
                             </span>
                           </div>
                         </div>
@@ -2348,7 +2577,7 @@ export default function CattleCycleHub({
                             setDryCowsData(updated);
                           }}
                           style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
-                          title="Remove Dry Cow"
+                          title={currentLang === 'ta' ? 'வற்றிய மாட்டை நீக்கு' : currentLang === 'hi' ? 'सूखी गाय हटाएं' : 'Remove Dry Cow'}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -2358,23 +2587,24 @@ export default function CattleCycleHub({
                         value={d.weight}
                         onChange={val => updateDryCow(i, 'weight', val)}
                         ranges={COW_WEIGHT_RANGES}
-                        label="Body Weight"
+                        label={currentLang === 'ta' ? 'உடல் எடை' : currentLang === 'hi' ? 'शारीरिक वजन' : 'Body Weight'}
                         accentColor={activeStage.color}
+                        currentLang={currentLang}
                       />
 
                       {/* Dry Period Duration */}
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Dry Period Duration
+                            {currentLang === 'ta' ? 'வற்றிய நாட்கள்:' : currentLang === 'hi' ? 'सूखे काल की अवधि:' : 'Dry Period Duration:'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {d.dryDays || 60} days
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: hasDryDays ? activeStage.color : '#dc2626' }}>
+                            {hasDryDays ? `${d.dryDays} ${currentLang === 'ta' ? 'நாட்கள்' : currentLang === 'hi' ? 'दिन' : 'days'}` : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'दिन चुनें' : 'Select Days')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {DRY_PERIOD_CHIPS.map(chip => {
-                            const isSel = Number(d.dryDays || 60) === chip.avg;
+                            const isSel = hasDryDays && Number(d.dryDays) === chip.avg;
                             return (
                               <button
                                 key={chip.label}
@@ -2401,6 +2631,8 @@ export default function CattleCycleHub({
                 {/* 5. BULLS CARDS */}
                 {activeKey === 'bulls' && bullsData.map((b, i) => {
                   const hasWeight = Boolean(b.weight && Number(b.weight) > 0);
+                  const hasPurpose = Boolean(b.purpose && b.purpose !== '');
+                  const isValid = hasWeight && hasPurpose;
                   return (
                     <div
                       key={b.id || i}
@@ -2408,10 +2640,10 @@ export default function CattleCycleHub({
                       className="cattle-icon-anim"
                       style={{
                         background: '#ffffff',
-                        border: `1.5px solid ${hasWeight ? activeStage.borderLight : '#f87171'}`,
+                        border: `1.5px solid ${isValid ? activeStage.borderLight : '#f87171'}`,
                         borderRadius: '14px',
                         padding: '12px 14px',
-                        boxShadow: hasWeight ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
+                        boxShadow: isValid ? '0 2px 8px rgba(0,0,0,0.04)' : '0 2px 10px rgba(239, 68, 68, 0.15)',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -2423,7 +2655,7 @@ export default function CattleCycleHub({
                             height: '46px',
                             borderRadius: '10px',
                             overflow: 'hidden',
-                            border: `2px solid ${hasWeight ? activeStage.color : '#ef4444'}`,
+                            border: `2px solid ${isValid ? activeStage.color : '#ef4444'}`,
                             flexShrink: 0,
                             background: '#f8fafc',
                           }}>
@@ -2437,7 +2669,7 @@ export default function CattleCycleHub({
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              background: hasWeight ? activeStage.color : '#ef4444',
+                              background: isValid ? activeStage.color : '#ef4444',
                               color: '#ffffff',
                               fontSize: '0.62rem',
                               fontWeight: 900,
@@ -2452,20 +2684,28 @@ export default function CattleCycleHub({
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a' }}>
-                                Bull #{i + 1}
+                                {currentLang === 'ta' ? `காளை #${i + 1}` : currentLang === 'hi' ? `सांड / बैल #${i + 1}` : `Bull #${i + 1}`}
                               </span>
-                              {hasWeight ? (
+                              {isValid ? (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ✓ Ready
+                                  {currentLang === 'ta' ? 'தயார்' : currentLang === 'hi' ? 'तैयार' : 'Ready'}
                                 </span>
                               ) : (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '6px' }}>
-                                  ⚠️ Select Weight
+                                  {!hasWeight 
+                                    ? (currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select Weight') 
+                                    : (currentLang === 'ta' ? 'பயன்பாடு தேர்வு செய்க' : currentLang === 'hi' ? 'उद्देश्य चुनें' : 'Select Purpose')}
                                 </span>
                               )}
                             </div>
-                            <span style={{ fontSize: '0.70rem', color: hasWeight ? '#64748b' : '#dc2626', fontWeight: 600 }}>
-                              {hasWeight ? `${b.weight} kg • ${b.purpose || 'Breeding Bull'}` : 'Body weight required'}
+                            <span style={{ fontSize: '0.70rem', color: isValid ? '#64748b' : '#dc2626', fontWeight: 600 }}>
+                              {isValid 
+                                ? `${b.weight} kg • ${b.purpose === 'Breeding Bull' ? (currentLang === 'ta' ? 'இனப்பெருக்கக் காளை' : currentLang === 'hi' ? 'प्रजनन सांड' : 'Breeding Bull') : (currentLang === 'ta' ? 'உழவு / வேலைக் காளை' : currentLang === 'hi' ? 'कामकाजी बैल' : 'Draft / Working')}` 
+                                : (hasWeight 
+                                  ? `${b.weight} kg • ${currentLang === 'ta' ? 'பயன்பாடு தேர்வு செய்க' : currentLang === 'hi' ? 'उद्देश्य चुनें' : 'Select purpose'}` 
+                                  : (hasPurpose 
+                                    ? `${b.purpose === 'Breeding Bull' ? (currentLang === 'ta' ? 'இனப்பெருக்கக் காளை' : currentLang === 'hi' ? 'प्रजनन सांड' : 'Breeding Bull') : (currentLang === 'ta' ? 'உழவு / வேலைக் காளை' : currentLang === 'hi' ? 'कामकाजी बैल' : 'Draft / Working')} • ${currentLang === 'ta' ? 'எடை தேர்வு செய்க' : currentLang === 'hi' ? 'वजन चुनें' : 'Select weight'}` 
+                                    : (currentLang === 'ta' ? 'எடை மற்றும் பயன்பாடு தேவை' : currentLang === 'hi' ? 'वजन और उद्देश्य आवश्यक' : 'Body weight & purpose required')))}
                             </span>
                           </div>
                         </div>
@@ -2478,7 +2718,7 @@ export default function CattleCycleHub({
                             setBullsData(updated);
                           }}
                           style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
-                          title="Remove Bull"
+                          title={currentLang === 'ta' ? 'காளையை நீக்கு' : currentLang === 'hi' ? 'सांड / बैल हटाएं' : 'Remove Bull'}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -2488,23 +2728,24 @@ export default function CattleCycleHub({
                         value={b.weight}
                         onChange={val => updateBull(i, 'weight', val)}
                         ranges={BULL_WEIGHT_RANGES}
-                        label="Body Weight"
+                        label={currentLang === 'ta' ? 'உடல் எடை' : currentLang === 'hi' ? 'शारीरिक वजन' : 'Body Weight'}
                         accentColor={activeStage.color}
+                        currentLang={currentLang}
                       />
 
                       {/* Bull Purpose / Activity */}
                       <div style={{ marginTop: '7px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#334155' }}>
-                            Bull Purpose / Activity
+                            {currentLang === 'ta' ? 'காளை பயன்பாடு / வேலை:' : currentLang === 'hi' ? 'सांड / बैल का उपयोग:' : 'Bull Purpose / Activity:'}
                           </label>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeStage.color }}>
-                            {b.purpose || 'Breeding Bull'}
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: hasPurpose ? activeStage.color : '#dc2626' }}>
+                            {hasPurpose ? (b.purpose === 'Breeding Bull' ? (currentLang === 'ta' ? 'இனப்பெருக்கக் காளை' : currentLang === 'hi' ? 'प्रजनन सांड' : 'Breeding Bull') : (currentLang === 'ta' ? 'உழவு / வேலைக் காளை' : currentLang === 'hi' ? 'कामकाजी बैल' : 'Draft / Working')) : (currentLang === 'ta' ? 'தேர்வு செய்க' : currentLang === 'hi' ? 'कार्य चुनें' : 'Select Purpose')}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                           {BULL_PURPOSE_CHIPS.map(purp => {
-                            const isSel = (b.purpose || 'Breeding Bull') === purp;
+                            const isSel = hasPurpose && b.purpose === purp;
                             return (
                               <button
                                 key={purp}
@@ -2518,7 +2759,9 @@ export default function CattleCycleHub({
                                   fontSize: '0.72rem', fontWeight: isSel ? 800 : 600, cursor: 'pointer',
                                 }}
                               >
-                                {purp === 'Breeding Bull' ? '🐂 Breeding Bull' : '🚜 Draft / Working'}
+                                {purp === 'Breeding Bull' 
+                                  ? (currentLang === 'ta' ? 'இனப்பெருக்கக் காளை' : currentLang === 'hi' ? 'प्रजनन सांड' : 'Breeding Bull') 
+                                  : (currentLang === 'ta' ? 'உழவு / வேலைக் காளை' : currentLang === 'hi' ? 'कामकाजी बैल' : 'Draft / Working')}
                               </button>
                             );
                           })}
@@ -2539,7 +2782,7 @@ export default function CattleCycleHub({
               onClick={() => {
                 const check = checkStageValidity(activeKey);
                 if (!check.valid) {
-                  setFeedbackMessage(`⚠️ Please select ${check.missingField} for ${check.label} before proceeding to the next question.`);
+                  setFeedbackMessage(`Please select ${check.missingField} for ${check.label} before proceeding to the next question.`);
                   const el = document.getElementById(`cattle-card-${activeKey}-${check.index}`);
                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   return;
@@ -2565,17 +2808,29 @@ export default function CattleCycleHub({
                 transition: 'all 0.15s ease',
               }}
             >
-              <span>Done with Q{activeStage.questionNum} ({activeStage.shortLabel}) — Go to Q{activeStage.questionNum + 1}: {activeStage.nextLabel}</span>
+              <span>
+                {currentLang === 'ta'
+                  ? `கேள்வி ${activeStage.questionNum} (${activeStage.shortLabel}) முடிந்தது — கேள்வி ${activeStage.questionNum + 1}-க்குச் செல்லவும்: ${activeStage.nextLabel}`
+                  : currentLang === 'hi'
+                    ? `प्रश्न ${activeStage.questionNum} (${activeStage.shortLabel}) पूरा हुआ — प्रश्न ${activeStage.questionNum + 1} पर जाएं: ${activeStage.nextLabel}`
+                    : `Done with Q${activeStage.questionNum} (${activeStage.shortLabel}) — Go to Q${activeStage.questionNum + 1}: ${activeStage.nextLabel}`}
+              </span>
               <ArrowRight size={16} />
             </button>
           ) : (
             <button
               type="button"
-              onClick={handleAttemptNext}
+              onClick={handleProceedToGrazing}
               className="btn-primary"
               style={{ width: '100%', padding: '14px 20px', fontSize: '0.92rem', justifyContent: 'center' }}
             >
-              <span>All 5 Questions Answered — Proceed to Step 3 (Grazing)</span>
+              <span>
+                {currentLang === 'ta'
+                  ? 'அனைத்து 5 கேள்விகளும் பூர்த்தி செய்யப்பட்டன — படி 3-க்குச் செல்லவும் (மேய்ச்சல்)'
+                  : currentLang === 'hi'
+                    ? 'सभी 5 प्रश्न पूरे हुए — चरण 3 (चराई प्रबंधन) पर जाएं'
+                    : 'All 5 Questions Answered — Proceed to Step 3 (Grazing)'}
+              </span>
               <ArrowRight size={16} />
             </button>
           )}
@@ -2605,7 +2860,7 @@ export default function CattleCycleHub({
           }}
         >
           <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>
-            {currentLang === 'ta' ? 'மந்தைக் கேள்விகள்:' : 'Herd Questions:'}
+            {currentLang === 'ta' ? 'மந்தைக் கேள்விகள்:' : currentLang === 'hi' ? 'मवेशी प्रश्न:' : 'Herd Questions:'}
           </span>
           {localizedStages.map(s => {
             const isCur = activeKey === s.key;
@@ -2624,12 +2879,12 @@ export default function CattleCycleHub({
               badgeBg = s.color;
               badgeColor = '#ffffff';
               badgeBorder = s.color;
-              icon = isInvalid ? '⚠️' : hasCattle ? '✓' : '●';
+              icon = isInvalid ? '!' : hasCattle ? '✓' : '●';
             } else if (isInvalid) {
               badgeBg = '#fee2e2';
               badgeColor = '#dc2626';
               badgeBorder = '#fca5a5';
-              icon = '⚠️';
+              icon = '!';
             } else if (isDone) {
               badgeBg = '#dcfce7';
               badgeColor = '#15803d';
@@ -2637,14 +2892,12 @@ export default function CattleCycleHub({
               icon = '✓';
             }
 
+            const headUnit = currentLang === 'ta' ? 'மாடு' : currentLang === 'hi' ? 'पशु' : 'head';
+
             return (
               <span
                 key={s.key}
-                onClick={() => {
-                  setVisitedStages(v => ({ ...v, [activeKey]: true }));
-                  setActiveKey(s.key);
-                  setFeedbackMessage('');
-                }}
+                onClick={() => handleSwitchStage(s.key)}
                 style={{
                   fontSize: '0.74rem',
                   fontWeight: 800,
@@ -2661,7 +2914,7 @@ export default function CattleCycleHub({
                   transition: 'all 0.15s ease',
                   flexShrink: 0
                 }}
-                title={`Question ${s.questionNum}: ${s.shortLabel} (${counts[s.key]} head)`}
+                title={`Q${s.questionNum}: ${s.shortLabel} (${counts[s.key]} ${headUnit})`}
               >
                 {icon} Q{s.questionNum}: {s.shortLabel} ({counts[s.key]})
               </span>
@@ -2671,22 +2924,152 @@ export default function CattleCycleHub({
 
         {/* Buttons Row */}
         <div className="responsive-nav-actions">
-          <button onClick={onPrev} className="btn-secondary">
+          <button type="button" onClick={handlePrevStage} className="btn-secondary">
             <ChevronLeft size={18} />
-            <span>{currentLang === 'ta' ? 'முந்தையது (இனம்)' : 'Previous (Breed)'}</span>
+            <span>
+              {prevStage ? (
+                currentLang === 'ta' 
+                  ? `முந்தையது (${localizedPrevStage?.shortLabel || prevStage.shortLabel})` 
+                  : currentLang === 'hi'
+                    ? `पिछला (${localizedPrevStage?.shortLabel || prevStage.shortLabel})`
+                    : `Previous (${localizedPrevStage?.shortLabel || prevStage.shortLabel})`
+              ) : (
+                currentLang === 'ta' 
+                  ? 'முந்தைய படி (இனம்)' 
+                  : currentLang === 'hi'
+                    ? 'पिछला चरण (नस्ल)'
+                    : 'Previous (Breed)'
+              )}
+            </span>
           </button>
 
           <button
             type="button"
-            onClick={handleAttemptNext}
+            onClick={handleNextStage}
             className="btn-primary"
           >
-            <span>{currentLang === 'ta' ? 'அடுத்த படி (மேய்ச்சல் மேலாண்மை)' : 'Next Step (Grazing Management)'}</span>
+            <span>
+              {nextStage ? (
+                currentLang === 'ta' 
+                  ? `அடுத்தது: ${localizedNextStage?.shortLabel || nextStage.shortLabel} →` 
+                  : currentLang === 'hi'
+                    ? `अगला: ${localizedNextStage?.shortLabel || nextStage.shortLabel} →`
+                    : `Next: ${localizedNextStage?.shortLabel || nextStage.shortLabel} →`
+              ) : (
+                currentLang === 'ta' 
+                  ? 'அடுத்த படி: மேய்ச்சல் மேலாண்மை →' 
+                  : currentLang === 'hi'
+                    ? 'अगला चरण: चराई प्रबंधन →'
+                    : 'Next Step: Grazing Management →'
+              )}
+            </span>
             <ChevronRight size={18} />
           </button>
         </div>
 
       </div>
+
+      {/* ── CATTLE DETAILS REQUIRED / INCOMPLETE DATA POPUP MODAL ── */}
+      {missingModal.isOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 9999
+        }}>
+          <div 
+            className="wg-card animate-fade-in" 
+            style={{ 
+              maxWidth: '460px', 
+              width: '100%', 
+              padding: '24px', 
+              position: 'relative', 
+              borderRadius: '20px',
+              border: '1.5px solid #fed7aa',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}
+          >
+            <button 
+              type="button"
+              onClick={() => setMissingModal({ isOpen: false })}
+              style={{ position: 'absolute', right: '16px', top: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '14px' }}>
+              <div style={{ background: '#fef3c7', padding: '10px', borderRadius: '14px', border: '1.5px solid #fde68a', flexShrink: 0 }}>
+                <AlertCircle size={26} color="#d97706" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', color: '#0f172a', fontWeight: 900, margin: '0 0 4px' }}>
+                  {missingModal.title}
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5, margin: 0 }}>
+                  {missingModal.message}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '18px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const elId = missingModal.missingElementId;
+                  setMissingModal({ isOpen: false });
+                  if (elId) {
+                    setTimeout(() => {
+                      const el = document.getElementById(elId);
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 120);
+                  }
+                }}
+                className="btn-primary"
+                style={{ width: '100%', padding: '11px', justifyContent: 'center', fontSize: '0.9rem' }}
+              >
+                <span>
+                  {currentLang === 'ta' ? 'விவரங்களை உள்ளிடவும்' : currentLang === 'hi' ? 'विवरण भरें' : 'Fill Cattle Details'}
+                </span>
+                <ChevronRight size={18} />
+              </button>
+
+              {missingModal.isZeroCount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const targetKey = missingModal.stageKey || activeKey;
+                    setVisitedStages(prev => ({ ...prev, [targetKey]: true }));
+                    const nxt = missingModal.nextStageKey;
+                    setMissingModal({ isOpen: false });
+                    if (nxt) {
+                      setActiveKey(nxt);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      handleProceedToGrazing();
+                    }
+                  }}
+                  className="btn-secondary"
+                  style={{ width: '100%', padding: '10px', justifyContent: 'center', fontSize: '0.84rem' }}
+                >
+                  <Check size={16} color="#16a34a" />
+                  <span>
+                    {currentLang === 'ta' 
+                      ? '0 மாடுகள் - தொடரவும் (Skip / 0 Head)' 
+                      : currentLang === 'hi' 
+                        ? '0 पशु - आगे बढ़ें' 
+                        : 'Confirm 0 & Continue'}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

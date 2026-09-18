@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import CattleCounter from './CattleCounter';
 import WeightChipSelect from './WeightChipSelect';
 import { COW_WEIGHT_RANGES } from '../data/weightRanges';
@@ -837,7 +837,7 @@ export default function Step4Lactation({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <span style={{ fontSize: '1rem' }}>{allConfigured ? '✅' : '⚠️'}</span>
+          {allConfigured ? <CheckCircle2 size={16} color="#0284c7" /> : <AlertCircle size={16} color="#be123c" />}
           {allConfigured
             ? `All ${count} milking cows configured — ready to proceed!`
             : `${unconfiguredCount} cow${unconfiguredCount > 1 ? 's' : ''} still need weight, milk yield, or fat % specified.`

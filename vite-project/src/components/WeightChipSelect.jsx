@@ -19,6 +19,7 @@ export default function WeightChipSelect({
   label = 'Select Weight',
   accentColor = '#16a34a',
   required = true,
+  currentLang = 'ta',
 }) {
   const [showCustom, setShowCustom] = useState(false);
   const [customVal, setCustomVal] = useState('');
@@ -43,6 +44,11 @@ export default function WeightChipSelect({
       setShowCustom(false);
     }
   };
+
+  const customChipLabel = currentLang === 'ta' ? 'தனிப்பயன் கிலோ' : currentLang === 'hi' ? 'अन्य किग्रा' : 'Custom kg';
+  const customPlaceholder = currentLang === 'ta' ? 'துல்லியமான கிலோவை உள்ளிடுக (எ.கா. 340)' : currentLang === 'hi' ? 'सटीक किग्रा दर्ज करें (उदा. 340)' : 'Enter exact kg (e.g. 340)';
+  const customSetLabel = currentLang === 'ta' ? 'அமைக்க' : currentLang === 'hi' ? 'दर्ज करें' : 'Set';
+  const validationLabel = currentLang === 'ta' ? '* தயவுசெய்து உடல் எடையைத் தேர்வு செய்யவும்' : currentLang === 'hi' ? '* कृपया वजन सीमा चुनें' : '* Please select a weight range';
 
   return (
     <div style={{ width: '100%' }}>
@@ -137,7 +143,7 @@ export default function WeightChipSelect({
           }}
         >
           <Pencil size={11} />
-          Custom kg
+          {customChipLabel}
         </button>
       </div>
 
@@ -158,7 +164,7 @@ export default function WeightChipSelect({
             min="30"
             max="1500"
             step="1"
-            placeholder="Enter exact kg (e.g. 340)"
+            placeholder={customPlaceholder}
             value={customVal}
             autoFocus
             onChange={e => setCustomVal(e.target.value)}
@@ -190,7 +196,7 @@ export default function WeightChipSelect({
               whiteSpace: 'nowrap',
             }}
           >
-            Set
+            {customSetLabel}
           </button>
         </div>
       )}
@@ -203,7 +209,7 @@ export default function WeightChipSelect({
           fontWeight: 600,
           margin: '6px 0 0',
         }}>
-          * Please select a weight range
+          {validationLabel}
         </p>
       )}
     </div>

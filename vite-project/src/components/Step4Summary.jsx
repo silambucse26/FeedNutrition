@@ -1,6 +1,7 @@
 import React from 'react';
 import { Thermometer, Droplets, Scale, Printer, ArrowLeft, Award, Activity, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { getBreedName } from '../data/breeds';
+import { CHIMERTECH_LOGO, IHERD_LOGO } from '../utils/brandLogos.js';
 
 export default function Step4Summary({ 
   weather, 
@@ -45,6 +46,57 @@ export default function Step4Summary({
 
   return (
     <div className="wg-card animate-fade-in" style={{ padding: '32px' }}>
+      {/* Dedicated Print-Only Branded Header with Chimertech & iHerd Logos */}
+      <div className="print-only-header" style={{
+        display: 'none',
+        padding: '12px 16px',
+        marginBottom: '18px',
+        borderBottom: '2.5px solid #16a34a',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+            src="/mooposhaqlogo.png" 
+            alt="MooPoshaq" 
+            style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '8px' }} 
+          />
+          <div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              MOO<span style={{ color: '#16a34a' }}>POSHAQ</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#334155', fontWeight: 700 }}>
+              Dairy Herd Feed &amp; Water Plan
+            </div>
+          </div>
+        </div>
+
+        {/* Partner Logos: Chimertech & iHerd */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          background: '#f8fafc',
+          padding: '6px 14px',
+          borderRadius: '10px',
+          border: '1px solid #cbd5e1'
+        }}>
+          <img 
+            src={CHIMERTECH_LOGO} 
+            alt="Chimertech" 
+            style={{ height: '36px', width: '36px', objectFit: 'contain' }} 
+          />
+          <div style={{ width: '1px', height: '24px', background: '#cbd5e1' }} />
+          <img 
+            src={IHERD_LOGO} 
+            alt="iHerd" 
+            style={{ height: '26px', maxWidth: '70px', objectFit: 'contain' }} 
+          />
+        </div>
+      </div>
+
       {/* Top Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
         <div>

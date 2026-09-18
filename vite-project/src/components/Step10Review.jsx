@@ -553,14 +553,7 @@ export default function Step10Review({
           </p>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
-            <button 
-              onClick={handlePrint}
-              className="btn-secondary"
-              style={{ background: '#ffffff', padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Printer size={14} />
-              <span>{t ? t('print_page') : 'Print Summary'}</span>
-            </button>
+
 
             {hasCattle && (
               <button 
@@ -582,7 +575,8 @@ export default function Step10Review({
                   selectedFeeds,
                   totalHerdWeightKg,
                   totalDailyMilkL,
-                  totalCattleCount
+                  totalCattleCount,
+                  currentLang
                 })}
                 className="btn-secondary"
                 style={{ background: '#ffffff', border: '1.5px solid #0284c7', color: '#0369a1', padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
@@ -603,7 +597,8 @@ export default function Step10Review({
                   totalHerdWeightKg,
                   totalDailyMilkL,
                   waterVolume,
-                  selectedFeeds
+                  selectedFeeds,
+                  reportLang: currentLang
                 })}
                 style={{ background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#ffffff', border: 'none', padding: '7px 14px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)' }}
                 title="Download generated feeding report in colorful PDF format"
@@ -613,16 +608,7 @@ export default function Step10Review({
               </button>
             )}
 
-            {canGenerateNutrition && (
-              <button 
-                onClick={generateCSV}
-                className="btn-primary"
-                style={{ padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Download size={14} />
-                <span>{t ? t('step10.download_csv') : 'Download CSV Report'}</span>
-              </button>
-            )}
+
           </div>
         </div>
 
@@ -2374,679 +2360,906 @@ export default function Step10Review({
             </div>
 
             {/* 3. CATEGORY-BY-CATEGORY PRACTICAL FEEDING CARDS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginBottom: '32px' }}>
-              
-              {/* 3.1 MILKING COW */}
-              {totalLactating > 0 && (
-                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-                  {/* Category Header with Reference Image */}
-                  <div className="category-card-header">
-                    <img 
-                      src="/cattle_art/lactating.jpg" 
-                      alt="Milking Cows" 
-                      onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      className="category-card-header-img"
-                      style={{ border: '1.5px solid #bae6fd' }}
-                    />
-                    <div className="category-card-header-content">
-                      <div className="category-card-title-row">
-                        <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Milk size={22} color="#0284c7" />
-                          <span>{currentLang === 'ta' ? `கறவை மாடுகள் (${totalLactating} மாடுகள்)` : `Milking Cows (${totalLactating} Head)`}</span>
-                        </h4>
-                        <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 700, background: '#e0f2fe', padding: '4px 12px', borderRadius: '20px' }}>
-                          {currentLang === 'ta' ? `மொத்த பால்: ${totalDailyMilkL} லிட்டர்/நாள் • சராசரி எடை: ${Math.round(wtLactating / Math.max(1, totalLactating))} கிலோ` : `Total Milk: ${totalDailyMilkL} Litres/day • Avg Weight: ${Math.round(wtLactating / Math.max(1, totalLactating))} kg`}
-                        </span>
+            {(() => {
+              const hasAnyDryFodder = (selectedFeeds || []).some(f => {
+                const cat = (f.category || '').toLowerCase();
+                return (cat.includes('dry') || cat.includes('straw') || cat.includes('hay') || cat.includes('stover')) && Number(f.quantityKg) > 0;
+              }) || [
+                ...(calcResult?.practicalFeedingReport?.perCategory?.milkingCow?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.pregnantCattle?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.growingHeifer?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.dryCow?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.bull?.animals || [])
+              ].some(a => (a.dryFodderKg || 0) > 0);
+
+              const hasAnyConcentrate = (selectedFeeds || []).some(f => {
+                const cat = (f.category || '').toLowerCase();
+                const name = (f.name || '').toLowerCase();
+                return (cat.includes('concentrate') || cat.includes('grain') || cat.includes('meal') || cat.includes('cake') || cat.includes('mash') || cat.includes('pellet') || cat.includes('chuni') || cat.includes('bran') || cat.includes('seed') || cat.includes('crushed') || name.includes('concentrate') || name.includes('cake') || name.includes('meal') || name.includes('grain') || name.includes('mash') || name.includes('bran') || name.includes('chuni')) && Number(f.quantityKg) > 0;
+              }) || [
+                ...(calcResult?.practicalFeedingReport?.perCategory?.milkingCow?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.pregnantCattle?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.growingHeifer?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.dryCow?.animals || []),
+                ...(calcResult?.practicalFeedingReport?.perCategory?.bull?.animals || [])
+              ].some(a => (a.concentrateKg || 0) > 0);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', marginBottom: '32px' }}>
+                  
+                  {/* 3.1 MILKING COW */}
+                  {totalLactating > 0 && (
+                    <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      {/* Category Header with Reference Image */}
+                      <div className="category-card-header">
+                        <img 
+                          src="/cattle_art/lactating.jpg" 
+                          alt="Milking Cows" 
+                          onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
+                          className="category-card-header-img"
+                          style={{ border: '1.5px solid #bae6fd' }}
+                        />
+                        <div className="category-card-header-content">
+                          <div className="category-card-title-row">
+                            <h4 style={{ fontSize: '1.25rem', color: '#0369a1', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Milk size={22} color="#0284c7" />
+                              <span>{currentLang === 'ta' ? `கறவை மாடுகள் (${totalLactating} மாடுகள்)` : currentLang === 'hi' ? `दुधारू गायें (${totalLactating} पशु)` : `Milking Cows (${totalLactating} Head)`}</span>
+                            </h4>
+                            <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 700, background: '#e0f2fe', padding: '4px 12px', borderRadius: '20px' }}>
+                              {currentLang === 'ta' ? `மொத்த பால்: ${totalDailyMilkL} லிட்டர்/நாள் • சராசரி எடை: ${Math.round(wtLactating / Math.max(1, totalLactating))} கிலோ` : currentLang === 'hi' ? `कुल दूध: ${totalDailyMilkL} लीटर/दिन • औसत वजन: ${Math.round(wtLactating / Math.max(1, totalLactating))} किग्रा` : `Total Milk: ${totalDailyMilkL} Litres/day • Avg Weight: ${Math.round(wtLactating / Math.max(1, totalLactating))} kg`}
+                            </span>
+                          </div>
+                          <p className="cattle-reference-text" style={{ color: '#475569' }}>
+                            <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : currentLang === 'hi' ? 'पशु पोषण संदर्भ:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'அதிக பால் தரும் கறவை மாடுகளுக்கு அவற்றின் உடல் எடை குறையாமல் சீரான பால் உற்பத்தியைத் தக்கவைக்க ஆற்றல் மற்றும் புறப்புரதம் நிறைந்த சரிவிகிதத் தீவனம் முன்னுரிமையாகத் தேவைப்படுகிறது.' : currentLang === 'hi' ? 'उच्च दुग्ध उत्पादक गायों को शरीर का वजन बनाए रखने और अधिकतम दूध उत्पादन के लिए ऊर्जा और बाईपास प्रोटीन युक्त संतुलित आहार की आवश्यकता होती है।' : 'High-producing dairy cows require prioritized feed energy and bypass protein to sustain peak milk yield without losing body condition.'}
+                          </p>
+                        </div>
                       </div>
-                      <p className="cattle-reference-text" style={{ color: '#475569' }}>
-                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'அதிக பால் தரும் கறவை மாடுகளுக்கு அவற்றின் உடல் எடை குறையாமல் சீரான பால் உற்பத்தியைத் தக்கவைக்க ஆற்றல் மற்றும் புறப்புரதம் நிறைந்த சரிவிகிதத் தீவனம் முன்னுரிமையாகத் தேவைப்படுகிறது.' : 'High-producing dairy cows require prioritized feed energy and bypass protein to sustain peak milk yield without losing body condition.'}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Simple Daily Guidelines */}
-                  <div className="cattle-educational-note" style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
-                    <div style={{ fontWeight: 800, color: '#0369a1', fontSize: '0.9rem', marginBottom: '6px' }}>
-                      {currentLang === 'ta' ? 'கறவை மாடுகளுக்கான தீவன வழிகாட்டி (தினசரி எளிய விதிகள்):' : 'Milking Cow Feeding Rules (Simple Daily Guide):'}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '8px', fontSize: '0.84rem', color: '#1e293b' }}>
-                      <div>• <strong>{currentLang === 'ta' ? 'அடர்தீவன விதி:' : 'Concentrate Rule:'}</strong> {currentLang === 'ta' ? 'ஒவ்வொரு 2 முதல் 2.5 லிட்டர் பால் உற்பத்திக்கும் 1 கிலோ அடர்தீவனம் அளிக்க வேண்டும்.' : 'Feed 1 kg cattle feed for every 2 to 2.5 Litres of milk produced daily.'}</div>
-                      <div>• <strong>{currentLang === 'ta' ? 'பசுந்தீவனம்:' : 'Green Fodder:'}</strong> {currentLang === 'ta' ? 'வைட்டமின்கள் மற்றும் தடையற்ற பால் சுரப்புக்கு தினமும் 20–25 கிலோ பசுந்தீவனம் அளிக்க வேண்டும்.' : 'Give 20–25 kg fresh green fodder daily for vitamins and milk flow.'}</div>
-                      <div>• <strong>{currentLang === 'ta' ? 'உலர் தீவனம்:' : 'Dry Straw / Hay:'}</strong> {currentLang === 'ta' ? 'அசைபோடுதலுக்கும் பாலின் கொழுப்புச் சத்துக்கும் (Fat) 3–5 கிலோ உலர் தீவனம் அளிக்க வேண்டும்.' : 'Feed 3–5 kg dry straw daily to support rumination and butterfat.'}</div>
-                      <div>• <strong>{currentLang === 'ta' ? 'சுத்தமான தண்ணீர்:' : 'Clean Water:'}</strong> {currentLang === 'ta' ? 'கறவை மாடுகளுக்கு தினமும் 70–90 லிட்டர் சுத்தமான தண்ணீர் தேவை. தண்ணீர் குறைந்தால் பால் உற்பத்தி குறையும்.' : 'Milking cows need 70–90 Litres of fresh water daily. Lack of water drops milk.'}</div>
-                      <div>• <strong>{currentLang === 'ta' ? 'தாதுக்கள் & உப்பு:' : 'Minerals & Salt:'}</strong> {currentLang === 'ta' ? 'பால் காய்ச்சலைத் தவிர்க்க தினமும் 60–80 கிராம் தாது உப்புக் கலவை சேர்க்க வேண்டும்.' : 'Add 60–80 grams mineral mixture daily to prevent milk fever.'}</div>
-                    </div>
-                  </div>
+                      {/* Simple Daily Guidelines */}
+                      <div className="cattle-educational-note" style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
+                        <div style={{ fontWeight: 800, color: '#0369a1', fontSize: '0.9rem', marginBottom: '6px' }}>
+                          {currentLang === 'ta' ? 'கறவை மாடுகளுக்கான தீவன வழிகாட்டி (தினசரி எளிய விதிகள்):' : currentLang === 'hi' ? 'दुधारू गायों हेतु आहार नियम (सरल दैनिक निर्देश):' : 'Milking Cow Feeding Rules (Simple Daily Guide):'}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '8px', fontSize: '0.84rem', color: '#1e293b' }}>
+                          {hasAnyConcentrate && (
+                            <div>• <strong>{currentLang === 'ta' ? 'அடர்தீவன விதி:' : currentLang === 'hi' ? 'दाना नियम:' : 'Concentrate Rule:'}</strong> {currentLang === 'ta' ? 'ஒவ்வொரு 2 முதல் 2.5 லிட்டர் பால் உற்பத்திக்கும் 1 கிலோ அடர்தீவனம் அளிக்க வேண்டும்.' : currentLang === 'hi' ? 'प्रत्येक 2 से 2.5 लीटर दूध पर 1 किग्रा दाना मिश्रण दें।' : 'Feed 1 kg cattle feed for every 2 to 2.5 Litres of milk produced daily.'}</div>
+                          )}
+                          <div>• <strong>{currentLang === 'ta' ? 'பசுந்தீவனம்:' : currentLang === 'hi' ? 'हरा चारा:' : 'Green Fodder:'}</strong> {currentLang === 'ta' ? 'வைட்டமின்கள் மற்றும் தடையற்ற பால் சுரப்புக்கு தினமும் 20–25 கிலோ பசுந்தீவனம் அளிக்க வேண்டும்.' : currentLang === 'hi' ? 'विटामिन और निरंतर दूध प्रवाह हेतु 20-25 किग्रा ताजा हरा चारा दें।' : 'Give 20–25 kg fresh green fodder daily for vitamins and milk flow.'}</div>
+                          {hasAnyDryFodder && (
+                            <div>• <strong>{currentLang === 'ta' ? 'உலர் தீவனம்:' : currentLang === 'hi' ? 'सूखा चारा:' : 'Dry Straw / Hay:'}</strong> {currentLang === 'ta' ? 'அசைபோடுதலுக்கும் பாலின் கொழுப்புச் சத்துக்கும் (Fat) 3–5 கிலோ உலர் தீவனம் அளிக்க வேண்டும்.' : currentLang === 'hi' ? 'जुगाली और दूध फैट के लिए 3–5 किग्रा सूखा चारा दें।' : 'Feed 3–5 kg dry straw daily to support rumination and butterfat.'}</div>
+                          )}
+                          <div>• <strong>{currentLang === 'ta' ? 'சுத்தமான தண்ணீர்:' : currentLang === 'hi' ? 'स्वच्छ जल:' : 'Clean Water:'}</strong> {currentLang === 'ta' ? 'கறவை மாடுகளுக்கு தினமும் 70–90 லிட்டர் சுத்தமான தண்ணீர் தேவை. தண்ணீர் குறைந்தால் பால் உற்பத்தி குறையும்.' : currentLang === 'hi' ? 'दुधारू गायों को रोजाना 70-90 लीटर स्वच्छ जल दें।' : 'Milking cows need 70–90 Litres of fresh water daily. Lack of water drops milk.'}</div>
+                          <div>• <strong>{currentLang === 'ta' ? 'தாதுக்கள் & உப்பு:' : currentLang === 'hi' ? 'खनिज व नमक:' : 'Minerals & Salt:'}</strong> {currentLang === 'ta' ? 'பால் காய்ச்சலைத் தவிர்க்க தினமும் 60–80 கிராம் தாது உப்புக் கலவை சேர்க்க வேண்டும்.' : currentLang === 'hi' ? 'मिल्क फीवर रोकथाम के लिए 60-80 ग्राम खनिज मिश्रण दें।' : 'Add 60–80 grams mineral mixture daily to prevent milk fever.'}</div>
+                        </div>
+                      </div>
 
-                  {/* Individual Animal Table */}
-                  {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals?.length > 0 && (
-                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#0369a1', display: 'block', marginBottom: '8px' }}>
-                        {currentLang === 'ta' ? 'ஒவ்வொரு கறவை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Individual Milking Cow:'}
-                      </strong>
-                      <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '10px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ background: '#f0f9ff', borderBottom: '2px solid #bae6fd', textAlign: 'left', color: '#0369a1' }}>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Cattle'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பருவம் & BCS' : 'Lactation & BCS'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பால் உற்பத்தி' : 'Milk Yield'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals.map((cow, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #e0f2fe', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                <div>{stripEmojis(cow.title) || (currentLang === 'ta' ? `கறவை மாடு #${idx + 1}` : `Cow #${idx + 1}`)}</div>
-                                {cow.parity && (
-                                  <span style={{ 
-                                    background: cow.isFirstLactation ? '#e0f2fe' : '#f1f5f9', 
-                                    color: cow.isFirstLactation ? '#0369a1' : '#475569', 
-                                    padding: '1px 6px', 
-                                    borderRadius: '4px', 
-                                    fontSize: '0.68rem', 
-                                    fontWeight: 700,
-                                    display: 'inline-block',
-                                    marginTop: '2px'
-                                  }}>
-                                    {cow.parity}
-                                  </span>
+                      {/* Individual Animal Table */}
+                      {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals?.length > 0 && (
+                        <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#0369a1', display: 'block', marginBottom: '8px' }}>
+                            {currentLang === 'ta' ? 'ஒவ்வொரு கறவை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : currentLang === 'hi' ? 'प्रत्येक दुधारू गाय का दैनिक सटीक आहार आवंटन:' : 'Exact Daily Feeding for Each Individual Milking Cow:'}
+                          </strong>
+                          <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bae6fd', borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead>
+                              <tr style={{ background: '#f0f9ff', borderBottom: '2px solid #bae6fd', textAlign: 'left', color: '#0369a1' }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : currentLang === 'hi' ? 'पहचान' : 'Cattle'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : currentLang === 'hi' ? 'वजन' : 'Weight'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பருவம் & BCS' : currentLang === 'hi' ? 'अवस्था & BCS' : 'Lactation & BCS'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பால் உற்பத்தி & இலக்கு' : currentLang === 'hi' ? 'दूध उत्पादन & लक्ष्य' : 'Milk Yield & Target'}</th>
+                                <th style={{ padding: '10px 12px', color: '#15803d' }}>{currentLang === 'ta' ? 'பசுந்தீவனம்' : currentLang === 'hi' ? 'हरा चारा' : 'Green Fodder'}</th>
+                                {hasAnyDryFodder && (
+                                  <th style={{ padding: '10px 12px', color: '#b45309' }}>{currentLang === 'ta' ? 'உலர் தீவனம்' : currentLang === 'hi' ? 'सूखा चारा' : 'Dry Fodder'}</th>
                                 )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', fontSize: '0.8rem' }}>
-                                <div style={{ fontWeight: 700, color: '#0369a1' }}>{translateTerm(cow.stage, currentLang) || (currentLang === 'ta' ? 'நடுப்பருவம்' : 'Mid lactation')}</div>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                                  <span style={{ 
-                                    background: cow.bcs <= 2.5 ? '#fee2e2' : '#f1f5f9', 
-                                    color: cow.bcs <= 2.5 ? '#b91c1c' : '#475569', 
-                                    padding: '1px 6px', 
-                                    borderRadius: '6px', 
-                                    fontSize: '0.72rem', 
-                                    fontWeight: 700 
-                                  }}>
-                                    BCS {cow.bcs ?? 3.0} {cow.bcs <= 2.5 ? (currentLang === 'ta' ? '(மெலிந்தது)' : '(Thin)') : ''}
-                                  </span>
-                                </div>
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.milkYieldL} {currentLang === 'ta' ? 'லி/நாள்' : 'L/day'} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({cow.milkFatPct}% {currentLang === 'ta' ? 'கொழுப்பு' : 'fat'})</span>
-                              </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#15803d', fontWeight: 800 }}>
-                                {cow.greenFodderKg > 0 ? `${cow.greenFodderKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#854d0e', fontWeight: 700 }}>
-                                {cow.dryFodderKg > 0 ? `${cow.dryFodderKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}
-                                {cow.isFeasible !== false && cow.dryFodderDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
-                                    {cow.dryFodderDetails}
-                                  </div>
+                                {hasAnyConcentrate && (
+                                  <th style={{ padding: '10px 12px', color: '#0369a1' }}>{currentLang === 'ta' ? 'அடர்தீவனம்' : currentLang === 'hi' ? 'दाना मिश्रण' : 'Concentrate'}</th>
                                 )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#0284c7', fontWeight: 900 }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது' : currentLang === 'hi' ? 'खनिज' : 'Min (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு' : currentLang === 'hi' ? 'नमक' : 'Salt (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர்' : currentLang === 'hi' ? 'पानी' : 'Water (L)'}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals.map((cow, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #e0f2fe', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
+                                    <div>{stripEmojis(cow.title) || (currentLang === 'ta' ? `கறவை மாடு #${idx + 1}` : currentLang === 'hi' ? `गाय #${idx + 1}` : `Cow #${idx + 1}`)}</div>
+                                    {cow.parity && (
+                                      <span style={{
+                                        background: cow.isFirstLactation ? '#e0f2fe' : '#f1f5f9',
+                                        color: cow.isFirstLactation ? '#0369a1' : '#475569',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.68rem',
+                                        fontWeight: 700,
+                                        display: 'inline-block',
+                                        marginTop: '2px'
+                                      }}>
+                                        {currentLang === 'ta' ? (cow.isFirstLactation ? '1வது ஈற்று' : '2+ ஈற்று') : currentLang === 'hi' ? (cow.isFirstLactation ? '1st ब्यात' : '2+ ब्यात') : cow.parity}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
+                                    {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}
+                                  </td>
+
+                                  <td style={{ padding: '10px 12px', fontSize: '0.8rem' }}>
+                                    <div style={{ fontWeight: 700, color: '#0369a1' }}>{translateTerm(cow.stage, currentLang) || (currentLang === 'ta' ? 'நடுப்பருவம்' : currentLang === 'hi' ? 'मध्य दुग्धकाल' : 'Mid lactation')}</div>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                      <span style={{ 
+                                        background: cow.bcs <= 2.5 ? '#fee2e2' : '#f1f5f9', 
+                                        color: cow.bcs <= 2.5 ? '#b91c1c' : '#475569', 
+                                        padding: '1px 6px', 
+                                        borderRadius: '6px', 
+                                        fontSize: '0.72rem', 
+                                        fontWeight: 700 
+                                      }}>
+                                        BCS {cow.bcs ?? 3.0} {cow.bcs <= 2.5 ? (currentLang === 'ta' ? '(மெலிந்தது)' : currentLang === 'hi' ? '(कमजोर)' : '(Thin)') : ''}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    <div>{cow.milkYieldL} {currentLang === 'ta' ? 'லி/நாள்' : currentLang === 'hi' ? 'ली/दिन' : 'L/day'} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>({cow.milkFatPct}% {currentLang === 'ta' ? 'கொழுப்பு' : currentLang === 'hi' ? 'फैट' : 'fat'})</span></div>
+                                    {cow.targetMilkYieldL && (
+                                      <div style={{ marginTop: '4px', fontSize: '0.74rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', fontWeight: 700 }}>
+                                        {currentLang === 'ta' ? `இலக்கு: ${cow.targetMilkYieldL} லி` : currentLang === 'hi' ? `लक्ष्य: ${cow.targetMilkYieldL} ली` : `Target: ${cow.targetMilkYieldL} L/day`}
+                                        {cow.potentialMilkGainL > 0 && <span style={{ color: '#15803d', marginLeft: '4px' }}>(+{cow.potentialMilkGainL} L)</span>}
+                                      </div>
+                                    )}
+                                    {cow.projectedMilkFatRange && (
+                                      <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
+                                        {currentLang === 'ta' ? `எதிர்பார்க்கப்படும் கொழுப்பு: ${cow.projectedMilkFatRange}` : currentLang === 'hi' ? `अनुमानित फैट: ${cow.projectedMilkFatRange}` : `Exp. Fat: ${cow.projectedMilkFatRange}`}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#15803d', fontWeight: 800 }}>
+                                    <div>{cow.greenFodderKg > 0 ? `${cow.greenFodderKg} ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}`)}</div>
+                                    {cow.isFeasible !== false && cow.greenFodderDetails && (
+                                      <div style={{ fontSize: '0.72rem', color: '#15803d', fontWeight: 600, marginTop: '2px' }}>
+                                        {cow.greenFodderDetails}
+                                      </div>
+                                    )}
+                                  </td>
+                                  {hasAnyDryFodder && (
+                                    <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#854d0e', fontWeight: 700 }}>
+                                      <div>{cow.dryFodderKg > 0 ? `${cow.dryFodderKg} ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}`)}</div>
+                                      {cow.isFeasible !== false && cow.dryFodderDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
+                                          {cow.dryFodderDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  {hasAnyConcentrate && (
+                                    <td style={{ padding: '10px 12px', color: cow.isFeasible === false ? '#b45309' : '#0284c7', fontWeight: 900 }}>
+                                      <div>
+                                        <span>{cow.concentrateKg > 0 ? `${cow.concentrateKg} ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}`)}</span>
+                                        {cow.concentrateDmPct > 0 && (
+                                          <span style={{ 
+                                            display: 'inline-block',
+                                            marginLeft: '6px',
+                                            fontSize: '0.72rem', 
+                                            padding: '1px 6px', 
+                                            borderRadius: '4px', 
+                                            background: cow.concentrateDmPct > 40 ? '#fee2e2' : '#e0f2fe',
+                                            color: cow.concentrateDmPct > 40 ? '#b91c1c' : '#0369a1',
+                                            fontWeight: 700 
+                                          }}>
+                                            {cow.concentrateDmPct}% DMI ({currentLang === 'ta' ? 'அதிகபட்சம் 40%' : currentLang === 'hi' ? 'अधिकतम 40%' : 'Max safe 40%'})
+                                          </span>
+                                        )}
+                                      </div>
+                                      {cow.isFeasible !== false && cow.concentrateDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
+                                          {cow.concentrateDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
+                                    {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : currentLang === 'hi' ? 'ग्रा' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
+                                    {cow.saltG || 40} {currentLang === 'ta' ? 'கி' : currentLang === 'hi' ? 'ग्रा' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    {cow.waterLiters} {currentLang === 'ta' ? 'லி' : currentLang === 'hi' ? 'ली' : 'L'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
+                        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : currentLang === 'hi' ? 'प्रति गाय औसत दैनिक खुराक:' : 'Average per Cow:'}</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
+                            {(() => {
+                              const firstAnimMilk = calcResult.practicalFeedingReport?.perCategory?.milkingCow?.animals?.[0];
+                              const feedIngMilk = firstAnimMilk?.feedIngredients || {};
+                              const greenFeedsMilk = (selectedFeeds || []).filter(f => (f.category || '').toLowerCase().includes('green') || (f.category || '').toLowerCase().includes('fodder'));
+                              const totalGreenMilk = calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.greenFodderKg ?? 25;
+                              const perFeedMilk = greenFeedsMilk.map(f => ({ name: f.name, qty: Number(feedIngMilk[f.name] || 0) })).filter(e => e.qty > 0);
+                              return (
                                 <div>
-                                  <span>{cow.concentrateKg > 0 ? `${cow.concentrateKg} ${currentLang === 'ta' ? 'கிலோ' : 'kg'}${cow.isFeasible === false ? '*' : ''}` : (cow.isFeasible === false ? '—' : `0 ${currentLang === 'ta' ? 'கிலோ' : 'kg'}`)}</span>
-                                  {cow.concentrateDmPct > 0 && (
-                                    <span style={{ 
-                                      display: 'inline-block',
-                                      marginLeft: '6px',
-                                      fontSize: '0.72rem', 
-                                      padding: '1px 6px', 
-                                      borderRadius: '4px', 
-                                      background: cow.concentrateDmPct > 40 ? '#fee2e2' : '#e0f2fe',
-                                      color: cow.concentrateDmPct > 40 ? '#b91c1c' : '#0369a1',
-                                      fontWeight: 700 
-                                    }}>
-                                      {cow.concentrateDmPct}% DMI ({currentLang === 'ta' ? 'அதிகபட்சம் 40%' : 'Max safe 40%'})
-                                    </span>
+                                  <div style={{ color: '#475569', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
+                                    {currentLang === 'ta' ? 'பசுந்தீவனம்' : currentLang === 'hi' ? 'हरा चारा' : 'Green fodder'} — <strong style={{ color: '#15803d' }}>{totalGreenMilk} {currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}</strong>
+                                  </div>
+                                  {perFeedMilk.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '2px solid #bbf7d0' }}>
+                                      {perFeedMilk.map((e, ei) => (
+                                        <div key={ei} style={{ fontSize: '0.75rem', color: '#166534' }}>
+                                          • {translateFeed(e.name, currentLang)}: <strong>{e.qty.toFixed(1)} kg</strong>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div style={{ fontSize: '0.75rem', color: '#15803d', paddingLeft: '8px' }}>
+                                      {greenFeedsMilk.map(f => translateFeed(f.name, currentLang)).join(', ')}
+                                    </div>
                                   )}
                                 </div>
-                                {cow.isFeasible !== false && cow.concentrateDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
-                                    {cow.concentrateDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
-                                {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 700 }}>
-                                {cow.saltG || 40} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                              );
+                            })()}
+                            {hasAnyDryFodder && (
+                              <div>
+                                {currentLang === 'ta' ? 'உலர் தீவனம்' : currentLang === 'hi' ? 'सूखा चारा' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}</strong>
+                                {(() => {
+                                  const dryFeeds = (selectedFeeds || []).filter(f => (f.category || '').toLowerCase().includes('dry') || (f.category || '').toLowerCase().includes('straw'));
+                                  if (dryFeeds.length > 0) {
+                                    return (
+                                      <span style={{ color: '#854d0e', fontSize: '0.76rem', marginLeft: '6px' }}>
+                                        ({dryFeeds.map(f => translateFeed(f.name, currentLang)).join(', ')})
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            )}
+                            {hasAnyConcentrate && (
+                              <div>
+                                {currentLang === 'ta' ? 'அடர்தீவனம்' : currentLang === 'hi' ? 'दाना मिश्रण' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.concentrateKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}</strong>
+                                {(() => {
+                                  const concFeeds = (selectedFeeds || []).filter(f => (f.category || '').toLowerCase().includes('concentrate') || (f.category || '').toLowerCase().includes('mash'));
+                                  if (concFeeds.length > 0) {
+                                    return (
+                                      <span style={{ color: '#0369a1', fontSize: '0.76rem', marginLeft: '6px' }}>
+                                        ({concFeeds.map(f => translateFeed(f.name, currentLang)).join(', ')})
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            )}
+                            <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : currentLang === 'hi' ? 'खनिज मिश्रण' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.mineralMixtureG ?? 70} {currentLang === 'ta' ? 'கிராம்' : currentLang === 'hi' ? 'ग्राम' : 'g'}</strong></div>
+                            <div>{currentLang === 'ta' ? 'குடிநீர்' : currentLang === 'hi' ? 'पेयजल' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.waterLiters ?? 75} {currentLang === 'ta' ? 'லிட்டர்' : currentLang === 'hi' ? 'लीटर' : 'L'}</strong></div>
+                          </div>
+                        </div>
+
+                        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'மந்தையின் ஊட்டச்சத்து சமநிலை:' : 'Herd Nutrition Balance:'}</strong>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '0.8rem' }}>
+                            <div>{currentLang === 'ta' ? 'ஆற்றல் (Energy):' : 'Energy:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.energy?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.energy?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.energy?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                            <div>{currentLang === 'ta' ? 'புரதம் (Protein):' : 'Protein:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.protein?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.protein?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.protein?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                            <div>{currentLang === 'ta' ? 'நார்ச்சத்து (Fibre):' : 'Fibre:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.fibre?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.fibre?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.fibre?.status?.split(' ')[0] || 'Adequate')}</span></div>
+                            <div>{currentLang === 'ta' ? 'கால்சியம் (Ca):' : 'Calcium:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.calcium?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.calcium?.status || 'Adequate')}</span></div>
+                            <div>{currentLang === 'ta' ? 'பாஸ்பரஸ் (P):' : 'Phosphorus:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.phosphorus?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.phosphorus?.status || 'Adequate')}</span></div>
+                            <div>{currentLang === 'ta' ? 'உப்பு (Salt):' : 'Salt:'} <span style={{ fontWeight: 700, color: '#15803d' }}>{currentLang === 'ta' ? 'சரியானது' : 'Adequate'}</span></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.greenFodderKg ?? 25} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.concentrateKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.mineralMixtureG ?? 70} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.milkingCow?.dailyFeeding?.waterLiters ?? 75} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                  {/* 3.2 PREGNANT CATTLE */}
+                  {totalPregnant > 0 && (
+                    <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(194, 65, 12, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      {/* Category Header with Reference Image */}
+                      <div className="category-card-header">
+                        <img 
+                          src="/cattle_art/pregnant.jpg" 
+                          alt="Pregnant Cattle" 
+                          onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
+                          className="category-card-header-img"
+                          style={{ border: '1.5px solid #fed7aa' }}
+                        />
+                        <div className="category-card-header-content">
+                          <div className="category-card-title-row">
+                            <h4 style={{ fontSize: '1.25rem', color: '#c2410c', fontWeight: 900, margin: 0 }}>
+                              {currentLang === 'ta' ? `சினை மாடுகள் (${totalPregnant} மாடுகள்: ${totalFirstTime} முதல் சினை, ${totalRepeat} மறு சினை)` : `Pregnant Cattle (${totalPregnant} Animals: ${totalFirstTime} First Pregnancy, ${totalRepeat} Repeat)`}
+                            </h4>
+                            <span style={{ fontSize: '0.825rem', color: '#c2410c', fontWeight: 700, background: '#fff7ed', padding: '4px 12px', borderRadius: '20px' }}>
+                              {currentLang === 'ta' ? 'சினைப் பருவம்: 1–9 மாதங்கள்' : 'Gestation Stages: Months 1–9'}
+                            </span>
+                          </div>
+                          <p className="cattle-reference-text" style={{ color: '#7c2d12' }}>
+                            <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'கடைசி சினைப் பருவத்தில் (7-9 மாதங்கள்) கன்றின் வளர்ச்சி மற்றும் சீம்பால் உற்பத்திக்காக கூடுதல் சத்துணவு (Steaming up) அளிக்க வேண்டும். 1-6 மாதங்களில் பராமரிப்புத் தீவனம் போதுமானது.' : 'Late gestation (months 7–9) requires steaming up with energy concentrates to build calf birthweight and colostrum. Months 1–6 need maintenance-level forage.'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'மந்தையின் ஊட்டச்சத்து சமநிலை:' : 'Herd Nutrition Balance:'}</strong>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '0.8rem' }}>
-                        <div>{currentLang === 'ta' ? 'ஆற்றல் (Energy):' : 'Energy:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.energy?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.energy?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.energy?.status?.split(' ')[0] || 'Adequate')}</span></div>
-                        <div>{currentLang === 'ta' ? 'புரதம் (Protein):' : 'Protein:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.protein?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.protein?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.protein?.status?.split(' ')[0] || 'Adequate')}</span></div>
-                        <div>{currentLang === 'ta' ? 'நார்ச்சத்து (Fibre):' : 'Fibre:'} <span style={{ fontWeight: 700, color: (calcResult.nutritionAnalysis?.fibre?.status?.includes('Adequate') || calcResult.nutritionAnalysis?.fibre?.status?.includes('Optimal')) ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.nutritionAnalysis?.fibre?.status?.split(' ')[0] || 'Adequate')}</span></div>
-                        <div>{currentLang === 'ta' ? 'கால்சியம் (Ca):' : 'Calcium:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.calcium?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.calcium?.status || 'Adequate')}</span></div>
-                        <div>{currentLang === 'ta' ? 'பாஸ்பரஸ் (P):' : 'Phosphorus:'} <span style={{ fontWeight: 700, color: calcResult.mineralsAnalysis?.phosphorus?.status === 'Adequate' ? '#15803d' : '#d97706' }}>{currentLang === 'ta' ? 'சரியானது' : (calcResult.mineralsAnalysis?.phosphorus?.status || 'Adequate')}</span></div>
-                        <div>{currentLang === 'ta' ? 'உப்பு (Salt):' : 'Salt:'} <span style={{ fontWeight: 700, color: '#15803d' }}>{currentLang === 'ta' ? 'சரியானது' : 'Adequate'}</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 3.2 PREGNANT CATTLE */}
-              {totalPregnant > 0 && (
-                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(194, 65, 12, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-                  {/* Category Header with Reference Image */}
-                  <div className="category-card-header">
-                    <img 
-                      src="/cattle_art/pregnant.jpg" 
-                      alt="Pregnant Cattle" 
-                      onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      className="category-card-header-img"
-                      style={{ border: '1.5px solid #fed7aa' }}
-                    />
-                    <div className="category-card-header-content">
-                      <div className="category-card-title-row">
-                        <h4 style={{ fontSize: '1.25rem', color: '#c2410c', fontWeight: 900, margin: 0 }}>
-                          {currentLang === 'ta' ? `சினை மாடுகள் (${totalPregnant} மாடுகள்: ${totalFirstTime} முதல் சினை, ${totalRepeat} மறு சினை)` : `Pregnant Cattle (${totalPregnant} Animals: ${totalFirstTime} First Pregnancy, ${totalRepeat} Repeat)`}
-                        </h4>
-                        <span style={{ fontSize: '0.825rem', color: '#c2410c', fontWeight: 700, background: '#fff7ed', padding: '4px 12px', borderRadius: '20px' }}>
-                          {currentLang === 'ta' ? 'சினைப் பருவம்: 1–9 மாதங்கள்' : 'Gestation Stages: Months 1–9'}
-                        </span>
-                      </div>
-                      <p className="cattle-reference-text" style={{ color: '#7c2d12' }}>
-                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'கடைசி சினைப் பருவத்தில் (7-9 மாதங்கள்) கன்றின் வளர்ச்சி மற்றும் சீம்பால் உற்பத்திக்காக கூடுதல் சத்துணவு (Steaming up) அளிக்க வேண்டும். 1-6 மாதங்களில் பராமரிப்புத் தீவனம் போதுமானது.' : 'Late gestation (months 7–9) requires steaming up with energy concentrates to build calf birthweight and colostrum. Months 1–6 need maintenance-level forage.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Individual Pregnant Animal Table */}
-                  {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals?.length > 0 && (
-                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#c2410c', display: 'block', marginBottom: '8px' }}>
-                        {currentLang === 'ta' ? 'ஒவ்வொரு சினை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Pregnant Animal:'}
-                      </strong>
-                      <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '10px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ background: '#fffaf5', borderBottom: '2px solid #fed7aa', textAlign: 'left', color: '#c2410c' }}>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Animal'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வகை' : 'Type'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'சினைப் பருவம்' : 'Gestation Stage'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals.map((cow, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #ffedd5', background: idx % 2 === 0 ? '#ffffff' : '#fffaf5' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(cow.title) || (currentLang === 'ta' ? `சினை மாடு #${idx + 1}` : `Pregnant #${idx + 1}`)}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#9a3412', fontWeight: 600 }}>
-                                {translateTerm(cow.type, currentLang) || cow.type}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px' }}>
-                                <span style={{ 
-                                  fontWeight: 800, 
-                                  color: cow.pregMonth >= 8 ? '#b91c1c' : cow.pregMonth >= 6 ? '#c2410c' : '#15803d' 
-                                }}>
-                                  {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : (cow.stage || `Month ${cow.pregMonth}`)}
-                                </span>
-                                {cow.pregMonth >= 8 ? (
-                                  <span style={{ display: 'block', fontSize: '0.72rem', background: '#fee2e2', color: '#b91c1c', padding: '1px 6px', borderRadius: '6px', fontWeight: 700, marginTop: '2px', width: 'fit-content' }}>
-                                    {currentLang === 'ta' ? `கூடுதல் சத்துணவு (${cow.pregMonth}-ம் மாதம்)` : `Steaming Up (Month ${cow.pregMonth})`}
-                                  </span>
-                                ) : (
-                                  <span style={{ display: 'block', fontSize: '0.72rem', background: '#f0fdf4', color: '#166534', padding: '1px 6px', borderRadius: '6px', fontWeight: 600, marginTop: '2px', width: 'fit-content' }}>
-                                    {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : `Month ${cow.pregMonth}`}
-                                  </span>
+                      {/* Individual Pregnant Animal Table */}
+                      {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals?.length > 0 && (
+                        <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#c2410c', display: 'block', marginBottom: '8px' }}>
+                            {currentLang === 'ta' ? 'ஒவ்வொரு சினை மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Pregnant Animal:'}
+                          </strong>
+                          <table style={{ width: '100%', minWidth: '720px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fed7aa', borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead>
+                              <tr style={{ background: '#fffaf5', borderBottom: '2px solid #fed7aa', textAlign: 'left', color: '#c2410c' }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'மாடு' : 'Animal'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வகை' : 'Type'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'சினைப் பருவம் & கன்று வளர்ச்சி' : 'Gestation & Calf Projection'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                                {hasAnyDryFodder && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
                                 )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {cow.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {cow.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {cow.dryFodderDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
-                                    {cow.dryFodderDetails}
+                                {hasAnyConcentrate && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                                )}
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals.map((cow, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #ffedd5', background: idx % 2 === 0 ? '#ffffff' : '#fffaf5' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
+                                    {stripEmojis(cow.title) || (currentLang === 'ta' ? `சினை மாடு #${idx + 1}` : `Pregnant #${idx + 1}`)}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#9a3412', fontWeight: 600 }}>
+                                    {translateTerm(cow.type, currentLang) || cow.type}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {cow.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px' }}>
+                                    <span style={{ 
+                                      fontWeight: 800, 
+                                      color: cow.pregMonth >= 8 ? '#b91c1c' : cow.pregMonth >= 6 ? '#c2410c' : '#15803d' 
+                                    }}>
+                                      {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : (cow.stage || `Month ${cow.pregMonth}`)}
+                                    </span>
+                                    {cow.pregMonth >= 8 ? (
+                                      <span style={{ display: 'block', fontSize: '0.72rem', background: '#fee2e2', color: '#b91c1c', padding: '1px 6px', borderRadius: '6px', fontWeight: 700, marginTop: '2px', width: 'fit-content' }}>
+                                        {currentLang === 'ta' ? `கூடுதல் சத்துணவு (${cow.pregMonth}-ம் மாதம்)` : `Steaming Up (Month ${cow.pregMonth})`}
+                                      </span>
+                                    ) : (
+                                      <span style={{ display: 'block', fontSize: '0.72rem', background: '#f0fdf4', color: '#166534', padding: '1px 6px', borderRadius: '6px', fontWeight: 600, marginTop: '2px', width: 'fit-content' }}>
+                                        {currentLang === 'ta' ? `${cow.pregMonth}-ம் மாதம்` : `Month ${cow.pregMonth}`}
+                                      </span>
+                                    )}
+                                    <div style={{ fontSize: '0.72rem', color: '#c2410c', fontWeight: 600, marginTop: '3px' }}>
+                                      {currentLang === 'ta' ? `எதிர்பார்க்கப்படும் கன்று பிறப்பு எடை: ~${cow.projectedCalfBirthWeightKg || 25} கிலோ` : `Projected calf birth wt: ~${cow.projectedCalfBirthWeightKg || 25} kg`}
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: '#7c2d12', marginTop: '1px' }}>
+                                      {currentLang === 'ta' ? `கருப்பை திசு வளர்ச்சி: ~${cow.fetalDailyGainG || cow.gravidUterineGainG || 180} கி/நாள்` : `Gravid uterine gain: ~${cow.fetalDailyGainG || cow.gravidUterineGainG || 180} g/day`}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
+                                    {cow.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  {hasAnyDryFodder && (
+                                    <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
+                                      {cow.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {cow.dryFodderDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
+                                          {cow.dryFodderDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  {hasAnyConcentrate && (
+                                    <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 900 }}>
+                                      {cow.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {cow.concentrateDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
+                                          {cow.concentrateDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {cow.saltG || 35} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    {cow.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
+                        <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Animal:'}</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
+                            {(() => {
+                              const firstAnimal = calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.animals?.[0];
+                              const feedIng = firstAnimal?.feedIngredients || {};
+                              const greenFeeds = (selectedFeeds || []).filter(f => (f.category || '').toLowerCase().includes('green') || (f.category || '').toLowerCase().includes('fodder'));
+                              const totalGreen = calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.greenFodderKg ?? 20;
+                              const perFeedEntries = greenFeeds.map(f => ({ name: f.name, qty: Number(feedIng[f.name] || 0) })).filter(e => e.qty > 0);
+                              return (
+                                <div>
+                                  <div style={{ color: '#475569', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
+                                    {currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong style={{ color: '#15803d' }}>{totalGreen} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong>
                                   </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 900 }}>
-                                {cow.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {cow.concentrateDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
-                                    {cow.concentrateDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {cow.saltG || 35} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {cow.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                  {perFeedEntries.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '2px solid #bbf7d0' }}>
+                                      {perFeedEntries.map((e, ei) => (
+                                        <div key={ei} style={{ fontSize: '0.75rem', color: '#166534' }}>
+                                          • {translateFeed(e.name, currentLang)}: <strong>{e.qty.toFixed(1)} kg</strong>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              );
+                            })()}
+                            {hasAnyDryFodder && (
+                              <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            {hasAnyConcentrate && (
+                              <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.concentrateKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.mineralMixtureG ?? 60} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                            <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.waterLiters ?? 55} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                          </div>
+                        </div>
+
+                        <div className="cattle-educational-note" style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '6px' }}>{currentLang === 'ta' ? 'சினைப் பருவம் ஏன் முக்கியம்?' : 'Why Pregnancy Stage Matters:'}</strong>
+                          <p style={{ fontSize: '0.8rem', color: '#7c2d12', margin: 0, lineHeight: 1.4 }}>
+                            {currentLang === 'ta' ? '5 மாத சினை மாடுகளுக்கு நார்ச்சத்தும் பசுந்தீவனமும் போதுமானது. ஆனால் 9-வது மாதத்தில் கன்றின் அதிவேக வளர்ச்சி காரணமாக வயிற்றின் கொள்ளளவு குறைகிறது, எனவே செறிவூட்டப்பட்ட அடர்தீவனம் அளிக்க வேண்டும்.' : 'A cow that is 5 months pregnant has lower fetal requirements and needs mostly fiber/green fodder. A cow in month 9 has rapid calf growth and needs higher concentrate density (steaming up) because rumen capacity decreases.'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
-                    <div style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Animal:'}</strong>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.greenFodderKg ?? 20} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.dryFodderKg ?? 4} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.concentrateKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.mineralMixtureG ?? 60} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.pregnantCattle?.dailyFeeding?.waterLiters ?? 55} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                  {/* 3.3 GROWING HEIFER */}
+                  {totalHeifers > 0 && (
+                    <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bbf7d0', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(21, 128, 61, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      {/* Category Header with Reference Image */}
+                      <div className="category-card-header">
+                        <img 
+                          src="/cattle_art/heifers.jpg" 
+                          alt="Growing Heifers" 
+                          onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
+                          className="category-card-header-img"
+                          style={{ border: '1.5px solid #bbf7d0' }}
+                        />
+                        <div className="category-card-header-content">
+                          <div className="category-card-title-row">
+                            <h4 style={{ fontSize: '1.25rem', color: '#15803d', fontWeight: 900, margin: 0 }}>
+                              {currentLang === 'ta' ? `வளரும் கிடாரிகள் (${totalHeifers} மாடுகள்)` : `Growing Heifers (${totalHeifers} Head)`}
+                            </h4>
+                            <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 700, background: '#f0fdf4', padding: '4px 12px', borderRadius: '20px' }}>
+                              {currentLang === 'ta' ? `இலக்கு வளர்ச்சி: +${calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.[0]?.dailyWeightGainG || 550} கி/நாள்` : `Target Gain: +${calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.[0]?.dailyWeightGainG || 550} g/day`}
+                            </span>
+                          </div>
+                          <p className="cattle-reference-text" style={{ color: '#166534' }}>
+                            <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'வளரும் கிடாரிகளுக்கு அதிக கொழுப்பு படியாமல் எலும்பு மற்றும் உடல் கட்டமைப்பு வளர்ச்சிக்கு சரிவிகித புரதமும் தாதுக்களும் தேவைப்படுகின்றன.' : 'Growing replacement heifers require balanced protein and minerals for skeletal frame growth without excess body fat deposition.'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="cattle-educational-note" style={{ background: '#fffaf5', padding: '14px', borderRadius: '12px', border: '1px solid #fed7aa' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#9a3412', display: 'block', marginBottom: '6px' }}>{currentLang === 'ta' ? 'சினைப் பருவம் ஏன் முக்கியம்?' : 'Why Pregnancy Stage Matters:'}</strong>
-                      <p style={{ fontSize: '0.8rem', color: '#7c2d12', margin: 0, lineHeight: 1.4 }}>
-                        {currentLang === 'ta' ? '5 மாத சினை மாடுகளுக்கு நார்ச்சத்தும் பசுந்தீவனமும் போதுமானது. ஆனால் 9-வது மாதத்தில் கன்றின் அதிவேக வளர்ச்சி காரணமாக வயிற்றின் கொள்ளளவு குறைகிறது, எனவே செறிவூட்டப்பட்ட அடர்தீவனம் அளிக்க வேண்டும்.' : 'A cow that is 5 months pregnant has lower fetal requirements and needs mostly fiber/green fodder. A cow in month 9 has rapid calf growth and needs higher concentrate density (steaming up) because rumen capacity decreases.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                      {/* Individual Heifer Table */}
+                      {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.length > 0 && (
+                        <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#15803d', display: 'block', marginBottom: '8px' }}>
+                            {currentLang === 'ta' ? 'ஒவ்வொரு கிடாரிக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Heifer:'}
+                          </strong>
+                          <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead>
+                              <tr style={{ background: '#f0fdf4', borderBottom: '2px solid #bbf7d0', textAlign: 'left', color: '#15803d' }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'கிடாரி' : 'Heifer'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                                <th style={{ padding: '10px 12px', color: '#15803d' }}>{currentLang === 'ta' ? 'எடை வளர்ச்சி & AI இலக்கு' : 'Frame Gain & AI Target'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                                {hasAnyDryFodder && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                                )}
+                                {hasAnyConcentrate && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                                )}
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals.map((h, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #dcfce7', background: idx % 2 === 0 ? '#ffffff' : '#f0fdf4' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
+                                    {stripEmojis(h.title) || (currentLang === 'ta' ? `கிடாரி #${idx + 1}` : `Heifer #${idx + 1}`)}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
+                                    {h.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', fontSize: '0.8rem' }}>
+                                    <div style={{ fontWeight: 800, color: '#15803d' }}>
+                                      +{h.dailyWeightGainG || 550} {currentLang === 'ta' ? 'கி/நாள் வளர்ச்சி' : 'g/day frame gain'}
+                                    </div>
+                                    <div style={{ fontSize: '0.72rem', color: '#475569', marginTop: '2px' }}>
+                                      {currentLang === 'ta' 
+                                        ? `இனப்பெருக்க எடை: ~${h.targetBreedingWeightKg || 225} கிலோ (~${h.monthsToBreedingWeight || 2} மாதங்களில் AI)` 
+                                        : `Target AI: ~${h.targetBreedingWeightKg || 225} kg (~${h.monthsToBreedingWeight || 2} mo to AI)`}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
+                                    {h.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  {hasAnyDryFodder && (
+                                    <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
+                                      {h.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {h.dryFodderDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
+                                          {h.dryFodderDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  {hasAnyConcentrate && (
+                                    <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                      {h.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {h.concentrateDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
+                                          {h.concentrateDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {h.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {h.saltG || 25} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    {h.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
 
-              {/* 3.3 GROWING HEIFER */}
-              {totalHeifers > 0 && (
-                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #bbf7d0', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(21, 128, 61, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-                  {/* Category Header with Reference Image */}
-                  <div className="category-card-header">
-                    <img 
-                      src="/cattle_art/heifers.jpg" 
-                      alt="Growing Heifers" 
-                      onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      className="category-card-header-img"
-                      style={{ border: '1.5px solid #bbf7d0' }}
-                    />
-                    <div className="category-card-header-content">
-                      <div className="category-card-title-row">
-                        <h4 style={{ fontSize: '1.25rem', color: '#15803d', fontWeight: 900, margin: 0 }}>
-                          {currentLang === 'ta' ? `வளரும் கிடாரிகள் (${totalHeifers} மாடுகள்)` : `Growing Heifers (${totalHeifers} Head)`}
-                        </h4>
-                        <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 700, background: '#f0fdf4', padding: '4px 12px', borderRadius: '20px' }}>
-                          {currentLang === 'ta' ? 'இலக்கு எடை அதிகரிப்பு: 500–600 கி/நாள்' : 'Target Gain: 500–600 g/day'}
-                        </span>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
+                        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு கிடாரிக்கு:' : 'Average per Heifer:'}</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
+                            {(() => {
+                              const firstAnimal = calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.[0];
+                              const feedIng = firstAnimal?.feedIngredients || {};
+                              const greenFeeds = (selectedFeeds || []).filter(f => (f.category || '').toLowerCase().includes('green') || (f.category || '').toLowerCase().includes('fodder'));
+                              const totalGreen = calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.greenFodderKg ?? 15;
+                              const perFeedEntries = greenFeeds.map(f => ({ name: f.name, qty: Number(feedIng[f.name] || 0) })).filter(e => e.qty > 0);
+                              return (
+                                <div>
+                                  <div style={{ color: '#475569', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
+                                    {currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong style={{ color: '#15803d' }}>{totalGreen} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong>
+                                  </div>
+                                  {perFeedEntries.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '2px solid #bbf7d0' }}>
+                                      {perFeedEntries.map((e, ei) => (
+                                        <div key={ei} style={{ fontSize: '0.75rem', color: '#166534' }}>
+                                          • {translateFeed(e.name, currentLang)}: <strong>{e.qty.toFixed(1)} kg</strong>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              );
+                            })()}
+                            {hasAnyDryFodder && (
+                              <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.dryFodderKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            {hasAnyConcentrate && (
+                              <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.concentrateKg ?? 1.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.mineralMixtureG ?? 35} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                            <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.waterLiters ?? 30} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                            <div style={{ color: '#15803d', fontWeight: 700, marginTop: '2px' }}>
+                              {currentLang === 'ta' ? 'தினசரி எடை வளர்ச்சி:' : 'Projected Daily Gain:'} +{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.[0]?.dailyWeightGainG || 550} {currentLang === 'ta' ? 'கி/நாள்' : 'g/day'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'பராமரிப்பு வழிகாட்டுதல்:' : 'Result & Care:'}</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
+                            <div>• {currentLang === 'ta' ? 'சீராக தினமும் உடல் எடை வளர்ச்சியைப் பராமரிக்கவும்' : 'Maintain steady daily growth'}</div>
+                            <div>• {currentLang === 'ta' ? 'அதிக அடர்தீவனம் கொடுத்து அளவுக்கு மீறி கொழுப்பு சேர்வதைத் தவிர்க்கவும்' : 'Avoid overfeeding heavy concentrates'}</div>
+                            <div>• {currentLang === 'ta' ? 'தாது உப்புக் கலவையை தவறாமல் சேர்க்கவும்' : 'Check mineral mixture balance'}</div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="cattle-reference-text" style={{ color: '#166534' }}>
-                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'வளரும் கிடாரிகளுக்கு அதிக கொழுப்பு படியாமல் எலும்பு மற்றும் உடல் கட்டமைப்பு வளர்ச்சிக்கு சரிவிகித புரதமும் தாதுக்களும் தேவைப்படுகின்றன.' : 'Growing replacement heifers require balanced protein and minerals for skeletal frame growth without excess body fat deposition.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Individual Heifer Table */}
-                  {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals?.length > 0 && (
-                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#15803d', display: 'block', marginBottom: '8px' }}>
-                        {currentLang === 'ta' ? 'ஒவ்வொரு கிடாரிக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Heifer:'}
-                      </strong>
-                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #bbf7d0', borderRadius: '10px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ background: '#f0fdf4', borderBottom: '2px solid #bbf7d0', textAlign: 'left', color: '#15803d' }}>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'கிடாரி' : 'Heifer'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.animals.map((h, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #dcfce7', background: idx % 2 === 0 ? '#ffffff' : '#f0fdf4' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(h.title) || (currentLang === 'ta' ? `கிடாரி #${idx + 1}` : `Heifer #${idx + 1}`)}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {h.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {h.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {h.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {h.dryFodderDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
-                                    {h.dryFodderDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {h.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {h.concentrateDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
-                                    {h.concentrateDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {h.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {h.saltG || 25} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {h.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு கிடாரிக்கு:' : 'Average per Heifer:'}</strong>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.greenFodderKg ?? 15} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.dryFodderKg ?? 2.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.concentrateKg ?? 1.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.mineralMixtureG ?? 35} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.growingHeifer?.dailyFeeding?.waterLiters ?? 30} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                  {/* 3.4 DRY COW */}
+                  {totalDry > 0 && (
+                    <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(71, 85, 105, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      {/* Category Header with Reference Image */}
+                      <div className="category-card-header">
+                        <img 
+                          src="/cattle_art/dry_cows.jpg" 
+                          alt="Dry Cows" 
+                          onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
+                          className="category-card-header-img"
+                          style={{ border: '1.5px solid #cbd5e1' }}
+                        />
+                        <div className="category-card-header-content">
+                          <div className="category-card-title-row">
+                            <h4 style={{ fontSize: '1.25rem', color: '#334155', fontWeight: 900, margin: 0 }}>
+                              {currentLang === 'ta' ? `வறண்ட மாடுகள் (${totalDry} மாடுகள்)` : `Dry Cows (${totalDry} Head)`}
+                            </h4>
+                            <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 700, background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
+                              {currentLang === 'ta' ? 'வறண்ட காலம்: 45–60 நாட்கள்' : 'Dry Period: 45–60 Days'}
+                            </span>
+                          </div>
+                          <p className="cattle-reference-text" style={{ color: '#475569' }}>
+                            <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'மடி திசுக்களின் புத்துணர்ச்சி மற்றும் அடுத்த ஈத்துக்கு வயிற்றின் ஓய்வு காலம். அதிக நார்ச்சத்துள்ள தீவனம் அளித்து அடர்தீவன அளவைக் குறைக்க வேண்டும்.' : 'Mammary gland involution and rumen rest period before next calving. Feed mostly high fiber forage and restrict heavy concentrates.'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'பராமரிப்பு வழிகாட்டுதல்:' : 'Result & Care:'}</strong>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem' }}>
-                        <div>• {currentLang === 'ta' ? 'சீராக தினமும் உடல் எடை வளர்ச்சியைப் பராமரிக்கவும்' : 'Maintain steady daily growth'}</div>
-                        <div>• {currentLang === 'ta' ? 'அதிக அடர்தீவனம் கொடுத்து அளவுக்கு மீறி கொழுப்பு சேர்வதைத் தவிர்க்கவும்' : 'Avoid overfeeding heavy concentrates'}</div>
-                        <div>• {currentLang === 'ta' ? 'தாது உப்புக் கலவையை தவறாமல் சேர்க்கவும்' : 'Check mineral mixture balance'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 3.4 DRY COW */}
-              {totalDry > 0 && (
-                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #cbd5e1', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(71, 85, 105, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-                  {/* Category Header with Reference Image */}
-                  <div className="category-card-header">
-                    <img 
-                      src="/cattle_art/dry_cows.jpg" 
-                      alt="Dry Cows" 
-                      onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      className="category-card-header-img"
-                      style={{ border: '1.5px solid #cbd5e1' }}
-                    />
-                    <div className="category-card-header-content">
-                      <div className="category-card-title-row">
-                        <h4 style={{ fontSize: '1.25rem', color: '#334155', fontWeight: 900, margin: 0 }}>
-                          {currentLang === 'ta' ? `வறண்ட மாடுகள் (${totalDry} மாடுகள்)` : `Dry Cows (${totalDry} Head)`}
-                        </h4>
-                        <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 700, background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
-                          {currentLang === 'ta' ? 'வறண்ட காலம்: 45–60 நாட்கள்' : 'Dry Period: 45–60 Days'}
-                        </span>
-                      </div>
-                      <p className="cattle-reference-text" style={{ color: '#475569' }}>
-                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'மடி திசுக்களின் புத்துணர்ச்சி மற்றும் அடுத்த ஈத்துக்கு வயிற்றின் ஓய்வு காலம். அதிக நார்ச்சத்துள்ள தீவனம் அளித்து அடர்தீவன அளவைக் குறைக்க வேண்டும்.' : 'Mammary gland involution and rumen rest period before next calving. Feed mostly high fiber forage and restrict heavy concentrates.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Individual Dry Cow Table */}
-                  {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals?.length > 0 && (
-                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#475569', display: 'block', marginBottom: '8px' }}>
-                        {currentLang === 'ta' ? 'ஒவ்வொரு வறண்ட மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Dry Cow:'}
-                      </strong>
-                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1', textAlign: 'left', color: '#475569' }}>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட மாடு' : 'Dry Cow'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட காலம்' : 'Dry Period'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals.map((d, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(d.title) || (currentLang === 'ta' ? `வறண்ட மாடு #${idx + 1}` : `Dry Cow #${idx + 1}`)}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {d.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px' }}>
-                                <span style={{ fontWeight: 700, color: '#475569' }}>
-                                  {d.dryDays} {currentLang === 'ta' ? 'நாட்கள் வறட்சி' : 'days dry'}
-                                </span>
-                                <span style={{ 
-                                  display: 'block', 
-                                  fontSize: '0.72rem', 
-                                  background: d.dryDays > 30 ? '#f1f5f9' : '#fef3c7', 
-                                  color: d.dryDays > 30 ? '#475569' : '#b45309', 
-                                  padding: '1px 6px', 
-                                  borderRadius: '6px', 
-                                  fontWeight: 700, 
-                                  marginTop: '2px', 
-                                  width: 'fit-content' 
-                                }}>
-                                  {d.dryDays > 30 ? (currentLang === 'ta' ? 'தொடக்க ஓய்வு (வயிற்று ஓய்வு)' : 'Far-off (Rumen rest)') : (currentLang === 'ta' ? 'ஈத்துக்கு முந்தைய மாற்றம்' : 'Close-up (Transition)')}
-                                </span>
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {d.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {d.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {d.dryFodderDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
-                                    {d.dryFodderDetails}
-                                  </div>
+                      {/* Individual Dry Cow Table */}
+                      {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals?.length > 0 && (
+                        <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#475569', display: 'block', marginBottom: '8px' }}>
+                            {currentLang === 'ta' ? 'ஒவ்வொரு வறண்ட மாட்டுக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Dry Cow:'}
+                          </strong>
+                          <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead>
+                              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1', textAlign: 'left', color: '#475569' }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட மாடு' : 'Dry Cow'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'வறண்ட காலம்' : 'Dry Period'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                                {hasAnyDryFodder && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
                                 )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {d.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {d.concentrateDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
-                                    {d.concentrateDetails}
-                                  </div>
+                                {hasAnyConcentrate && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
                                 )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {d.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {d.saltG || 30} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {d.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcResult.practicalFeedingReport?.perCategory?.dryCow?.animals.map((d, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
+                                    {stripEmojis(d.title) || (currentLang === 'ta' ? `வறண்ட மாடு #${idx + 1}` : `Dry Cow #${idx + 1}`)}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
+                                    <div>{d.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</div>
+                                    <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 700, marginTop: '2px' }}>
+                                      {currentLang === 'ta' ? `ஈத்துக்கு முன் எடை: ~${d.targetCalvingWeightKg || (d.weightKg + 25)} கிலோ` : `Near-calving: ~${d.targetCalvingWeightKg || (d.weightKg + 25)} kg`}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '10px 12px' }}>
+                                    <span style={{ fontWeight: 700, color: '#475569' }}>
+                                      {d.dryDays} {currentLang === 'ta' ? 'நாட்கள் வறட்சி' : 'days dry'}
+                                    </span>
+                                    <span style={{ 
+                                      display: 'block', 
+                                      fontSize: '0.72rem', 
+                                      background: d.dryDays > 30 ? '#f1f5f9' : '#fef3c7', 
+                                      color: d.dryDays > 30 ? '#475569' : '#b45309', 
+                                      padding: '1px 6px', 
+                                      borderRadius: '6px', 
+                                      fontWeight: 700, 
+                                      marginTop: '2px', 
+                                      width: 'fit-content' 
+                                    }}>
+                                      {d.dryDays > 30 ? (currentLang === 'ta' ? 'தொடக்க ஓய்வு (வயிற்று ஓய்வு)' : 'Far-off (Rumen rest)') : (currentLang === 'ta' ? 'ஈத்துக்கு முந்தைய மாற்றம்' : 'Close-up (Transition)')}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
+                                    {d.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  {hasAnyDryFodder && (
+                                    <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
+                                      {d.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {d.dryFodderDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
+                                          {d.dryFodderDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  {hasAnyConcentrate && (
+                                    <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                      {d.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {d.concentrateDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
+                                          {d.concentrateDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {d.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {d.saltG || 30} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    {d.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
+                        <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
+                            <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.greenFodderKg ?? 20} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            {hasAnyDryFodder && (
+                              <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.dryFodderKg ?? 4.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            {hasAnyConcentrate && (
+                              <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.concentrateKg ?? 1.2} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                            )}
+                            <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.mineralMixtureG ?? 45} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                            <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.waterLiters ?? 50} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                          </div>
+                        </div>
+
+                        <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'நிலைமை:' : 'Status:'}</strong>
+                          <p style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700, margin: '0 0 6px' }}>
+                            {currentLang === 'ta' ? 'பராமரிப்புத் தீவனம் தேவை' : 'Maintenance feeding required'}
+                          </p>
+                          <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>
+                            {currentLang === 'ta' ? 'கன்று ஈனும் போது ஏற்படும் வளர்சிதை மாற்றக் கோளாறுகளைத் தவிர்க்க வறண்ட காலத்தில் அதிக தானியங்கள் கொடுப்பதைத் தவிர்க்கவும்.' : 'Avoid excessive grains during dry period to prevent fat cow syndrome and metabolic disorders at calving.'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
-                    <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு மாட்டுக்கு:' : 'Average per Cow:'}</strong>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.825rem' }}>
-                        <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.greenFodderKg ?? 20} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.dryFodderKg ?? 4.5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.concentrateKg ?? 1.2} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.mineralMixtureG ?? 45} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
-                        <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.dryCow?.dailyFeeding?.waterLiters ?? 50} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                  {/* 3.5 BREEDING BULL */}
+                  {totalBulls > 0 && (
+                    <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(185, 28, 28, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
+                      {/* Category Header with Reference Image */}
+                      <div className="category-card-header">
+                        <img 
+                          src="/cattle_art/bulls.jpg" 
+                          alt="Breeding Bulls" 
+                          onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
+                          className="category-card-header-img"
+                          style={{ border: '1.5px solid #fca5a5' }}
+                        />
+                        <div className="category-card-header-content">
+                          <div className="category-card-title-row">
+                            <h4 style={{ fontSize: '1.25rem', color: '#b91c1c', fontWeight: 900, margin: 0 }}>
+                              {currentLang === 'ta' ? `காளைகள் & உழவு மாடுகள் (${totalBulls} மாடுகள்)` : `Breeding Bulls & Draught Cattle (${totalBulls} Head)`}
+                            </h4>
+                            <span style={{ fontSize: '0.825rem', color: '#b91c1c', fontWeight: 700, background: '#fef2f2', padding: '4px 12px', borderRadius: '20px' }}>
+                              {currentLang === 'ta' ? 'அடிப்படை வளர்சிதை மாற்றம்: +10%' : 'Basal Metabolism: +10%'}
+                            </span>
+                          </div>
+                          <p className="cattle-reference-text" style={{ color: '#7f1d1d' }}>
+                            <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'இனப்பெருக்க காளைகள் மற்றும் வேலை செய்யும் மாடுகளுக்கு அதிக வளர்சிதை மாற்ற விகிதம் உள்ளது. இனப்பெருக்க சுறுசுறுப்பிற்காக சரிவிகித பசுந்தீவனத்துடன் மிதமான அடர்தீவனம் அளிக்க வேண்டும்.' : 'Breeding bulls and working oxen have higher basal metabolic rates. Feed balanced green roughage with moderate energy concentrate for reproductive vigor.'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="cattle-educational-note" style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'நிலைமை:' : 'Status:'}</strong>
-                      <p style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700, margin: '0 0 6px' }}>
-                        {currentLang === 'ta' ? 'பராமரிப்புத் தீவனம் தேவை' : 'Maintenance feeding required'}
-                      </p>
-                      <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>
-                        {currentLang === 'ta' ? 'கன்று ஈனும் போது ஏற்படும் வளர்சிதை மாற்றக் கோளாறுகளைத் தவிர்க்க வறண்ட காலத்தில் அதிக தானியங்கள் கொடுப்பதைத் தவிர்க்கவும்.' : 'Avoid excessive grains during dry period to prevent fat cow syndrome and metabolic disorders at calving.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                      {/* Individual Bull Table */}
+                      {calcResult.practicalFeedingReport?.perCategory?.bull?.animals?.length > 0 && (
+                        <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
+                          <strong style={{ fontSize: '0.88rem', color: '#b91c1c', display: 'block', marginBottom: '8px' }}>
+                            {currentLang === 'ta' ? 'ஒவ்வொரு காளைக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Bull:'}
+                          </strong>
+                          <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '10px', overflow: 'hidden' }}>
+                            <thead>
+                              <tr style={{ background: '#fef2f2', borderBottom: '2px solid #fca5a5', textAlign: 'left', color: '#b91c1c' }}>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'காளை' : 'Bull'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
+                                {hasAnyDryFodder && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
+                                )}
+                                {hasAnyConcentrate && (
+                                  <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
+                                )}
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
+                                <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcResult.practicalFeedingReport?.perCategory?.bull?.animals.map((b, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #fee2e2', background: idx % 2 === 0 ? '#ffffff' : '#fef2f2' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
+                                    {stripEmojis(b.title) || (currentLang === 'ta' ? `காளை #${idx + 1}` : `Bull #${idx + 1}`)}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
+                                    {b.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
+                                    {b.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                  </td>
+                                  {hasAnyDryFodder && (
+                                    <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
+                                      {b.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {b.dryFodderDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
+                                          {b.dryFodderDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  {hasAnyConcentrate && (
+                                    <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                      {b.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
+                                      {b.concentrateDetails && (
+                                        <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
+                                          {b.concentrateDetails}
+                                        </div>
+                                      )}
+                                    </td>
+                                  )}
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {b.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#475569' }}>
+                                    {b.saltG || 40} {currentLang === 'ta' ? 'கி' : 'g'}
+                                  </td>
+                                  <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
+                                    {b.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
 
-              {/* 3.5 BREEDING BULL */}
-              {totalBulls > 0 && (
-                <div className="cattle-category-card" style={{ background: '#ffffff', border: '1.5px solid #fca5a5', borderRadius: '16px', padding: 'clamp(14px, 3vw, 24px)', boxShadow: '0 2px 8px rgba(185, 28, 28, 0.04)', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' }}>
-                  {/* Category Header with Reference Image */}
-                  <div className="category-card-header">
-                    <img 
-                      src="/cattle_art/bulls.jpg" 
-                      alt="Breeding Bulls" 
-                      onError={(e) => { e.target.src = "/cattle_art/farm_summary.jpg"; }}
-                      className="category-card-header-img"
-                      style={{ border: '1.5px solid #fca5a5' }}
-                    />
-                    <div className="category-card-header-content">
-                      <div className="category-card-title-row">
-                        <h4 style={{ fontSize: '1.25rem', color: '#b91c1c', fontWeight: 900, margin: 0 }}>
-                          {currentLang === 'ta' ? `காளைகள் & உழவு மாடுகள் (${totalBulls} மாடுகள்)` : `Breeding Bulls & Draught Cattle (${totalBulls} Head)`}
-                        </h4>
-                        <span style={{ fontSize: '0.825rem', color: '#b91c1c', fontWeight: 700, background: '#fef2f2', padding: '4px 12px', borderRadius: '20px' }}>
-                          {currentLang === 'ta' ? 'அடிப்படை வளர்சிதை மாற்றம்: +10%' : 'Basal Metabolism: +10%'}
-                        </span>
+                      <div style={{ background: '#fef2f2', padding: '14px', borderRadius: '12px', border: '1px solid #fca5a5' }}>
+                        <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு காளைக்கு:' : 'Average per Bull:'}</strong>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.825rem' }}>
+                          <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.greenFodderKg ?? 25} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                          {hasAnyDryFodder && (
+                            <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.dryFodderKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                          )}
+                          {hasAnyConcentrate && (
+                            <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.concentrateKg ?? 1.8} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
+                          )}
+                          <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.mineralMixtureG ?? 50} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
+                          <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.waterLiters ?? 65} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
+                        </div>
+                        <p className="cattle-educational-note" style={{ fontSize: '0.78rem', color: '#b91c1c', margin: '8px 0 0', fontWeight: 600 }}>
+                          {currentLang === 'ta' ? '* கறவை மாடுகளுக்கு கொடுக்கும் அதிக அடர்தீவன அளவை காளைகளுக்கு அளிக்கக் கூடாது.' : '* The bull should not receive the same high-energy concentrate level as the lactating cow.'}
+                        </p>
                       </div>
-                      <p className="cattle-reference-text" style={{ color: '#7f1d1d' }}>
-                        <strong>{currentLang === 'ta' ? 'மாடு வளர்ப்பு வழிகாட்டி:' : 'Cattle Reference:'}</strong> {currentLang === 'ta' ? 'இனப்பெருக்க காளைகள் மற்றும் வேலை செய்யும் மாடுகளுக்கு அதிக வளர்சிதை மாற்ற விகிதம் உள்ளது. இனப்பெருக்க சுறுசுறுப்பிற்காக சரிவிகித பசுந்தீவனத்துடன் மிதமான அடர்தீவனம் அளிக்க வேண்டும்.' : 'Breeding bulls and working oxen have higher basal metabolic rates. Feed balanced green roughage with moderate energy concentrate for reproductive vigor.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Individual Bull Table */}
-                  {calcResult.practicalFeedingReport?.perCategory?.bull?.animals?.length > 0 && (
-                    <div className="responsive-table-container horizontal-scroll" style={{ marginBottom: '16px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#b91c1c', display: 'block', marginBottom: '8px' }}>
-                        {currentLang === 'ta' ? 'ஒவ்வொரு காளைக்குமான தினசரி துல்லிய தீவன அளவு:' : 'Exact Daily Feeding for Each Bull:'}
-                      </strong>
-                      <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.84rem', background: '#ffffff', border: '1px solid #fca5a5', borderRadius: '10px', overflow: 'hidden' }}>
-                        <thead>
-                          <tr style={{ background: '#fef2f2', borderBottom: '2px solid #fca5a5', textAlign: 'left', color: '#b91c1c' }}>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'காளை' : 'Bull'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'எடை' : 'Weight'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'பசுந்தீவனம் (கிலோ)' : 'Green Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உலர் தீவனம் (கிலோ)' : 'Dry Fodder (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'அடர்தீவனம் (கிலோ)' : 'Concentrate (kg)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'தாது உப்பு (கி)' : 'Mineral Mix (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'உப்பு (கி)' : 'Salt (g)'}</th>
-                            <th style={{ padding: '10px 12px' }}>{currentLang === 'ta' ? 'குடிநீர் (லி)' : 'Water (L)'}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {calcResult.practicalFeedingReport?.perCategory?.bull?.animals.map((b, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #fee2e2', background: idx % 2 === 0 ? '#ffffff' : '#fef2f2' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 800, color: '#0f172a' }}>
-                                {stripEmojis(b.title) || (currentLang === 'ta' ? `காளை #${idx + 1}` : `Bull #${idx + 1}`)}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569', fontWeight: 600 }}>
-                                {b.weightKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#15803d', fontWeight: 800 }}>
-                                {b.greenFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#854d0e', fontWeight: 700 }}>
-                                {b.dryFodderKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {b.dryFodderDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#a16207', fontWeight: 500, marginTop: '2px' }}>
-                                    {b.dryFodderDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {b.concentrateKg} {currentLang === 'ta' ? 'கிலோ' : 'kg'}
-                                {b.concentrateDetails && (
-                                  <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 600, marginTop: '2px' }}>
-                                    {b.concentrateDetails}
-                                  </div>
-                                )}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {b.mineralMixtureG} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#475569' }}>
-                                {b.saltG || 40} {currentLang === 'ta' ? 'கி' : 'g'}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#0284c7', fontWeight: 800 }}>
-                                {b.waterLiters} {currentLang === 'ta' ? 'லி' : 'L'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
                   )}
 
-                  <div style={{ background: '#fef2f2', padding: '14px', borderRadius: '12px', border: '1px solid #fca5a5' }}>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a', display: 'block', marginBottom: '8px' }}>{currentLang === 'ta' ? 'சராசரியாக ஒரு காளைக்கு:' : 'Average per Bull:'}</strong>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.825rem' }}>
-                      <div>{currentLang === 'ta' ? 'பசுந்தீவனம்' : 'Green fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.greenFodderKg ?? 25} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                      <div>{currentLang === 'ta' ? 'உலர் தீவனம்' : 'Dry fodder'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.dryFodderKg ?? 5} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                      <div>{currentLang === 'ta' ? 'அடர்தீவனம்' : 'Concentrate'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.concentrateKg ?? 1.8} {currentLang === 'ta' ? 'கிலோ' : 'kg'}</strong></div>
-                      <div>{currentLang === 'ta' ? 'தாது உப்புக் கலவை' : 'Mineral mixture'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.mineralMixtureG ?? 50} {currentLang === 'ta' ? 'கிராம்' : 'g'}</strong></div>
-                      <div>{currentLang === 'ta' ? 'குடிநீர்' : 'Water'} — <strong>{calcResult.practicalFeedingReport?.perCategory?.bull?.dailyFeeding?.waterLiters ?? 65} {currentLang === 'ta' ? 'லிட்டர்' : 'L'}</strong></div>
-                    </div>
-                    <p className="cattle-educational-note" style={{ fontSize: '0.78rem', color: '#b91c1c', margin: '8px 0 0', fontWeight: 600 }}>
-                      {currentLang === 'ta' ? '* கறவை மாடுகளுக்கு கொடுக்கும் அதிக அடர்தீவன அளவை காளைகளுக்கு அளிக்கக் கூடாது.' : '* The bull should not receive the same high-energy concentrate level as the lactating cow.'}
-                    </p>
-                  </div>
                 </div>
-              )}
-
-            </div>
+              );
+            })()}
 
             {/* 4. WATER STATUS */}
             <div className="review-section-card" style={{ background: '#ffffff', border: '1.5px solid #bae6fd', borderRadius: '16px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 8px rgba(2, 132, 199, 0.04)' }}>
@@ -3462,56 +3675,56 @@ export default function Step10Review({
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
                         {/* Feed Net Energy Box */}
                         <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '14px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>Diet Net Energy (NEL) Supply</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase' }}>{currentLang === 'ta' ? 'உணவு நிகர ஆற்றல் (NEL)' : 'Diet Net Energy (NEL) Supply'}</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#15803d', margin: '4px 0' }}>
                             {energy.feedNelMcal || 0} <span style={{ fontSize: '0.85rem' }}>Mcal/day</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#166534' }}>
-                            Diet ME: {energy.dietMeMcal || 0} Mcal/day x 0.66
+                            {currentLang === 'ta' ? 'உணவு ME:' : 'Diet ME:'} {energy.dietMeMcal || 0} Mcal/day x 0.66
                           </div>
                         </div>
 
                         {/* Lactating Milk Energy Demand */}
                         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e40af', textTransform: 'uppercase' }}>Milk Energy (NEL) Demand</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e40af', textTransform: 'uppercase' }}>{currentLang === 'ta' ? 'பால் உற்பத்தி ஆற்றல் தேவை' : 'Milk Energy (NEL) Demand'}</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1d4ed8', margin: '4px 0' }}>
                             {energy.milkNeuseMcalPerDay || 0} <span style={{ fontSize: '0.85rem' }}>Mcal/day</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#1e40af' }}>
-                            Milk NEL: {energy.milkNepMcalPerKg || 0} Mcal/kg (0.360 + 0.0969 x Fat%)
+                            {currentLang === 'ta' ? 'பால் NEL:' : 'Milk NEL:'} {energy.milkNepMcalPerKg || 0} Mcal/kg (0.360 + 0.0969 x Fat%)
                           </div>
                         </div>
 
                         {/* Maintenance Energy Demand */}
                         <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '12px', padding: '14px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6d28d9', textTransform: 'uppercase' }}>Maintenance NEL Demand</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6d28d9', textTransform: 'uppercase' }}>{currentLang === 'ta' ? 'பராமரிப்பு ஆற்றல் தேவை' : 'Maintenance NEL Demand'}</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#7c3aed', margin: '4px 0' }}>
                             {energy.maintenanceNelMcal || 0} <span style={{ fontSize: '0.85rem' }}>Mcal/day</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#6d28d9' }}>
-                            Formula: 0.10 x BW^0.75 per animal
+                            {currentLang === 'ta' ? 'சூத்திரம்: 0.10 x BW^0.75' : 'Formula: 0.10 x BW^0.75 per animal'}
                           </div>
                         </div>
 
                         {/* Gestational Energy Demand */}
                         <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', padding: '14px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400e', textTransform: 'uppercase' }}>Gestational Demand</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400e', textTransform: 'uppercase' }}>{currentLang === 'ta' ? 'சினைக்கால ஆற்றல் தேவை' : 'Gestational Demand'}</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#b45309', margin: '4px 0' }}>
                             {energy.gestNelMcalPerDay || 0} <span style={{ fontSize: '0.85rem' }}>Mcal/day</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#92400e' }}>
-                            Conceptus Gain: {energy.gravidUterineGainKgDay || 0} kg/day | {energy.dryPeriodStage}
+                            {currentLang === 'ta' ? 'கரு வளர்ச்சி:' : 'Conceptus Gain:'} {energy.gravidUterineGainKgDay || 0} kg/day | {energy.dryPeriodStage}
                           </div>
                         </div>
 
                         {/* Growth & Frame Energy Demand */}
                         <div style={{ background: '#fdf4ff', border: '1px solid #f0abfc', borderRadius: '12px', padding: '14px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#86198f', textTransform: 'uppercase' }}>Growth & Frame Demand</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#86198f', textTransform: 'uppercase' }}>{currentLang === 'ta' ? 'வளர்ச்சி ஆற்றல் தேவை' : 'Growth & Frame Demand'}</span>
                           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#a21caf', margin: '4px 0' }}>
                             {energy.growthNelMcal || 0} <span style={{ fontSize: '0.85rem' }}>Mcal/day</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#86198f' }}>
-                            {energy.growthDescription || 'Heifer Frame Growth & Primiparous Gain'}
+                            {currentLang === 'ta' ? 'கிடாரி உடல் வளர்ச்சி' : energy.growthDescription || 'Heifer Frame Growth & Primiparous Gain'}
                           </div>
                         </div>
                       </div>

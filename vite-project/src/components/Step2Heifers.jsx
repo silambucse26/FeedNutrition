@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Copy, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import CattleCounter from './CattleCounter';
 import WeightChipSelect from './WeightChipSelect';
 import { HEIFER_WEIGHT_RANGES } from '../data/weightRanges';
@@ -369,7 +369,7 @@ export default function Step2Heifers({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <span style={{ fontSize: '1rem' }}>{allWeightsFilled ? '✅' : '⚠️'}</span>
+          {allWeightsFilled ? <CheckCircle2 size={16} color="#16a34a" /> : <AlertCircle size={16} color="#d97706" />}
           {allWeightsFilled
             ? `All ${heifersData.length} heifer${heifersData.length > 1 ? 's' : ''} configured — ready to proceed!`
             : `${heifersData.filter(h => !h.weight || Number(h.weight) <= 0).length} heifer${heifersData.filter(h => !h.weight || Number(h.weight) <= 0).length > 1 ? 's' : ''} still need a weight selected.`

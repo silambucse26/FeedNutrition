@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Copy, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import CattleCounter from './CattleCounter';
 import WeightChipSelect from './WeightChipSelect';
 import { COW_WEIGHT_RANGES } from '../data/weightRanges';
@@ -546,7 +546,7 @@ export default function Step5DryCows({
           color: allReady ? '#7e22ce' : '#92400e',
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
-          <span style={{ fontSize: '1.1rem' }}>{allReady ? '✅' : '⚠️'}</span>
+          {allReady ? <CheckCircle2 size={16} color="#7e22ce" /> : <AlertCircle size={16} color="#92400e" />}
           {allReady
             ? `All ${dryCowsData.length} dry cow${dryCowsData.length > 1 ? 's' : ''} configured with body weight & dry days — ready to proceed!`
             : `${needsWeight} dry cow${needsWeight > 1 ? 's' : ''} still need a body weight selected.`

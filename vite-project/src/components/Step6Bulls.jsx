@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import CattleCounter from './CattleCounter';
 import WeightChipSelect from './WeightChipSelect';
 import { BULL_WEIGHT_RANGES } from '../data/weightRanges';
@@ -282,7 +282,7 @@ export default function Step6Bulls({
           color: allReady ? '#b91c1c' : '#92400e',
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
-          <span style={{ fontSize: '1rem' }}>{allReady ? '✅' : '⚠️'}</span>
+          {allReady ? <CheckCircle2 size={16} color="#b91c1c" /> : <AlertCircle size={16} color="#92400e" />}
           {allReady
             ? `All ${bullsData.length} bull${bullsData.length > 1 ? 's' : ''} configured — ready to proceed!`
             : `${needsWeight} bull${needsWeight > 1 ? 's' : ''} still need a weight selected.`

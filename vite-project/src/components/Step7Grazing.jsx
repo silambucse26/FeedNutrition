@@ -126,18 +126,19 @@ export default function Step7Grazing({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{currentLang === 'ta' ? 'படி 3 / 6' : 'STEP 3 OF 6'}</span>
-            <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 800 }}>
-              {currentLang === 'ta' ? 'மேய்ச்சல் & உணவு தேடல்' : (t ? t('step7.tag') : 'PASTURE & FORAGING')}
+            <span style={{ fontSize: '0.825rem', color: '#15803d', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {currentLang === 'ta' ? 'மேய்ச்சல் & உணவு தேடல்' : currentLang === 'hi' ? 'चारागाह एवं चराई' : (t ? t('step7.tag') : 'PASTURE & FORAGING')}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#14532d' }}>
-            {currentLang === 'ta' ? 'மேய்ச்சல் மேலாண்மை' : (t ? t('step7.title') : 'Grazing Management')}
+            {currentLang === 'ta' ? 'மேய்ச்சல் மேலாண்மை' : currentLang === 'hi' ? 'चराई प्रबंधन' : (t ? t('step7.title') : 'Grazing Management')}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#334155' }}>
             {currentLang === 'ta' 
               ? 'ஒவ்வொரு மாட்டுக் குழுவிற்கும் பண்ணைக்குள் அல்லது வெளியே மேய்ச்சல் முறையையும், தினசரி மேய்ச்சல் நேரத்தையும் தேர்வு செய்க.' 
-              : (t ? t('step7.subtitle') : 'Select inside or outside farm grazing and choose daily grazing hours for each cattle group.')}
+              : currentLang === 'hi'
+                ? 'प्रत्येक पशु समूह के लिए फार्म के अंदर या बाहर चराई प्रणाली और दैनिक चराई के घंटे चुनें।'
+                : (t ? t('step7.subtitle') : 'Select inside or outside farm grazing and choose daily grazing hours for each cattle group.')}
           </p>
         </div>
 
@@ -162,12 +163,18 @@ export default function Step7Grazing({
         <AlertCircle size={20} color="#16a34a" style={{ flexShrink: 0 }} />
         <div>
           <strong style={{ fontSize: '0.875rem', color: '#14532d' }}>
-            {currentLang === 'ta' ? 'ஒவ்வொரு மாட்டுக் குழுவிற்கும் மேய்ச்சல் விவரங்கள்' : 'Individual Grazing Per Cattle Group'}
+            {currentLang === 'ta' 
+              ? 'ஒவ்வொரு மாட்டுக் குழுவிற்கும் மேய்ச்சல் விவரங்கள்' 
+              : currentLang === 'hi'
+                ? 'पशु समूह अनुसार व्यक्तिगत चराई विवरण'
+                : 'Individual Grazing Per Cattle Group'}
           </strong>
           <p style={{ fontSize: '0.8rem', color: '#15803d', margin: '2px 0 0' }}>
             {currentLang === 'ta'
               ? 'ஒவ்வொரு மாட்டுக் குழுவும் பண்ணைக்குள் அல்லது பண்ணைக்கு வெளியே மேய்கிறதா என்பதைத் தேர்வு செய்து, தினசரி மேய்ச்சல் நேரத்தைக் குறிப்பிடவும். வெளியே மேயும் மாடுகளுக்கு மட்டுமே நடை தூரம் (கி.மீ) தேவைப்படுகிறது.'
-              : 'Select whether each cattle group grazes Inside the farm or Outside the farm, and choose daily grazing hours. Walking distance in km is only requested for cattle that graze outside.'}
+              : currentLang === 'hi'
+                ? 'चुनें कि प्रत्येक पशु समूह फार्म के अंदर या बाहर चराई करता है, और दैनिक चराई के घंटे दर्ज करें। चलने की दूरी (किमी) केवल बाहर चराई करने वाले पशुओं के लिए आवश्यक है।'
+                : 'Select whether each cattle group grazes Inside the farm or Outside the farm, and choose daily grazing hours. Walking distance in km is only requested for cattle that graze outside.'}
           </p>
         </div>
       </div>
@@ -175,7 +182,7 @@ export default function Step7Grazing({
       {/* Active Grazing Details per Animal Category */}
       <div style={{ marginBottom: '28px' }}>
         <h3 style={{ fontSize: '1rem', color: '#0f172a', fontWeight: 800, marginBottom: '14px' }}>
-          {currentLang === 'ta' ? 'மாடுகள் குழுவாரியாக மேய்ச்சல் விவரங்கள்' : (t ? t('step7.details_heading') : 'Grazing Details per Animal Group')}
+          {currentLang === 'ta' ? 'மாடுகள் குழுவாரியாக மேய்ச்சல் விவரங்கள்' : (t ? t('Grazing Management') : 'Grazing Details per Animal Group')}
         </h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -230,10 +237,10 @@ export default function Step7Grazing({
                       borderRadius: '6px' 
                     }}>
                       {isOutside 
-                        ? `🌲 ${currentLang === 'ta' ? 'பண்ணைக்கு வெளியே' : 'Outside Farm'} • ${hoursVal} ${currentLang === 'ta' ? 'மணி/நாள்' : 'hrs/day'} • ${distVal} ${currentLang === 'ta' ? 'கி.மீ' : 'km'}` 
+                        ? `${currentLang === 'ta' ? 'பண்ணைக்கு வெளியே' : 'Outside Farm'} • ${hoursVal} ${currentLang === 'ta' ? 'மணி/நாள்' : 'hrs/day'} • ${distVal} ${currentLang === 'ta' ? 'கி.மீ' : 'km'}` 
                         : (isStallFed || Number(hoursVal) === 0)
-                          ? `🏡 ${currentLang === 'ta' ? 'பண்ணைக்குள் • 0 மணி/நாள் (தொழுவப் பராமரிப்பு)' : 'Inside Farm • 0 hrs/day (Stall-fed)'}` 
-                          : `🏡 ${currentLang === 'ta' ? 'பண்ணைக்குள்' : 'Inside Farm'} • ${hoursVal} ${currentLang === 'ta' ? 'மணி/நாள்' : 'hrs/day'}`}
+                          ? `${currentLang === 'ta' ? 'பண்ணைக்குள் • 0 மணி/நாள் (தொழுவப் பராமரிப்பு)' : 'Inside Farm • 0 hrs/day (Stall-fed)'}` 
+                          : `${currentLang === 'ta' ? 'பண்ணைக்குள்' : 'Inside Farm'} • ${hoursVal} ${currentLang === 'ta' ? 'மணி/நாள்' : 'hrs/day'}`}
                     </span>
                   </div>
                 </div>
@@ -245,7 +252,7 @@ export default function Step7Grazing({
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
                       <MapPin size={13} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#16a34a' }} />
-                      {currentLang === 'ta' ? 'மேய்ச்சல் இடம் *' : 'Grazing Location *'}
+                      {currentLang === 'ta' ? 'மேய்ச்சல் இடம் *' : currentLang === 'hi' ? 'चराई का स्थान *' : 'Grazing Location *'}
                     </label>
                     <select
                       value={loc}
@@ -261,9 +268,9 @@ export default function Step7Grazing({
                         background: '#ffffff'
                       }}
                     >
-                      <option value="inside" style={{ color: '#000000', fontWeight: 400 }}>🏡 1. {currentLang === 'ta' ? 'பண்ணைக்குள் மேய்ச்சல்' : 'Inside Farm Grazing'}</option>
-                      <option value="outside" style={{ color: '#000000', fontWeight: 400 }}>🌲 2. {currentLang === 'ta' ? 'பண்ணைக்கு வெளியே மேய்ச்சல்' : 'Outside Farm Grazing'}</option>
-                      <option value="none" style={{ color: '#000000', fontWeight: 400 }}>🏠 3. {currentLang === 'ta' ? 'தொழுவப் பராமரிப்பு / மேய்ச்சல் இல்லை' : 'Stall-Fed / No Grazing'}</option>
+                      <option value="inside" style={{ color: '#000000', fontWeight: 400 }}>1. {currentLang === 'ta' ? 'பண்ணைக்குள் மேய்ச்சல்' : currentLang === 'hi' ? 'फार्म के अंदर चराई' : 'Inside Farm Grazing'}</option>
+                      <option value="outside" style={{ color: '#000000', fontWeight: 400 }}>2. {currentLang === 'ta' ? 'பண்ணைக்கு வெளியே மேய்ச்சல்' : currentLang === 'hi' ? 'फार्म के बाहर चराई' : 'Outside Farm Grazing'}</option>
+                      <option value="none" style={{ color: '#000000', fontWeight: 400 }}>3. {currentLang === 'ta' ? 'தொழுவப் பராமரிப்பு / மேய்ச்சல் இல்லை' : currentLang === 'hi' ? 'खूंटे पर / कोई चराई नहीं' : 'Stall-Fed / No Grazing'}</option>
                     </select>
                   </div>
 
@@ -271,7 +278,7 @@ export default function Step7Grazing({
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
                       <Clock size={13} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#2563eb' }} />
-                      {currentLang === 'ta' ? 'மேய்ச்சல் நேரம் (மணி / நாள்) *' : 'Grazing Time (Hours / Day) *'}
+                      {currentLang === 'ta' ? 'மேய்ச்சல் நேரம் (மணி / நாள்) *' : currentLang === 'hi' ? 'चराई का समय (घंटे / दिन) *' : 'Grazing Time (Hours / Day) *'}
                     </label>
 
                     {isStallFed ? (
@@ -355,7 +362,7 @@ export default function Step7Grazing({
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
                         <Compass size={13} style={{ verticalAlign: 'middle', marginRight: '4px', color: '#d97706' }} />
-                        {currentLang === 'ta' ? 'தினசரி நடை தூரம் (கி.மீ / நாள்) *' : 'Walking Distance (km / day) *'}
+                        {currentLang === 'ta' ? 'தினசரி நடை தூரம் (கி.மீ / நாள்) *' : currentLang === 'hi' ? 'चलने की दूरी (किमी / दिन) *' : 'Walking Distance (km / day) *'}
                       </label>
                       <select
                         value={isStandardDist ? distVal : 'custom'}
@@ -377,15 +384,15 @@ export default function Step7Grazing({
                           background: '#ffffff'
                         }}
                       >
-                        <option value="0.5" style={{ color: '#000000' }}>0.5 {currentLang === 'ta' ? 'கி.மீ / நாள் (அருகிலுள்ள நிலம்)' : 'km / day (Nearby field)'}</option>
-                        <option value="1.0" style={{ color: '#000000' }}>1.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : 'km / day'}</option>
-                        <option value="1.5" style={{ color: '#000000' }}>1.5 {currentLang === 'ta' ? 'கி.மீ / நாள் (வழக்கமான நடை தூரம்)' : 'km / day (Typical walk)'}</option>
-                        <option value="2.0" style={{ color: '#000000' }}>2.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : 'km / day'}</option>
-                        <option value="2.5" style={{ color: '#000000' }}>2.5 {currentLang === 'ta' ? 'கி.மீ / நாள்' : 'km / day'}</option>
-                        <option value="3.0" style={{ color: '#000000' }}>3.0 {currentLang === 'ta' ? 'கி.மீ / நாள் (கிராம எல்லை)' : 'km / day (Village perimeter)'}</option>
-                        <option value="4.0" style={{ color: '#000000' }}>4.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : 'km / day'}</option>
-                        <option value="5.0" style={{ color: '#000000' }}>5.0 {currentLang === 'ta' ? 'கி.மீ / நாள் (நீண்ட தூரம்)' : 'km / day (Long range)'}</option>
-                        {!isStandardDist && <option value="custom" style={{ color: '#000000' }}>{currentLang === 'ta' ? 'விருப்ப தூரம்: ' : 'Custom: '}{distVal} {currentLang === 'ta' ? 'கி.மீ' : 'km'}</option>}
+                        <option value="0.5" style={{ color: '#000000' }}>0.5 {currentLang === 'ta' ? 'கி.மீ / நாள் (அருகிலுள்ள நிலம்)' : currentLang === 'hi' ? 'किमी / दिन (पास का खेत)' : 'km / day (Nearby field)'}</option>
+                        <option value="1.0" style={{ color: '#000000' }}>1.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : currentLang === 'hi' ? 'किमी / दिन' : 'km / day'}</option>
+                        <option value="1.5" style={{ color: '#000000' }}>1.5 {currentLang === 'ta' ? 'கி.மீ / நாள் (வழக்கமான நடை தூரம்)' : currentLang === 'hi' ? 'किमी / दिन (सामान्य दूरी)' : 'km / day (Typical walk)'}</option>
+                        <option value="2.0" style={{ color: '#000000' }}>2.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : currentLang === 'hi' ? 'किमी / दिन' : 'km / day'}</option>
+                        <option value="2.5" style={{ color: '#000000' }}>2.5 {currentLang === 'ta' ? 'கி.மீ / நாள்' : currentLang === 'hi' ? 'किमी / दिन' : 'km / day'}</option>
+                        <option value="3.0" style={{ color: '#000000' }}>3.0 {currentLang === 'ta' ? 'கி.மீ / நாள் (கிராம எல்லை)' : currentLang === 'hi' ? 'किमी / दिन (गांव सीमा)' : 'km / day (Village perimeter)'}</option>
+                        <option value="4.0" style={{ color: '#000000' }}>4.0 {currentLang === 'ta' ? 'கி.மீ / நாள்' : currentLang === 'hi' ? 'किमी / दिन' : 'km / day'}</option>
+                        <option value="5.0" style={{ color: '#000000' }}>5.0 {currentLang === 'ta' ? 'கி.மீ / நாள் (நீண்ட தூரம்)' : currentLang === 'hi' ? 'किमी / दिन (लंबी दूरी)' : 'km / day (Long range)'}</option>
+                        {!isStandardDist && <option value="custom" style={{ color: '#000000' }}>{currentLang === 'ta' ? 'விருப்ப தூரம்: ' : currentLang === 'hi' ? 'कस्टम दूरी: ' : 'Custom: '}{distVal} {currentLang === 'ta' ? 'கி.மீ' : currentLang === 'hi' ? 'किमी' : 'km'}</option>}
                       </select>
                     </div>
                   )}
@@ -401,11 +408,11 @@ export default function Step7Grazing({
       <div className="responsive-nav-actions" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
-          <span>{currentLang === 'ta' ? 'முந்தையது (மாடுகள் சுழற்சி)' : (t ? t('previous') : 'Previous')}</span>
+          <span>{currentLang === 'ta' ? 'முந்தையது (மாடுகள் சுழற்சி)' : currentLang === 'hi' ? 'पिछला (मवेशी झुंड)' : (t ? t('previous') : 'Previous')}</span>
         </button>
 
         <button onClick={handleProceed} className="btn-primary">
-          <span>{currentLang === 'ta' ? 'அடுத்த படி (தண்ணீர் மேலாண்மை)' : (t ? t('next_step') : 'Next Step')}</span>
+          <span>{currentLang === 'ta' ? 'அடுத்த படி (தண்ணீர் மேலாண்மை)' : currentLang === 'hi' ? 'अगला चरण (पानी की उपलब्धता)' : (t ? t('next_step') : 'Next Step')}</span>
           <ChevronRight size={18} />
         </button>
       </div>

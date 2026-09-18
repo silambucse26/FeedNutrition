@@ -1,30 +1,31 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Droplets, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Droplets } from 'lucide-react';
 
 export default function Step8Water({ 
-  waterVolume, 
+  waterVolume = '', 
   setWaterVolume, 
-  waterSource, 
+  waterSource = '', 
   setWaterSource, 
-  waterQuality, 
+  waterQuality = 'Good', 
   setWaterQuality, 
+  acknowledgeStep,
   onNext, 
   onPrev,
   currentLang = 'ta',
   t
 }) {
   const sources = [
-    { id: 'Borewell', label: currentLang === 'ta' ? 'ஆழ்துளைக் கிணறு (Borewell)' : (t ? t('step8.src_borewell') : 'Borewell') },
-    { id: 'River', label: currentLang === 'ta' ? 'ஆறு / ஓடை' : (t ? t('step8.src_river') : 'River') },
-    { id: 'Pond', label: currentLang === 'ta' ? 'குளம் / ஏரி' : (t ? t('step8.src_pond') : 'Pond') },
-    { id: 'Municipal supply', label: currentLang === 'ta' ? 'நகராட்சி / பஞ்சாயத்து குடிநீர்' : (t ? t('step8.src_municipal') : 'Municipal supply') },
-    { id: 'Other', label: currentLang === 'ta' ? 'பிற ஆதாரங்கள்' : (t ? t('step8.src_other') : 'Other') }
+    { id: 'Borewell', label: currentLang === 'ta' ? 'ஆழ்துளைக் கிணறு (Borewell)' : currentLang === 'hi' ? 'बोरवेल / नलकूप' : 'Borewell' },
+    { id: 'River', label: currentLang === 'ta' ? 'ஆறு / ஓடை' : currentLang === 'hi' ? 'नदी / नहर' : 'River' },
+    { id: 'Pond', label: currentLang === 'ta' ? 'குளம் / ஏரி' : currentLang === 'hi' ? 'तालाब / जलाशय' : 'Pond' },
+    { id: 'Municipal supply', label: currentLang === 'ta' ? 'நகராட்சி / பஞ்சாயத்து குடிநீர்' : currentLang === 'hi' ? 'सरकारी / नगर आपूर्ति' : 'Municipal supply' },
+    { id: 'Other', label: currentLang === 'ta' ? 'பிற ஆதாரங்கள்' : currentLang === 'hi' ? 'अन्य स्रोत' : 'Other' }
   ];
 
   const qualities = [
-    { id: 'Good', label: currentLang === 'ta' ? 'நன்று (சுத்தமான நன்னீர்)' : (t ? t('step8.qual_good') : 'Good (Clean & Fresh)'), color: '#16a34a', bg: '#f0fdf4' },
-    { id: 'Average', label: currentLang === 'ta' ? 'நடுத்தரம் (லேசான உப்புத்தன்மை)' : (t ? t('step8.qual_average') : 'Average (Slightly Brackish)'), color: '#d97706', bg: '#fffbeb' },
-    { id: 'Poor', label: currentLang === 'ta' ? 'மோசம் (கலங்கலான / அதிக உப்புத்தன்மை)' : (t ? t('step8.qual_poor') : 'Poor (Turbid / High Salinity)'), color: '#dc2626', bg: '#fef2f2' }
+    { id: 'Good', label: currentLang === 'ta' ? 'நன்று (சுத்தமான நன்னீர்)' : currentLang === 'hi' ? 'अच्छा (साफ एवं ताजा पानी)' : 'Good (Clean & Fresh)', color: '#16a34a', bg: '#f0fdf4' },
+    { id: 'Average', label: currentLang === 'ta' ? 'நடுத்தரம் (லேசான உப்புத்தன்மை)' : currentLang === 'hi' ? 'मध्यम (हल्का खारा पानी)' : 'Average (Slightly Brackish)', color: '#d97706', bg: '#fffbeb' },
+    { id: 'Poor', label: currentLang === 'ta' ? 'மோசம் (கலங்கலான / அதிக உப்புத்தன்மை)' : currentLang === 'hi' ? 'खराब (गंदला / अत्यधिक खारा)' : 'Poor (Turbid / High Salinity)', color: '#dc2626', bg: '#fef2f2' }
   ];
 
   return (
@@ -39,20 +40,19 @@ export default function Step8Water({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ background: '#0284c7', color: '#ffffff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 800 }}>
-              {currentLang === 'ta' ? 'படி 4 / 6' : 'STEP 4 OF 6'}
-            </span>
-            <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800 }}>
-              {currentLang === 'ta' ? 'குடிநீர் & நீர்த் தரம்' : (t ? t('step8.tag') : 'HYDRATION & WATER QUALITY')}
+            <span style={{ fontSize: '0.825rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {currentLang === 'ta' ? 'குடிநீர் & நீர்த் தரம்' : currentLang === 'hi' ? 'पेयजल एवं जल गुणवत्ता' : (t ? t('step8.tag') : 'HYDRATION & WATER QUALITY')}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0c4a6e' }}>
-            {currentLang === 'ta' ? 'குடிநீர் இருப்பு & தரம்' : (t ? t('step8.title') : 'Water Availability & Quality')}
+            {currentLang === 'ta' ? 'குடிநீர் இருப்பு & தரம்' : currentLang === 'hi' ? 'पानी की उपलब्धता एवं गुणवत्ता' : (t ? t('step8.title') : 'Water Availability & Quality')}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#075985' }}>
             {currentLang === 'ta' 
               ? 'பால் உற்பத்திக்கும் மாடுகளின் உடல் வெப்பச் சமநிலைக்கும் போதுமான, சுத்தமான குடிநீர் இருப்பதை உறுதி செய்க.' 
-              : (t ? t('step8.subtitle') : 'Ensure clean, sufficient daily water supply essential for milk synthesis and thermoregulation.')}
+              : currentLang === 'hi'
+                ? 'दूध उत्पादन एवं पशु के शरीर तापमान नियंत्रण हेतु पर्याप्त स्वच्छ पेयजल सुनिश्चित करें।'
+                : (t ? t('step8.subtitle') : 'Ensure clean, sufficient daily water supply essential for milk synthesis and thermoregulation.')}
           </p>
         </div>
 
@@ -72,37 +72,36 @@ export default function Step8Water({
         marginBottom: '28px'
       }}>
         <label style={{ display: 'block', fontSize: '1rem', color: '#0f172a', fontWeight: 800, marginBottom: '8px' }}>
-          {currentLang === 'ta' ? 'தினசரி கிடைக்கும் குடிநீர் அளவு (லிட்டர் / நாள்)' : (t ? t('step8.daily_volume_label') : 'Daily Available Drinking Water (Litres / day)')}
+          {currentLang === 'ta' ? 'தினசரி கிடைக்கும் குடிநீர் அளவு (லிட்டர் / நாள்)' : currentLang === 'hi' ? 'दैनिक उपलब्ध पेयजल की मात्रा (लीटर / दिन)' : (t ? t('step8.daily_volume_label') : 'Daily Available Drinking Water (Litres / day)')}
         </label>
+        <p style={{ fontSize: '0.825rem', color: '#64748b', marginBottom: '16px' }}>
+          {currentLang === 'ta' 
+            ? 'உங்கள் பண்ணையில் தினசரி மாடுகளுக்குக் கிடைக்கக்கூடிய மொத்த நன்னீரின் அளவை உள்ளிடவும்.' 
+            : currentLang === 'hi'
+              ? 'अपने फार्म पर मवेशियों के लिए उपलब्ध कुल दैनिक पेयजल की मात्रा दर्ज करें।'
+              : 'Enter total volume of fresh drinking water made accessible per day to the cattle.'}
+        </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <input 
             type="number"
-            min="10" 
-            max="20000" 
+            min="0"
             step="10"
-            placeholder="e.g. 500"
-            value={waterVolume === undefined || waterVolume === '' || waterVolume === 0 ? '' : waterVolume}
-            onFocus={(e) => {
-              if (e.target.value === '0') setWaterVolume('');
-              e.target.select();
-            }}
-            onWheel={(e) => e.target.blur()}
+            placeholder={currentLang === 'ta' ? 'எ.கா. 350' : currentLang === 'hi' ? 'उदा. 350' : 'e.g. 350'}
+            value={waterVolume}
             onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') {
+              if (acknowledgeStep) acknowledgeStep();
+              setWaterVolume(e.target.value);
+            }}
+            onFocus={(e) => {
+              if (e.target.value === '0') {
                 setWaterVolume('');
-                return;
-              }
-              const num = parseInt(raw, 10);
-              if (!isNaN(num)) {
-                setWaterVolume(num === 0 ? '' : num);
               }
             }}
             style={{ width: 'min(100%, 180px)', fontSize: '1.4rem', fontWeight: '900', color: '#0284c7', borderColor: '#0284c7', borderRadius: '10px' }}
           />
           <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0284c7' }}>
-            {currentLang === 'ta' ? 'லிட்டர் / நாள்' : (t ? t('step8.litres_per_day') : 'Litres / day')}
+            {currentLang === 'ta' ? 'லிட்டர் / நாள்' : currentLang === 'hi' ? 'लीटर / दिन' : (t ? t('step8.litres_per_day') : 'Litres / day')}
           </span>
         </div>
       </div>
@@ -110,7 +109,7 @@ export default function Step8Water({
       {/* Water Source Selection */}
       <div style={{ marginBottom: '28px' }}>
         <label style={{ display: 'block', fontSize: '0.9rem', color: '#0f172a', fontWeight: 800, marginBottom: '12px' }}>
-          {currentLang === 'ta' ? 'குடிநீர் ஆதாரம்' : (t ? t('step8.water_source') : 'Water Source')}
+          {currentLang === 'ta' ? 'குடிநீர் ஆதாரம்' : currentLang === 'hi' ? 'पेयजल स्रोत' : (t ? t('step8.water_source') : 'Water Source')}
         </label>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -138,7 +137,7 @@ export default function Step8Water({
       {/* Water Quality Ratings */}
       <div style={{ marginBottom: '32px' }}>
         <label style={{ display: 'block', fontSize: '0.9rem', color: '#0f172a', fontWeight: 800, marginBottom: '12px' }}>
-          {currentLang === 'ta' ? 'குடிநீரின் தரம்' : (t ? t('step8.water_quality') : 'Water Quality Rating')}
+          {currentLang === 'ta' ? 'குடிநீரின் தரம்' : currentLang === 'hi' ? 'जल गुणवत्ता रेटिंग' : (t ? t('step8.water_quality') : 'Water Quality Rating')}
         </label>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '12px' }}>
@@ -173,11 +172,11 @@ export default function Step8Water({
       <div className="responsive-nav-actions" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
         <button onClick={onPrev} className="btn-secondary">
           <ChevronLeft size={18} />
-          <span>{currentLang === 'ta' ? 'முந்தையது (மேய்ச்சல்)' : (t ? t('previous') : 'Previous')}</span>
+          <span>{currentLang === 'ta' ? 'முந்தையது (மேய்ச்சல்)' : currentLang === 'hi' ? 'पिछला (चराई)' : (t ? t('previous') : 'Previous')}</span>
         </button>
 
         <button onClick={onNext} className="btn-primary">
-          <span>{currentLang === 'ta' ? 'அடுத்த படி (தீவன இருப்பு)' : (t ? t('next_step') : 'Next Step')}</span>
+          <span>{currentLang === 'ta' ? 'அடுத்த படி (தீவன இருப்பு)' : currentLang === 'hi' ? 'अगला चरण (चारा सूची)' : (t ? t('next_step') : 'Next Step')}</span>
           <ChevronRight size={18} />
         </button>
       </div>

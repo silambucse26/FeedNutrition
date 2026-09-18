@@ -20,6 +20,22 @@ export async function getActiveApiUrl() {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   if (isLocalHost) {
+    // 1. Try Vite proxy relative endpoint (completely bypasses cross-origin CORS)
+    try {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 1200);
+      const res = await fetch('/api/health', { signal: ctrl.signal });
+      clearTimeout(tid);
+      if (res.ok) {
+        resolvedApiUrl = ''; // Relative path uses Vite's configured proxy to 127.0.0.1:8000
+        cachedHealthStatus = { connected: true, timestamp: Date.now() };
+        return resolvedApiUrl;
+      }
+    } catch {
+      // Proxy not active or failed, try direct 127.0.0.1:8000
+    }
+
+    // 2. Direct local FastAPI server check
     try {
       const ctrl = new AbortController();
       const tid = setTimeout(() => ctrl.abort(), 1200);

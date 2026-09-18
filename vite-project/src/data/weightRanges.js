@@ -12,7 +12,7 @@ export const COW_WEIGHT_RANGES = [
   { label: '550 – 600 kg', value: '550-600', avg: 575 },
   { label: '600 – 650 kg', value: '600-650', avg: 625 },
   { label: '> 650 kg', value: '>650', avg: 675 },
-  { label: '✏️ Custom kg', value: 'custom', avg: '' }
+  { label: 'Custom kg', value: 'custom', avg: '' }
 ];
 
 export const HEIFER_WEIGHT_RANGES = [
@@ -24,7 +24,7 @@ export const HEIFER_WEIGHT_RANGES = [
   { label: '300 – 350 kg', value: '300-350', avg: 325 },
   { label: '350 – 400 kg', value: '350-400', avg: 375 },
   { label: '> 400 kg', value: '>400', avg: 425 },
-  { label: '✏️ Custom kg', value: 'custom', avg: '' }
+  { label: 'Custom kg', value: 'custom', avg: '' }
 ];
 
 export const BULL_WEIGHT_RANGES = [
@@ -35,7 +35,7 @@ export const BULL_WEIGHT_RANGES = [
   { label: '600 – 700 kg', value: '600-700', avg: 650 },
   { label: '700 – 800 kg', value: '700-800', avg: 750 },
   { label: '> 800 kg', value: '>800', avg: 850 },
-  { label: '✏️ Custom kg', value: 'custom', avg: '' }
+  { label: 'Custom kg', value: 'custom', avg: '' }
 ];
 
 export const PREGNANCY_MONTH_OPTIONS = [
@@ -62,7 +62,7 @@ export const PREGNANCY_DAYS_OPTIONS = [
   { label: '210 days', value: 210 },
   { label: '240 days', value: 240 },
   { label: '270 days', value: 270 },
-  { label: '✏️ Custom Days', value: 'custom' }
+  { label: 'Custom Days', value: 'custom' }
 ];
 
 export const MILK_YIELD_RANGES = [
@@ -77,7 +77,7 @@ export const MILK_YIELD_RANGES = [
   { label: '18 – 22 L/day', value: '18-22', avg: 20.0 },
   { label: '22 – 26 L/day', value: '22-26', avg: 24.0 },
   { label: '> 26 L/day', value: '>26', avg: 28.0 },
-  { label: '✏️ Custom L/day', value: 'custom', avg: '' }
+  { label: 'Custom L/day', value: 'custom', avg: '' }
 ];
 
 export const MILK_FAT_RANGES = [
@@ -89,7 +89,7 @@ export const MILK_FAT_RANGES = [
   { label: '5.0% – 6.0%', value: '5.0-6.0', avg: 5.5 },
   { label: '6.0% – 7.5%', value: '6.0-7.5', avg: 6.75 },
   { label: '> 7.5%', value: '>7.5', avg: 8.0 },
-  { label: '✏️ Custom Fat %', value: 'custom', avg: '' }
+  { label: 'Custom Fat %', value: 'custom', avg: '' }
 ];
 
 export const DRY_DAYS_RANGES = [
@@ -99,7 +99,7 @@ export const DRY_DAYS_RANGES = [
   { label: '45 – 60 days', value: '45-60', avg: 52 },
   { label: '60 – 75 days', value: '60-75', avg: 68 },
   { label: '> 75 days', value: '>75', avg: 85 },
-  { label: '✏️ Custom Days', value: 'custom', avg: '' }
+  { label: 'Custom Days', value: 'custom', avg: '' }
 ];
 
 /**

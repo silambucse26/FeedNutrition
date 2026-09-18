@@ -12,6 +12,7 @@ import { prewarmBackend } from './services/nutritionApi';
 
 import { CATTLE_BREEDS } from './data/breeds';
 import translations from './data/translations.json';
+import { resolveLocationDetails, sanitizeWeather, extractCleanCityFromBdc, SUB_LOCALITIES } from './utils/locationHelper';
 
 export default function App() {
   const rawKey = import.meta.env.VITE_OPENWEATHER_API_KEY || '';
@@ -64,7 +65,15 @@ export default function App() {
   const [weather, setWeather] = useState(() => {
     try {
       const saved = localStorage.getItem('feednutrition_weather');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = sanitizeWeather(parsed);
+        if (cleaned && cleaned.city !== parsed.city) {
+          localStorage.setItem('feednutrition_weather', JSON.stringify(cleaned));
+        }
+        return cleaned;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -75,6 +84,12 @@ export default function App() {
 
   // App Step (1 to 6)
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Scroll to top whenever step changes so user never lands at bottom of a new page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   const [herdActiveStage, setHerdActiveStage] = useState('heifers');
 
   // Step 1: Selected Breed (clean start: null until user selects a breed)
@@ -283,53 +298,74 @@ export default function App() {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
 
-        // 1. Precise Reverse Geocoding to get City / District / Town Name
+        // 1. Precise Reverse Geocoding with Locality, Taluk, District and State hierarchy
         let cityName = '';
-        if (envApiKey) {
-          try {
-            const owGeoRes = await fetch(
-              `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${envApiKey}`
-            );
-            if (owGeoRes.ok) {
-              const owGeoData = await owGeoRes.json();
-              if (owGeoData && owGeoData.length > 0) {
-                cityName = owGeoData[0].name || '';
-              }
-            }
-          } catch (e) {
-            console.warn('OpenWeather reverse geocode fallback', e);
+
+        // Priority 1: BigDataCloud Reverse Geocoding (Accurate District & State)
+        try {
+          const langCode = currentLang === 'ta' ? 'ta' : currentLang === 'hi' ? 'hi' : 'en';
+          const bdcRes = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${langCode}`
+          );
+          if (bdcRes.ok) {
+            const bdcData = await bdcRes.json();
+            cityName = extractCleanCityFromBdc(bdcData, currentLang);
           }
+        } catch (e) {
+          console.warn('BigDataCloud reverse geocode failed, trying OpenStreetMap', e);
         }
 
-        if (!cityName) {
-          try {
-            const geoRes = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-            );
-            if (geoRes.ok) {
-              const geoData = await geoRes.json();
-              cityName = geoData.locality || geoData.city || geoData.town || geoData.village || geoData.county || geoData.principalSubdivision || '';
-            }
-          } catch (e) {
-            console.warn('BigDataCloud reverse geocode fallback', e);
-          }
-        }
-
+        // Priority 2: OpenStreetMap Nominatim (Accurate Indian cities & districts)
         if (!cityName) {
           try {
             const nomRes = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
+              { headers: { 'User-Agent': 'FeedNutritionApp/2.0' } }
             );
             if (nomRes.ok) {
               const nomData = await nomRes.json();
-              cityName = nomData.address?.city || nomData.address?.town || nomData.address?.village || nomData.address?.county || nomData.address?.state_district || nomData.name || '';
+              const addr = nomData.address || {};
+              const rawCity = addr.city || addr.town || addr.municipality || '';
+              const district = (addr.county || addr.state_district || addr.district || '')
+                .replace(/\s*(district|மாவட்டம்|வட்டம்)/gi, '').trim();
+              const state = addr.state || '';
+
+              let primaryCity = district;
+              if (rawCity && !SUB_LOCALITIES.has(rawCity.toLowerCase()) && !/chennai|சென்னை/i.test(district)) {
+                primaryCity = rawCity;
+              }
+
+              if (primaryCity) {
+                cityName = state && !primaryCity.toLowerCase().includes(state.toLowerCase())
+                  ? `${primaryCity}, ${state}`
+                  : primaryCity;
+              }
             }
           } catch (e) {
-            console.warn('Nominatim reverse geocode fallback', e);
+            console.warn('Nominatim reverse geocode failed, trying OpenWeather', e);
           }
         }
 
-        // 2. Fetch Real-time Weather Data (OpenWeather if API key available, else Open-Meteo)
+        // Priority 3: OpenWeather Reverse Geocoding (if API key available)
+        if (!cityName && envApiKey) {
+          try {
+            const owGeoRes = await fetch(
+              `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=5&appid=${envApiKey}`
+            );
+            if (owGeoRes.ok) {
+              const owGeoData = await owGeoRes.json();
+              if (Array.isArray(owGeoData) && owGeoData.length > 0) {
+                const item = owGeoData[0];
+                const localizedName = (item.local_names && (item.local_names[currentLang] || item.local_names['en'])) || item.name;
+                cityName = item.state ? `${localizedName}, ${item.state}` : localizedName;
+              }
+            }
+          } catch (e) {
+            console.warn('OpenWeather reverse geocode fallback failed', e);
+          }
+        }
+
+        // 2. Fetch Real-time Climate & Weather Data
         let temp = 28;
         let rh = 65;
         let condition = 'Clear';
@@ -345,7 +381,9 @@ export default function App() {
               temp = Math.round(owData.main.temp);
               rh = Math.round(owData.main.humidity);
               condition = owData.weather[0]?.main || 'Clear';
-              if (!cityName) cityName = owData.name;
+              if (!cityName && owData.name) {
+                cityName = owData.name;
+              }
               weatherFetched = true;
             }
           } catch (e) {
@@ -371,6 +409,9 @@ export default function App() {
 
         if (!cityName) {
           cityName = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+        } else {
+          const { fullLocation } = resolveLocationDetails(cityName);
+          cityName = fullLocation;
         }
 
         const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
@@ -398,18 +439,17 @@ export default function App() {
     };
 
     const handleInitialFailure = (err) => {
-      console.warn('High-accuracy geolocation failed, attempting cell/network fallback', err);
-      // If code === 1 (PERMISSION_DENIED), user or iOS settings denied permission
+      console.warn('High-accuracy geolocation failed, attempting network fallback', err);
       if (err.code === 1) {
         if (isIOS) {
           setShowIosLocationHelp(true);
         }
-        setWeatherError('Location access was denied on iOS. Tap for Settings guide or enter city manually.');
+        setWeatherError('Location access was denied. Tap for Settings guide or enter city manually.');
         setLoadingWeather(false);
         return;
       }
 
-      // Tier 2: Low-accuracy fallback with cached position (fast and reliable on iOS Safari)
+      // Tier 2: Low-accuracy fallback
       navigator.geolocation.getCurrentPosition(
         handleSuccess,
         (fallbackErr) => {
@@ -420,35 +460,51 @@ export default function App() {
           setWeatherError('Could not acquire GPS position. Please pick your city manually.');
           setLoadingWeather(false);
         },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 }
       );
     };
 
-    // Tier 1: Try high accuracy first with 6s timeout
+    // Tier 1: Fresh live location acquisition with maximumAge: 0
     navigator.geolocation.getCurrentPosition(
       handleSuccess,
       handleInitialFailure,
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   };
 
   // Weather by city search
-  const fetchWeatherByCity = async (cityName) => {
+  const fetchWeatherByCity = async (cityName, explicitLat = null, explicitLon = null) => {
     if (!cityName) return;
     setLoadingWeather(true);
     setWeatherError(null);
 
     try {
-      let lat = null;
-      let lon = null;
+      let lat = explicitLat;
+      let lon = explicitLon;
       let resolvedName = cityName;
       let temp = 28;
       let rh = 65;
       let condition = 'Clear';
       let weatherFetched = false;
 
-      // 1. Try OpenWeather if API key available
-      if (envApiKey) {
+      // 1. If exact latitude & longitude passed from search dropdown
+      if (lat !== null && lon !== null) {
+        const omRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code`
+        );
+        if (omRes.ok) {
+          const omData = await omRes.json();
+          if (omData.current) {
+            temp = Math.round(omData.current.temperature_2m);
+            rh = Math.round(omData.current.relative_humidity_2m);
+            condition = getWeatherConditionFromCode(omData.current.weather_code);
+            weatherFetched = true;
+          }
+        }
+      }
+
+      // 2. Try OpenWeather if API key available and not fetched yet
+      if (!weatherFetched && envApiKey) {
         try {
           const res = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)}&units=metric&appid=${envApiKey}`
@@ -497,6 +553,9 @@ export default function App() {
         }
       }
 
+      const { fullLocation } = resolveLocationDetails(resolvedName);
+      resolvedName = fullLocation;
+
       const thiCalc = Math.round(0.8 * temp + (rh / 100) * (temp - 14.4) + 46.4);
       const weatherObj = {
         city: resolvedName,
@@ -543,11 +602,11 @@ export default function App() {
           if (totalCattle === 0) return acknowledgedSteps[2] ? 'complete' : 'empty';
           const hasInvalidCattle = 
             (heifersData && heifersData.some(h => !h.weight || Number(h.weight) <= 0)) ||
-            (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
-            (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
+            (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0 || !c.pregDays || Number(c.pregDays) <= 0)) ||
+            (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0 || !c.pregDays || Number(c.pregDays) <= 0)) ||
             (lactatingData && lactatingData.some(l => !l.weight || Number(l.weight) <= 0 || l.milkYield === '' || Number(l.milkYield) <= 0 || l.milkFat === '' || Number(l.milkFat) <= 0)) ||
-            (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0)) ||
-            (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0));
+            (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0 || !d.dryDays || Number(d.dryDays) <= 0)) ||
+            (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0 || !b.purpose));
           return hasInvalidCattle ? 'partial' : 'complete';
         }
 
@@ -574,11 +633,11 @@ export default function App() {
           const hasFeed = selectedFeeds && selectedFeeds.length > 0 && selectedFeeds.every(f => Number(f.quantityKg) > 0);
           const hasInvalidCattle = 
             (heifersData && heifersData.some(h => !h.weight || Number(h.weight) <= 0)) ||
-            (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
-            (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0)) ||
+            (firstTimeCattle && firstTimeCattle.some(c => !c.weight || Number(c.weight) <= 0 || !c.pregDays || Number(c.pregDays) <= 0)) ||
+            (repeatCattle && repeatCattle.some(c => !c.weight || Number(c.weight) <= 0 || !c.pregDays || Number(c.pregDays) <= 0)) ||
             (lactatingData && lactatingData.some(l => !l.weight || Number(l.weight) <= 0 || l.milkYield === '' || Number(l.milkYield) <= 0 || l.milkFat === '' || Number(l.milkFat) <= 0)) ||
-            (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0)) ||
-            (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0));
+            (dryCowsData && dryCowsData.some(d => !d.weight || Number(d.weight) <= 0 || !d.dryDays || Number(d.dryDays) <= 0)) ||
+            (bullsData && bullsData.some(b => !b.weight || Number(b.weight) <= 0 || !b.purpose));
 
           if (hasBreed && totalCattle > 0 && !hasInvalidCattle && hasWater && hasFeed && isWeatherComplete) {
             return 'complete';

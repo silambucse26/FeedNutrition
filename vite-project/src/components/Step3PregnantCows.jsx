@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import CattleCounter from './CattleCounter';
 import WeightChipSelect from './WeightChipSelect';
 import { COW_WEIGHT_RANGES } from '../data/weightRanges';
@@ -631,7 +631,7 @@ export default function Step3PregnantCows({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <span style={{ fontSize: '1rem' }}>{allWeightsFilled ? '✅' : '⚠️'}</span>
+          {allWeightsFilled ? <CheckCircle2 size={16} color="#16a34a" /> : <AlertCircle size={16} color="#d97706" />}
           {allWeightsFilled
             ? `All ${totalCount} pregnant cattle configured with weight & days — ready to proceed!`
             : `${emptyWeightsCount} animal${emptyWeightsCount > 1 ? 's' : ''} still need body weight selected.`

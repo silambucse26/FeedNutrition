@@ -76,7 +76,8 @@ def milkEnergy(milkFatPerc: float, milkYield: float, is_buffalo: bool = False):
     if is_buffalo or milkFatPerc >= 6.0:
         milkNEp = 0.0929 * milkFatPerc + 0.438
     else:
-        milkNEp = 0.0929 * milkFatPerc + 0.372
+        # NRC / User formula (Item 13): MilkNEL = 0.360 + 0.0969 * Fat%
+        milkNEp = 0.360 + 0.0969 * milkFatPerc
     milkNEused = milkNEp * milkYield
     milkMEused = milkNEused / MEtoNE_conv
     return milkNEused, milkMEused
@@ -91,7 +92,8 @@ def actualValues(as_Fed: float, compArray: List[float], feedType: str):
     actDmIntake = get_percentage(compArray[0], as_Fed)
     actCpIntake = get_percentage(compArray[1], actDmIntake)
     actEeIntake = get_percentage(compArray[2], actDmIntake)
-    actFaIntake = max(0.0, actDmIntake - actEeIntake)
+    # Item 1: FA = 0.85 * EE approximation (replaces invalid FA = 1 - EE or DM - EE)
+    actFaIntake = round(0.85 * actEeIntake, 4)
     actCfIntake = get_percentage(compArray[3], actDmIntake)
     actNfeIntake = get_percentage(compArray[4], actDmIntake)
     actAshIntake = get_percentage(compArray[5], actDmIntake)
@@ -103,12 +105,15 @@ def actualValues(as_Fed: float, compArray: List[float], feedType: str):
         actLigninIntake = get_percentage(compArray[8], actDmIntake)
     else:
         feedFractions = ["fDm","fCp","fEe","fFa","fCf","fNfe","fAsh","fNdf","fAdf","fLignin","fHemiCell","fTp","fmilkCp","fsNPNCPE"]
+        # Item 5: Roughage lignin is never zero; use feed-specific lignin or 10% ADF
         actLigninIntake = get_percentage(compArray[8], actDmIntake) if len(compArray) > 8 else (0.10 * actADFIntake)
 
     actHemicelluloses = max(0.0, actNDFIntake - actADFIntake)
-    actTpIntake = max(0.0, actCpIntake - (actCpIntake / 6.25))
-    milkCp = (actCpIntake / 6.25) * 6.38
-    actNPNCP = max(0.0, actCpIntake - actTpIntake)
+    # Item 2 & 3: True protein from TrueProteinFraction (default 0.85 for plant protein); NPNCP = CP - TP
+    actTpIntake = round(0.85 * actCpIntake, 4)
+    actNPNCP = round(max(0.0, actCpIntake - actTpIntake), 4)
+    # Item 4: MCP removed from raw feed fraction (not microbial crude protein)
+    milkCp = 0.0
 
     fractionA = (actNPNCP / actCpIntake * 100.0) if actCpIntake > 0 else 20.0
     fractionC = ((actLigninIntake / actADFIntake) * (actCpIntake * 0.135)) if actADFIntake > 0 else 5.0
@@ -2519,7 +2524,8 @@ def calculate_pdf_kt_formulation(
     grazing_dm_kg: float = 0.0,
     herd_total_water_liters: Optional[float] = None,
     current_mineral_mix_g: float = 0.0,
-    current_salt_g: float = 0.0
+    current_salt_g: float = 0.0,
+    recommended_total_me_mcal: Optional[float] = None
 ) -> Dict[str, Any]:
     """
     Implements all formulas from the Knowledge Transfer (KT) Formulation System,
@@ -2922,18 +2928,32 @@ def calculate_pdf_kt_formulation(
     total_nel_required = round(tot_nel_maint + milk_neuse_mcal_per_day + total_gest_nel + growth_nel, 2)
     total_nel_formula = f"TotalNELReq = {tot_nel_maint:.2f} (Maint) + {milk_neuse_mcal_per_day:.2f} (Milk) + {total_gest_nel:.2f} (Gest) + {growth_nel:.2f} (Growth/Frame) = {total_nel_required:.2f} Mcal/day"
 
-    # True Energy Balance & Adequacy %
-    energy_balance_nel = round(tot_feed_nel - total_nel_required, 2)
-    nel_adequacy_pct = round((tot_feed_nel / max(0.1, total_nel_required)) * 100.0, 1)
-    if 95.0 <= nel_adequacy_pct <= 105.0:
+    # True Energy Balance & Adequacy % for Current Input Ration
+    current_diet_me = round(tot_feed_me, 2)
+    current_feed_nel = tot_feed_nel
+    current_energy_balance_nel = round(current_feed_nel - total_nel_required, 2)
+    current_nel_adequacy_pct = round((current_feed_nel / max(0.1, total_nel_required)) * 100.0, 1)
+
+    # True Energy Balance & Adequacy % for Recommended Balanced Ration
+    rec_me_val = float(recommended_total_me_mcal or (total_nel_required / 0.66))
+    rec_feed_nel = round(rec_me_val * 0.66, 2)
+    rec_energy_balance_nel = round(rec_feed_nel - total_nel_required, 2)
+    rec_nel_adequacy_pct = round((rec_feed_nel / max(0.1, total_nel_required)) * 100.0, 1)
+
+    energy_balance_nel = current_energy_balance_nel
+    nel_adequacy_pct = current_nel_adequacy_pct
+    if 95.0 <= current_nel_adequacy_pct <= 105.0:
         energy_status = "Optimal Energy Balance (NASEM 95–105%)"
         energy_advice = "Dietary Net Energy matches total herd physiological requirements."
-    elif nel_adequacy_pct < 95.0:
+    elif current_nel_adequacy_pct < 95.0:
         energy_status = "Energy Deficit (Negative Balance)"
         energy_advice = f"Deficit of {abs(energy_balance_nel):.1f} Mcal NEL/day. Increase dietary energy density."
     else:
         energy_status = "Energy Surplus"
         energy_advice = f"Surplus of {energy_balance_nel:.1f} Mcal NEL/day. Monitor body condition to avoid excess fat."
+
+    rec_energy_status = "Optimal Energy Balance (NASEM 95–115%)" if (95.0 <= rec_nel_adequacy_pct <= 115.0) else "Balanced Diet"
+    rec_energy_advice = "Recommended balanced ration fully meets total herd physiological Net Energy demand."
 
     # -------------------------------------------------------------
     # 4. MINERAL SUPPLY & NASEM FACTORIAL REQUIREMENTS
@@ -3148,6 +3168,16 @@ def calculate_pdf_kt_formulation(
         "energyAnalysis": {
             "dietMeMcal": round(tot_feed_me, 2),
             "feedNelMcal": tot_feed_nel,
+            "currentDietMeMcal": current_diet_me,
+            "currentFeedNelMcal": current_feed_nel,
+            "currentEnergyBalanceNelMcal": current_energy_balance_nel,
+            "currentNelAdequacyPct": current_nel_adequacy_pct,
+            "recommendedDietMeMcal": round(rec_me_val, 2),
+            "recommendedFeedNelMcal": rec_feed_nel,
+            "recommendedEnergyBalanceNelMcal": rec_energy_balance_nel,
+            "recommendedNelAdequacyPct": rec_nel_adequacy_pct,
+            "recommendedEnergyStatus": rec_energy_status,
+            "recommendedEnergyAdvice": rec_energy_advice,
             "milkNepMcalPerKg": milk_nel_mcal_per_kg,
             "milkNeuseMcalPerDay": milk_neuse_mcal_per_day,
             "milkMeMcalPerDay": milk_me_mcal_per_day,

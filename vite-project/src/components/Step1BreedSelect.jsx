@@ -50,14 +50,19 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">{currentLang === 'ta' ? 'படி 1 / 6' : (t ? t('step1.badge') : 'STEP 1 OF 6')}</span>
-            <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>{t ? t('steps.step_1') : 'BREED SELECTION'}</span>
+            <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {currentLang === 'hi' ? 'नस्ल चयन' : (t ? t('steps.step_1') : 'BREED SELECTION')}
+            </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#0f172a' }}>
-            {t ? t('step1.title') : 'Select Cattle or Buffalo Breed'}
+            {currentLang === 'hi' ? 'गाय या भैंस की नस्ल चुनें' : (t ? t('step1.title') : 'Select Cattle or Buffalo Breed')}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#475569' }}>
-            {currentLang === 'ta' ? 'மாடு அல்லது எருமை இனத்தை கிளிக் செய்து கால்நடை மந்தை மேலாண்மைக்கு செல்லவும்.' : (t ? t('step1.subtitle') : 'Click any breed card to select and proceed directly to Cattle Herd Management.')}
+            {currentLang === 'ta' 
+              ? 'மாடு அல்லது எருமை இனத்தை கிளிக் செய்து கால்நடை மந்தை மேலாண்மைக்கு செல்லவும்.' 
+              : currentLang === 'hi'
+                ? 'गाय या भैंस की नस्ल कार्ड पर क्लिक करें और सीधे मवेशी झुंड प्रबंधन पर आगे बढ़ें।'
+                : (t ? t('step1.subtitle') : 'Click any breed card to select and proceed directly to Cattle Herd Management.')}
           </p>
         </div>
 
@@ -70,7 +75,7 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
 
       {/* SINGLE COMBINED SEARCH & SELECT FIELD */}
       <div style={{ marginBottom: '24px', position: 'relative' }} ref={dropdownRef}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div className="breed-search-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <label style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 800 }}>
             {t ? t('step1.search_label') : 'Search & Select Cattle Breed'}
           </label>
@@ -204,7 +209,13 @@ export default function Step1BreedSelect({ selectedBreed, onSelectBreed, allEnte
               justifyContent: 'center'
             }}
           >
-            <span>{currentLang === 'ta' ? 'படி 2-க்குச் செல்லவும் (மாடுகள் மந்தை)' : 'Proceed to Step 2 (Cattle Herd)'}</span>
+            <span>
+              {currentLang === 'ta' 
+                ? 'மாடுகள் மந்தை பிரிவுக்குச் செல்லவும்' 
+                : currentLang === 'hi'
+                  ? 'मवेशी झुंड पर जाएं'
+                  : 'Proceed to Cattle Herd'}
+            </span>
             <ChevronRight size={16} />
           </button>
         </div>
