@@ -1541,8 +1541,9 @@ export async function downloadFeedingReportPDF({
       });
       currentY = doc.lastAutoTable.finalY + 6;
     }
+  }
 
-    // 2F. ADVISORY & BEST PRACTICES NOTES
+  // 2F. ADVISORY & BEST PRACTICES NOTES
   const advisoryBullets = langKey === 'ta' ? [
     ['- Uyar paal karakkum maadukalukku kooduthal adartheevanam matrum pasuntheevanam valangavum.'],
     ['- 6-9 matha chinamaadukalukku steaming-up theevanam valangavum; mun-chinathil maintenance theevanam pothumanathu.'],
