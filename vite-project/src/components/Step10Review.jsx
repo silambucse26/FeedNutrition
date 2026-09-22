@@ -263,11 +263,31 @@ export default function Step10Review({
   const canGenerateNutrition = isWeatherOk && hasBreed && hasCattle && !hasInvalidCattle && hasWater && hasFeed;
 
   const requiredMissingItems = [];
-  if (!hasBreed) requiredMissingItems.push({ num: 1, title: t ? t('steps.step_1') : 'Breed Selection', reason: 'Select a cattle or buffalo breed' });
-  if (!hasCattle) requiredMissingItems.push({ num: 2, title: t ? t('steps.step_2') : 'Cattle Herd', reason: 'Record at least one animal in your herd (Heifers, Pregnant, Lactating, Dry, or Bulls)' });
-  if (hasInvalidCattle) requiredMissingItems.push({ num: 2, title: 'Cattle Details Incomplete', reason: 'Ensure all recorded cattle have valid live weights and production values' });
-  if (!hasWater) requiredMissingItems.push({ num: 4, title: t ? t('steps.step_4') : 'Water Availability', reason: 'Daily water supply volume and water source are required' });
-  if (!hasFeed) requiredMissingItems.push({ num: 5, title: t ? t('steps.step_5') : 'Feed & Fodder', reason: 'Select feed ingredients with daily quantity (kg/day)' });
+  if (!hasBreed) requiredMissingItems.push({
+    num: 1,
+    title: currentLang === 'ta' ? '1. இனத் தேர்வு' : currentLang === 'hi' ? '1. नस्ल चयन' : (t ? t('steps.step_1') : 'Breed Selection'),
+    reason: currentLang === 'ta' ? 'பசு அல்லது எருமை இனத்தைத் தேர்ந்தெடுக்கவும்' : currentLang === 'hi' ? 'गाय या भैंस की नस्ल चुनें' : 'Select a cattle or buffalo breed'
+  });
+  if (!hasCattle) requiredMissingItems.push({
+    num: 2,
+    title: currentLang === 'ta' ? '2. மந்தை மாடுகள்' : currentLang === 'hi' ? '2. मवेशी झुंड' : (t ? t('steps.step_2') : 'Cattle Herd'),
+    reason: currentLang === 'ta' ? 'குறைந்தது ஒரு மாட்டையாவது பதிவு செய்யவும்' : currentLang === 'hi' ? 'कम से कम एक पशु दर्ज करें' : 'Record at least one animal in your herd (Heifers, Pregnant, Lactating, Dry, or Bulls)'
+  });
+  if (hasInvalidCattle) requiredMissingItems.push({
+    num: 2,
+    title: currentLang === 'ta' ? 'மாடுகள் விவரம் முழுமையடையவில்லை' : currentLang === 'hi' ? 'पशु विवरण अपूर्ण' : 'Cattle Details Incomplete',
+    reason: currentLang === 'ta' ? 'அனைத்து மாடுகளுக்கும் எடை மற்றும் உற்பத்தி விவரங்கள் உள்ளதை உறுதிப்படுத்தவும்' : currentLang === 'hi' ? 'सुनिश्चित करें कि सभी पशुओं का वजन सही दर्ज है' : 'Ensure all recorded cattle have valid live weights and production values'
+  });
+  if (!hasWater) requiredMissingItems.push({
+    num: 4,
+    title: currentLang === 'ta' ? '4. குடிநீர் இருப்பு' : currentLang === 'hi' ? '4. पानी की उपलब्धता' : (t ? t('steps.step_4') : 'Water Availability'),
+    reason: currentLang === 'ta' ? 'தினசரி தண்ணீர் அளவு மற்றும் மூலம் தேவை' : currentLang === 'hi' ? 'दैनिक पानी की मात्रा और स्रोत आवश्यक हैं' : 'Daily water supply volume and water source are required'
+  });
+  if (!hasFeed) requiredMissingItems.push({
+    num: 5,
+    title: currentLang === 'ta' ? '5. தீவனம் & உலர் தீவனம்' : currentLang === 'hi' ? '5. चारा एवं दाना' : (t ? t('steps.step_5') : 'Feed & Fodder'),
+    reason: currentLang === 'ta' ? 'தீவனப் பொருட்களைத் தினசரி அளவுடன் (கிலோ/நாள்) தேர்ந்தெடுக்கவும்' : currentLang === 'hi' ? 'दैनिक मात्रा (किग्रा/दिन) के साथ चारा सामग्री चुनें' : 'Select feed ingredients with daily quantity (kg/day)'
+  });
 
   // Check backend connectivity on mount (calculation is triggered on user button click)
   useEffect(() => {
@@ -540,16 +560,16 @@ export default function Step10Review({
       >
         <div className="step-banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span className="badge-green">FINAL STEP 6</span>
+            <span className="badge-green">{currentLang === 'ta' ? 'இறுதிப் படி 6' : currentLang === 'hi' ? 'अंतिम चरण 6' : 'FINAL STEP 6'}</span>
             <span style={{ fontSize: '0.825rem', color: '#16a34a', fontWeight: 800 }}>
-              {t ? t('step10.tag') : 'COMPREHENSIVE FARM REVIEW'}
+              {t ? t('step10.tag') : (currentLang === 'ta' ? 'பண்ணை தரவு சுருக்கம்' : currentLang === 'hi' ? 'फार्म डेटा सारांश' : 'FARM DATA SUMMARY')}
             </span>
           </div>
           <h2 className="step-banner-title" style={{ color: '#14532d' }}>
-            {t ? t('step10.title') : 'Farm Data Summary & Ration Review'}
+            {currentLang === 'ta' ? 'பண்ணைத் தரவு சுருக்கம் & தீவன மதிப்பாய்வு' : currentLang === 'hi' ? 'फार्म डेटा सारांश एवं राशन समीक्षा' : (t ? t('step10.title') : 'Farm Data Summary & Ration Review')}
           </h2>
           <p className="step-banner-subtitle" style={{ color: '#166534' }}>
-            {t ? t('step10.subtitle') : 'Verify all your recorded farm data below, then generate your precision nutrition calculation.'}
+            {currentLang === 'ta' ? 'கீழே பதிவு செய்யப்பட்ட உங்கள் பண்ணைத் தரவைச் சரிபார்த்து, உங்கள் ஊட்டச்சத்துக் கணக்கீட்டை உருவாக்கவும்.' : currentLang === 'hi' ? 'नीचे अपने दर्ज किए गए फार्म डेटा की जांच करें, फिर पोषण गणना उत्पन्न करें।' : (t ? t('step10.subtitle') : 'Verify all your recorded farm data below, then generate your precision nutrition calculation.')}
           </p>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
@@ -583,7 +603,7 @@ export default function Step10Review({
                 title="Download recorded farm inputs in colorful PDF format"
               >
                 <FileText size={14} color="#0284c7" />
-                <span>Download Input Data (PDF)</span>
+                <span>{currentLang === 'ta' ? 'உள்ளீட்டுத் தரவு பதிவிறக்கு (PDF)' : currentLang === 'hi' ? 'इनपुट डेटा डाउनलोड करें (PDF)' : 'Download Input Data (PDF)'}</span>
               </button>
             )}
 
@@ -604,10 +624,25 @@ export default function Step10Review({
                 title="Download generated feeding report in colorful PDF format"
               >
                 <Download size={14} />
-                <span>Download Feeding Report (PDF)</span>
+                <span>{currentLang === 'ta' ? 'தீவன அறிக்கை பதிவிறக்கு (PDF)' : currentLang === 'hi' ? 'चारा रिपोर्ट डाउनलोड करें (PDF)' : 'Download Feeding Report (PDF)'}</span>
               </button>
             )}
 
+            {onResetAllData && (
+              <button 
+                onClick={() => {
+                  if (window.confirm(currentLang === 'ta' ? 'அனைத்து பதிவு செய்யப்பட்ட பண்ணைத் தரவையும் நீக்கிவிட்டு புதிய பதிவைத் தொடங்க விரும்புகிறீர்களா?' : currentLang === 'hi' ? 'क्या आप वाकई सारा दर्ज डेटा हटाकर नया रिकॉर्ड शुरू करना चाहते हैं?' : 'Are you sure you want to clear all recorded farm data and start fresh?')) {
+                    onResetAllData();
+                  }
+                }}
+                className="btn-secondary"
+                style={{ background: '#ffffff', border: '1.5px solid #ef4444', color: '#dc2626', padding: '7px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}
+                title="Clear all inputs and reset farm data"
+              >
+                <RefreshCw size={14} color="#dc2626" />
+                <span>{currentLang === 'ta' ? 'அனைத்தையும் நீக்குக' : currentLang === 'hi' ? 'डेटा रीसेट करें' : 'Reset All'}</span>
+              </button>
+            )}
 
           </div>
         </div>
@@ -627,38 +662,52 @@ export default function Step10Review({
         marginBottom: '28px'
       }}>
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '16px' }}>
-          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Total Animals</span>
+          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+            {currentLang === 'ta' ? 'மொத்த மாடுகள்' : currentLang === 'hi' ? 'कुल पशु' : 'Total Animals'}
+          </span>
           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 2px' }}>
-            {totalCattleCount} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>head</span>
+            {totalCattleCount} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>{currentLang === 'ta' ? 'எண்ணிக்கை' : currentLang === 'hi' ? 'पशु' : 'head'}</span>
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>{selectedBreed ? getBreedName(selectedBreed, t) : 'All categories'}</span>
+          <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>{selectedBreed ? getBreedName(selectedBreed, t) : (currentLang === 'ta' ? 'அனைத்து பிரிவுகள்' : currentLang === 'hi' ? 'सभी श्रेणियां' : 'All categories')}</span>
         </div>
 
         <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '16px' }}>
-          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Herd Weight</span>
+          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+            {currentLang === 'ta' ? 'மந்தையின் எடை' : currentLang === 'hi' ? 'झुंड का वजन' : 'Herd Weight'}
+          </span>
           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a', margin: '4px 0 2px' }}>
-            {totalHerdWeightKg > 0 ? `${totalHerdWeightKg.toLocaleString()}` : '0'} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>kg</span>
+            {totalHerdWeightKg > 0 ? `${totalHerdWeightKg.toLocaleString()}` : '0'} <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#64748b' }}>{currentLang === 'ta' ? 'கிலோ' : currentLang === 'hi' ? 'किग्रा' : 'kg'}</span>
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Combined Biomass</span>
+          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            {currentLang === 'ta' ? 'மொத்த உடல் எடை' : currentLang === 'hi' ? 'कुल शारीरिक भार' : 'Combined Biomass'}
+          </span>
         </div>
 
         {totalDailyMilkL > 0 && (
           <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '16px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Daily Milk Output</span>
+            <span style={{ fontSize: '0.78rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>
+              {currentLang === 'ta' ? 'தினசரி பால் உற்பத்தி' : currentLang === 'hi' ? 'दैनिक दूध उत्पादन' : 'Daily Milk Output'}
+            </span>
             <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#15803d', margin: '4px 0 2px' }}>
-              {totalDailyMilkL} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Liters/day</span>
+              {totalDailyMilkL} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{currentLang === 'ta' ? 'லிட்டர்/நாள்' : currentLang === 'hi' ? 'लीटर/दिन' : 'Liters/day'}</span>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#166534' }}>From {totalLactating} lactating cows</span>
+            <span style={{ fontSize: '0.75rem', color: '#166534' }}>
+              {currentLang === 'ta' ? `${totalLactating} கறவை மாடுகளிலிருந்து` : currentLang === 'hi' ? `${totalLactating} दुधारू गायों से` : `From ${totalLactating} lactating cows`}
+            </span>
           </div>
         )}
 
         {waterVolume > 0 && (
           <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '14px', padding: '16px' }}>
-            <span style={{ fontSize: '0.78rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Daily Water Available</span>
+            <span style={{ fontSize: '0.78rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>
+              {currentLang === 'ta' ? 'தினசரி கிடைக்கும் குடிநீர்' : currentLang === 'hi' ? 'दैनिक उपलब्ध पानी' : 'Daily Water Available'}
+            </span>
             <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0284c7', margin: '4px 0 2px' }}>
-              {waterVolume} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>L/day</span>
+              {waterVolume} <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{currentLang === 'ta' ? 'லி/நாள்' : currentLang === 'hi' ? 'ली/दिन' : 'L/day'}</span>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#0369a1' }}>{waterSource || 'Farm supply'}</span>
+            <span style={{ fontSize: '0.75rem', color: '#0369a1' }}>
+              {translateTerm(waterSource, currentLang) || (currentLang === 'ta' ? 'பண்ணை நீர் வழங்கல்' : currentLang === 'hi' ? 'फार्म आपूर्ति' : 'Farm supply')}
+            </span>
           </div>
         )}
       </div>
@@ -668,7 +717,7 @@ export default function Step10Review({
       {/* ============================================================ */}
       <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         <FileText size={20} color="#16a34a" />
-        <span>{currentLang === 'ta' ? 'பதிவு செய்யப்பட்ட பண்ணைத் தரவுகள் (படிகள் 1 முதல் 9)' : 'Recorded Farm Data Review (Steps 1 to 9)'}</span>
+        <span>{currentLang === 'ta' ? 'பதிவு செய்யப்பட்ட பண்ணைத் தரவுகள் (படிகள் 1 முதல் 5)' : currentLang === 'hi' ? 'दर्ज किए गए फार्म डेटा की समीक्षा (चरण 1 से 5)' : 'Recorded Farm Data Review (Steps 1 to 5)'}</span>
       </h3>
 
       {/* Top Two Summary Cards: Climate & Breed */}
@@ -1103,34 +1152,6 @@ export default function Step10Review({
         marginBottom: '32px',
         boxShadow: backendOnline ? '0 10px 25px -5px rgba(22, 163, 74, 0.08)' : 'none'
       }}>
-        {/* Top Header Strip */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: backendOnline ? '#dcfce7' : '#f1f5f9',
-              color: backendOnline ? '#16a34a' : '#64748b',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Zap size={22} className={calcLoading ? 'animate-spin' : ''} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '1.2rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>
-                  Scientific Precision Nutrition & Formulation Engine
-                </h3>
-              </div>
-              <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '3px 0 0' }}>
-                ICAR & NRC precision equations for THI stress, DMI requirements, RUP/RDP protein, and mineral homeostasis.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* ========== CASE 1: MANDATORY DATA INCOMPLETE NOTICE & CHECKLIST ========== */}
         {!canGenerateNutrition && (
           <div style={{
@@ -1143,11 +1164,11 @@ export default function Step10Review({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
               <AlertTriangle size={22} color="#d97706" />
               <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#92400e', margin: 0 }}>
-                All Farm Data is Required Before Calculating Nutrition Values
+                {currentLang === 'ta' ? 'ஊட்டச்சத்தைக் கணக்கிடுவதற்கு முன் அனைத்து பண்ணை விவரங்களும் தேவை' : currentLang === 'hi' ? 'पोषण मानों की गणना करने से पहले सभी फार्म डेटा आवश्यक है' : 'All Farm Data is Required Before Calculating Nutrition Values'}
               </h4>
             </div>
             <p style={{ fontSize: '0.85rem', color: '#78350f', margin: '0 0 16px', lineHeight: 1.5 }}>
-              To ensure scientific accuracy of the feed formulation and heat stress (THI) index, <strong>every step must be filled</strong>, and <strong>location, temperature, and relative humidity must be provided</strong>.
+              {currentLang === 'ta' ? 'தீவன அளவு மற்றும் தட்பவெப்ப குறியீட்டைத் துல்லியமாகக் கணக்கிட, ஒவ்வொரு படியும் பூர்த்தி செய்யப்பட வேண்டும், மேலும் இருப்பிடம், வெப்பநிலை மற்றும் ஈரப்பதம் வழங்கப்பட வேண்டும்.' : currentLang === 'hi' ? 'सटीक पोषण गणना और मौसम सूचकांक के लिए, प्रत्येक चरण भरा होना चाहिए, और स्थान, तापमान एवं आर्द्रता प्रदान की जानी चाहिए।' : 'To ensure scientific accuracy of the feed formulation and heat stress (THI) index, every step must be filled, and location, temperature, and relative humidity must be provided.'}
             </p>
 
             {/* Checklist Items */}
@@ -1174,11 +1195,15 @@ export default function Step10Review({
                   }}></span>
                   <div>
                     <strong style={{ fontSize: '0.85rem', color: isWeatherOk ? '#15803d' : '#991b1b' }}>
-                      Location & Weather Telemetry: {isWeatherOk ? `Synced (${weather?.city}, ${weather?.tempC}°C, ${weather?.humidity}% RH)` : 'Missing (Location, Temp & RH Required)'}
+                      {currentLang === 'ta' 
+                        ? `இருப்பிடம் & தட்பவெப்ப நிலை: ${isWeatherOk ? `இணைக்கப்பட்டது (${weather?.city}, ${weather?.tempC}°C, ${weather?.humidity}% RH)` : 'தேவை (இருப்பிடம், வெப்பநிலை & ஈரப்பதம்)'}`
+                        : currentLang === 'hi'
+                        ? `स्थान एवं मौसम: ${isWeatherOk ? `जुड़ा हुआ (${weather?.city}, ${weather?.tempC}°C, ${weather?.humidity}% RH)` : 'अपूर्ण (स्थान, तापमान एवं आर्द्रता आवश्यक)'}`
+                        : `Location & Weather Telemetry: ${isWeatherOk ? `Synced (${weather?.city}, ${weather?.tempC}°C, ${weather?.humidity}% RH)` : 'Missing (Location, Temp & RH Required)'}`}
                     </strong>
                     {!isWeatherOk && (
                       <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#b91c1c' }}>
-                        Local temperature and humidity are essential to compute THI, heat stress, and free water intake.
+                        {currentLang === 'ta' ? 'குடிநீர் மற்றும் வெப்ப அழுத்தத்தை அறிய உள்ளூர் வெப்பநிலை மற்றும் ஈரப்பதம் அவசியமாகும்.' : currentLang === 'hi' ? 'गर्मी सूचकांक और जल आवश्यकता जानने के लिए स्थानीय तापमान और आर्द्रता आवश्यक हैं।' : 'Local temperature and humidity are essential to compute THI, heat stress, and free water intake.'}
                       </p>
                     )}
                   </div>
@@ -1192,7 +1217,7 @@ export default function Step10Review({
                         className="btn-primary" 
                         style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <MapPin size={14} /> Auto-Detect GPS Weather
+                        <MapPin size={14} /> {currentLang === 'ta' ? 'GPS மூலம் தானாகக் கண்டறி' : currentLang === 'hi' ? 'जीपीएस से स्वतः पता करें' : 'Auto-Detect GPS Weather'}
                       </button>
                     )}
                     <button 
@@ -1200,7 +1225,7 @@ export default function Step10Review({
                       className="btn-secondary" 
                       style={{ padding: '6px 12px', fontSize: '0.78rem' }}
                     >
-                      {showManualWeather ? 'Cancel' : 'Enter Manually'}
+                      {showManualWeather ? (currentLang === 'ta' ? 'ரத்து' : currentLang === 'hi' ? 'रद्द करें' : 'Cancel') : (currentLang === 'ta' ? 'கைமுறையாக உள்ளிடவும்' : currentLang === 'hi' ? 'स्वयं दर्ज करें' : 'Enter Manually')}
                     </button>
                   </div>
                 )}
@@ -1219,7 +1244,9 @@ export default function Step10Review({
                   alignItems: 'flex-end'
                 }}>
                   <div style={{ flex: '1 1 140px' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>City / District:</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                      {currentLang === 'ta' ? 'நகரம் / மாவட்டம்:' : currentLang === 'hi' ? 'शहर / जिला:' : 'City / District:'}
+                    </label>
                     <input 
                       type="text"
                       placeholder="e.g. Salem, Karnal, Anand"
@@ -1230,7 +1257,9 @@ export default function Step10Review({
                     />
                   </div>
                   <div style={{ width: '100px' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>Temp (°C):</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                      {currentLang === 'ta' ? 'வெப்பநிலை (°C):' : currentLang === 'hi' ? 'तापमान (°C):' : 'Temp (°C):'}
+                    </label>
                     <input 
                       type="number" 
                       placeholder="e.g. 32"
@@ -1243,7 +1272,9 @@ export default function Step10Review({
                     />
                   </div>
                   <div style={{ width: '100px' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>Humidity (%):</label>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                      {currentLang === 'ta' ? 'ஈரப்பதம் (%):' : currentLang === 'hi' ? 'आर्द्रता (%):' : 'Humidity (%):'}
+                    </label>
                     <input 
                       type="number" 
                       placeholder="e.g. 65"
@@ -1258,7 +1289,7 @@ export default function Step10Review({
                     />
                   </div>
                   <button type="submit" className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.8rem' }}>
-                    Save Weather
+                    {currentLang === 'ta' ? 'வானிலை சேமிக்கவும்' : currentLang === 'hi' ? 'मौसम सहेजें' : 'Save Weather'}
                   </button>
                 </form>
               )}
@@ -1277,11 +1308,11 @@ export default function Step10Review({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#dc2626' }}></span>
                     <span style={{ fontSize: '0.85rem', color: '#991b1b', fontWeight: 700 }}>
-                      No Cattle Recorded (Total Head: 0). Record at least one animal to calculate nutrition.
+                      {currentLang === 'ta' ? 'மாடுகள் எதுவும் பதிவு செய்யப்படவில்லை (மொத்தம்: 0). ஊட்டச்சத்தைக் கணக்கிட குறைந்தபட்சம் ஒரு மாட்டைப் பதிவு செய்யவும்.' : currentLang === 'hi' ? 'कोई मवेशी दर्ज नहीं है (कुल: 0)। पोषण गणना के लिए कम से कम एक पशु दर्ज करें।' : 'No Cattle Recorded (Total Head: 0). Record at least one animal to calculate nutrition.'}
                     </span>
                   </div>
                   <button onClick={() => onEditStep(2)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-                    Go to Cattle
+                    {currentLang === 'ta' ? 'மாடுகள் பகுதிக்குச் செல்க' : currentLang === 'hi' ? 'पशु जोड़ें' : 'Go to Cattle'}
                   </button>
                 </div>
               )}
@@ -1317,7 +1348,7 @@ export default function Step10Review({
                         background: '#fee2e2',
                         color: '#b91c1c'
                       }}>
-                        Required
+                        {currentLang === 'ta' ? 'தேவை' : currentLang === 'hi' ? 'आवश्यक' : 'Required'}
                       </span>
                       <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>
                         {item.reason}
@@ -1330,7 +1361,7 @@ export default function Step10Review({
                     className="btn-secondary" 
                     style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 700 }}
                   >
-                    Go to Step {item.num} →
+                    {currentLang === 'ta' ? `படி ${item.num}க்குச் செல்க →` : currentLang === 'hi' ? `चरण ${item.num} पर जाएं →` : `Go to Step ${item.num} →`}
                   </button>
                 </div>
               ))}
@@ -1354,10 +1385,10 @@ export default function Step10Review({
           }}>
             <Sparkles size={32} color="#16a34a" style={{ marginBottom: '10px' }} />
             <h4 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#15803d', margin: '0 0 6px' }}>
-              All Farm Data Verified & Ready to Calculate
+              {currentLang === 'ta' ? 'அனைத்து பண்ணைத் தரவுகளும் சரிபார்க்கப்பட்டு கணக்கீட்டிற்குத் தயாராக உள்ளன' : currentLang === 'hi' ? 'सभी फार्म डेटा सत्यापित और गणना के लिए तैयार' : 'All Farm Data Verified & Ready to Calculate'}
             </h4>
             <p style={{ fontSize: '0.85rem', color: '#166534', margin: '0 0 18px', maxWidth: '560px' }}>
-              All 9 steps and local climate telemetry have been confirmed. Click below to run the scientific nutrition engine and view herd balances.
+              {currentLang === 'ta' ? 'அனைத்து விவரங்களும் உறுதி செய்யப்பட்டுள்ளன. உங்கள் கால்நடைகளுக்கான தீவன ஊட்டச்சத்துக் கணக்கீட்டைக் காண கீழே உள்ள பொத்தானைக் கிளிக் செய்யவும்.' : currentLang === 'hi' ? 'सभी फार्म विवरणों की पुष्टि हो चुकी है। पोषण आवश्यकताओं और राशन संतुलन को देखने के लिए नीचे क्लिक करें।' : 'All farm steps and local climate telemetry have been confirmed. Click below to run the nutrition calculation and view herd balances.'}
             </p>
 
             <button
